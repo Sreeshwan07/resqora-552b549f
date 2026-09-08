@@ -20,7 +20,7 @@ import { activeEmergencyQuery, contactsQuery, emergencyEventsQuery, profileQuery
 import { locationPingsQuery } from "@/lib/resqora-data";
 import { guardianSessionQuery, guardianUrl, guardianOf } from "@/lib/guardian";
 import { coordsOf, copyText, mapsLink } from "@/lib/alerts";
-import { STATUS_FLOW, statusIndex, statusLabel } from "@/lib/emergency";
+import { INCIDENT_PHASES, phaseLabel, phaseRank } from "@/lib/incident";
 import { cachePlan, cachedPlan, emergencyReference, medicalContext, persistPlan } from "@/lib/core";
 import { generateActionPlan, type CoordinatorPlan } from "@/lib/coordinator.functions";
 import { NOT_PROVIDED } from "@/lib/resqr";
@@ -153,7 +153,7 @@ function DigitalTwinPage() {
     );
   }
 
-  const stepIndex = statusIndex(emergency.status);
+  const stepIndex = phaseRank(emergency.phase);
 
   return (
     <>
@@ -176,7 +176,7 @@ function DigitalTwinPage() {
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <StatusIndicator status="critical" label={statusLabel(emergency.status)} />
+                <StatusIndicator status="critical" label={phaseLabel(emergency.phase)} />
                 <Badge
                   variant="outline"
                   className="rounded-full text-[10px] font-semibold uppercase"
@@ -187,7 +187,7 @@ function DigitalTwinPage() {
             </div>
 
             <div className="mt-4 grid gap-2 sm:grid-cols-4">
-              {STATUS_FLOW.slice(0, 5).map((step, index) => (
+              {INCIDENT_PHASES.slice(0, 8).map((step, index) => (
                 <div
                   key={step.key}
                   className={`rounded-2xl border p-3 ${
@@ -289,7 +289,7 @@ function DigitalTwinPage() {
             type={emergency.type}
             severity={emergency.severity}
             position={position}
-            status={statusLabel(emergency.status)}
+            status={phaseLabel(emergency.phase)}
             nearby={nearby}
           />
         </div>

@@ -83,7 +83,7 @@ export const STATUS_FLOW = [
   {
     key: "contacts_notified",
     label: "Contacts notified",
-    detail: "Your 3 trusted contacts were alerted.",
+    detail: "Your trusted contacts were alerted.",
   },
   {
     key: "active",
@@ -284,7 +284,6 @@ export async function createEmergency(options: {
     /* tracking link can be regenerated from the live page */
   }
 
-  await supabase.from("emergencies").update({ status: "ai_analysis" }).eq("id", data.id);
   // Lifecycle: assessment starts once location capture has been attempted, and
   // alerting starts as the notification workflow below runs.
   markPhase(data.id, "assessing", "Location captured, situation being assessed.");
@@ -525,7 +524,6 @@ export async function createEmergency(options: {
     }
   };
 
-  await supabase.from("emergencies").update({ status: "contacts_notified" }).eq("id", data.id);
   // Channels are independent, so they run together instead of one after another.
   await Promise.all([guardianTask(), emailTask(), smsTask(), whatsappTask()]);
 
@@ -536,7 +534,6 @@ export async function createEmergency(options: {
     `${contacts.length} trusted contact${contacts.length === 1 ? "" : "s"} alerted with your live location.`,
   );
 
-  await supabase.from("emergencies").update({ status: "active" }).eq("id", data.id);
   await logEvent(
     data.id,
     options.userId,
@@ -648,28 +645,18 @@ export async function confirmSafe(input: {
   }
 }
 
-export async function advanceEmergency(emergency: Emergency) {
-  const next = STATUS_FLOW[Math.min(statusIndex(emergency.status) + 1, STATUS_FLOW.length - 1)];
-  if (next.key === "resolved") return resolveEmergency(emergency);
-  await supabase.from("emergencies").update({ status: next.key }).eq("id", emergency.id);
-  await logEvent(emergency.id, emergency.user_id, next.label, next.detail);
-}
-
 export async function resolveEmergency(emergency: Emergency) {
   const resolvedAt = new Date();
   const duration = Math.max(
     1,
     Math.round((resolvedAt.getTime() - new Date(emergency.started_at).getTime()) / 1000),
   );
+  await markPhase(emergency.id, "resolved", "Emergency marked as resolved.");
+  // The state machine stamps status/resolved_at; only the measured duration is ours.
   await supabase
     .from("emergencies")
-    .update({
-      status: "resolved",
-      resolved_at: resolvedAt.toISOString(),
-      duration_seconds: duration,
-    })
+    .update({ resolved_at: resolvedAt.toISOString(), duration_seconds: duration })
     .eq("id", emergency.id);
-  markPhase(emergency.id, "resolved", "Emergency marked as resolved.");
   await logEvent(emergency.id, emergency.user_id, "Resolved", "Emergency marked as resolved.");
   await notify(emergency.user_id, {
     category: "emergency",
