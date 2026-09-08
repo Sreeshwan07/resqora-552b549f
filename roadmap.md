@@ -51,3 +51,11 @@ Each phase is verified before moving to the next.
 - [ ] Mass-casualty triage board across victims of one incident
 - [ ] Analytics: response times, dispatch-to-arrival, resolution outcomes
 - [ ] Retire legacy status writes in favour of phase only
+
+## Stage 3 — situational awareness (done)
+- Situation map on Command Centre plotting live incidents, response units and hazard advisory radii (SSR-safe, no external map library).
+- Responder inbox (/responder): responder registration, availability, assignment accept/decline/en route/on scene/complete via server RPC.
+- Triage board (/triage): all people across live incidents grouped by priority, with status and receiving hospital.
+- Response performance analytics on Command Centre: median time to alert, to acknowledgement, to close; resolved rate; simulation vs real split.
+
+Open: full live incident end-to-end run on a physical device; real (non-simulation) response units.
