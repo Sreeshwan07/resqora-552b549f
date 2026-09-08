@@ -104,6 +104,20 @@ export const commandCentreNav: NavItem = {
   description: "Coordinate, dispatch & hand over",
 };
 
+export const responderNav: NavItem = {
+  label: "Responder inbox",
+  to: "/responder",
+  icon: Radio,
+  description: "Your assignments & availability",
+};
+
+export const triageNav: NavItem = {
+  label: "Triage board",
+  to: "/triage",
+  icon: HeartPulse,
+  description: "People involved, most urgent first",
+};
+
 export const prepareNav: NavItem = {
   label: "Prepare",
   to: "/prepare",
