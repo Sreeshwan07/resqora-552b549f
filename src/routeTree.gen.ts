@@ -39,12 +39,14 @@ import { Route as AppNotificationsRouteImport } from './routes/_app.notification
 import { Route as AppPrepareRouteImport } from './routes/_app.prepare'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppReportRouteImport } from './routes/_app.report'
+import { Route as AppResponderRouteImport } from './routes/_app.responder'
 import { Route as AppResqAiRouteImport } from './routes/_app.resq-ai'
 import { Route as AppResqrIdRouteImport } from './routes/_app.resqr-id'
 import { Route as AppScanRouteImport } from './routes/_app.scan'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppShareCenterRouteImport } from './routes/_app.share-center'
 import { Route as AppSupportRouteImport } from './routes/_app.support'
+import { Route as AppTriageRouteImport } from './routes/_app.triage'
 import { Route as MTokenRouteImport } from './routes/m.$token'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as STokenRouteImport } from './routes/s.$token'
@@ -200,6 +202,11 @@ const AppReportRoute = AppReportRouteImport.update({
   path: '/report',
   getParentRoute: () => AppRoute,
 } as any)
+const AppResponderRoute = AppResponderRouteImport.update({
+  id: '/responder',
+  path: '/responder',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppResqAiRoute = AppResqAiRouteImport.update({
   id: '/resq-ai',
   path: '/resq-ai',
@@ -228,6 +235,11 @@ const AppShareCenterRoute = AppShareCenterRouteImport.update({
 const AppSupportRoute = AppSupportRouteImport.update({
   id: '/support',
   path: '/support',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTriageRoute = AppTriageRouteImport.update({
+  id: '/triage',
+  path: '/triage',
   getParentRoute: () => AppRoute,
 } as any)
 const MTokenRoute = MTokenRouteImport.update({
@@ -287,12 +299,14 @@ export interface FileRoutesByFullPath {
   '/prepare': typeof AppPrepareRoute
   '/profile': typeof AppProfileRoute
   '/report': typeof AppReportRoute
+  '/responder': typeof AppResponderRoute
   '/resq-ai': typeof AppResqAiRoute
   '/resqr-id': typeof AppResqrIdRoute
   '/scan': typeof AppScanRoute
   '/settings': typeof AppSettingsRoute
   '/share-center': typeof AppShareCenterRoute
   '/support': typeof AppSupportRoute
+  '/triage': typeof AppTriageRoute
   '/m/$token': typeof MTokenRoute
   '/r/$code': typeof RCodeRoute
   '/s/$token': typeof STokenRoute
@@ -329,12 +343,14 @@ export interface FileRoutesByTo {
   '/prepare': typeof AppPrepareRoute
   '/profile': typeof AppProfileRoute
   '/report': typeof AppReportRoute
+  '/responder': typeof AppResponderRoute
   '/resq-ai': typeof AppResqAiRoute
   '/resqr-id': typeof AppResqrIdRoute
   '/scan': typeof AppScanRoute
   '/settings': typeof AppSettingsRoute
   '/share-center': typeof AppShareCenterRoute
   '/support': typeof AppSupportRoute
+  '/triage': typeof AppTriageRoute
   '/m/$token': typeof MTokenRoute
   '/r/$code': typeof RCodeRoute
   '/s/$token': typeof STokenRoute
@@ -373,12 +389,14 @@ export interface FileRoutesById {
   '/_app/prepare': typeof AppPrepareRoute
   '/_app/profile': typeof AppProfileRoute
   '/_app/report': typeof AppReportRoute
+  '/_app/responder': typeof AppResponderRoute
   '/_app/resq-ai': typeof AppResqAiRoute
   '/_app/resqr-id': typeof AppResqrIdRoute
   '/_app/scan': typeof AppScanRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/share-center': typeof AppShareCenterRoute
   '/_app/support': typeof AppSupportRoute
+  '/_app/triage': typeof AppTriageRoute
   '/m/$token': typeof MTokenRoute
   '/r/$code': typeof RCodeRoute
   '/s/$token': typeof STokenRoute
@@ -417,12 +435,14 @@ export interface FileRouteTypes {
     | '/prepare'
     | '/profile'
     | '/report'
+    | '/responder'
     | '/resq-ai'
     | '/resqr-id'
     | '/scan'
     | '/settings'
     | '/share-center'
     | '/support'
+    | '/triage'
     | '/m/$token'
     | '/r/$code'
     | '/s/$token'
@@ -459,12 +479,14 @@ export interface FileRouteTypes {
     | '/prepare'
     | '/profile'
     | '/report'
+    | '/responder'
     | '/resq-ai'
     | '/resqr-id'
     | '/scan'
     | '/settings'
     | '/share-center'
     | '/support'
+    | '/triage'
     | '/m/$token'
     | '/r/$code'
     | '/s/$token'
@@ -502,12 +524,14 @@ export interface FileRouteTypes {
     | '/_app/prepare'
     | '/_app/profile'
     | '/_app/report'
+    | '/_app/responder'
     | '/_app/resq-ai'
     | '/_app/resqr-id'
     | '/_app/scan'
     | '/_app/settings'
     | '/_app/share-center'
     | '/_app/support'
+    | '/_app/triage'
     | '/m/$token'
     | '/r/$code'
     | '/s/$token'
@@ -741,6 +765,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppReportRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/responder': {
+      id: '/_app/responder'
+      path: '/responder'
+      fullPath: '/responder'
+      preLoaderRoute: typeof AppResponderRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/resq-ai': {
       id: '/_app/resq-ai'
       path: '/resq-ai'
@@ -781,6 +812,13 @@ declare module '@tanstack/react-router' {
       path: '/support'
       fullPath: '/support'
       preLoaderRoute: typeof AppSupportRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/triage': {
+      id: '/_app/triage'
+      path: '/triage'
+      fullPath: '/triage'
+      preLoaderRoute: typeof AppTriageRouteImport
       parentRoute: typeof AppRoute
     }
     '/m/$token': {
@@ -846,12 +884,14 @@ interface AppRouteChildren {
   AppPrepareRoute: typeof AppPrepareRoute
   AppProfileRoute: typeof AppProfileRoute
   AppReportRoute: typeof AppReportRoute
+  AppResponderRoute: typeof AppResponderRoute
   AppResqAiRoute: typeof AppResqAiRoute
   AppResqrIdRoute: typeof AppResqrIdRoute
   AppScanRoute: typeof AppScanRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppShareCenterRoute: typeof AppShareCenterRoute
   AppSupportRoute: typeof AppSupportRoute
+  AppTriageRoute: typeof AppTriageRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -879,12 +919,14 @@ const AppRouteChildren: AppRouteChildren = {
   AppPrepareRoute: AppPrepareRoute,
   AppProfileRoute: AppProfileRoute,
   AppReportRoute: AppReportRoute,
+  AppResponderRoute: AppResponderRoute,
   AppResqAiRoute: AppResqAiRoute,
   AppResqrIdRoute: AppResqrIdRoute,
   AppScanRoute: AppScanRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppShareCenterRoute: AppShareCenterRoute,
   AppSupportRoute: AppSupportRoute,
+  AppTriageRoute: AppTriageRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

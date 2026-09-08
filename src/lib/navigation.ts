@@ -28,6 +28,8 @@ import {
   Menu,
   LayoutDashboard,
   ShieldCheck,
+  HeartPulse,
+  Radio,
 } from "lucide-react";
 import type { NavSection, NavItem } from "@/types";
 
@@ -102,6 +104,20 @@ export const commandCentreNav: NavItem = {
   to: "/command-center",
   icon: LayoutDashboard,
   description: "Coordinate, dispatch & hand over",
+};
+
+export const responderNav: NavItem = {
+  label: "Responder inbox",
+  to: "/responder",
+  icon: Radio,
+  description: "Your assignments & availability",
+};
+
+export const triageNav: NavItem = {
+  label: "Triage board",
+  to: "/triage",
+  icon: HeartPulse,
+  description: "People involved, most urgent first",
 };
 
 export const prepareNav: NavItem = {
@@ -222,6 +238,8 @@ export const navSections: NavSection[] = [
       },
       digitalTwinNav,
       commandCentreNav,
+      triageNav,
+      responderNav,
       prepareNav,
       {
         label: "Report accident",
@@ -292,7 +310,7 @@ export const mobileNav: NavItem[] = [
 export const mobileMenuSections: NavSection[] = [
   {
     title: "Emergency",
-    items: [reportNav, liveLocationNav, digitalTwinNav, activityNav],
+    items: [reportNav, liveLocationNav, digitalTwinNav, commandCentreNav, triageNav, responderNav, prepareNav, activityNav],
   },
   {
     title: "My safety",
