@@ -26,6 +26,8 @@ import {
   LifeBuoy,
   Cpu,
   Menu,
+  LayoutDashboard,
+  ShieldCheck,
 } from "lucide-react";
 import type { NavSection, NavItem } from "@/types";
 
@@ -93,6 +95,20 @@ export const coreNav: NavItem = {
   to: "/core",
   icon: Cpu,
   description: "AI emergency coordination system",
+};
+
+export const commandCentreNav: NavItem = {
+  label: "Command Centre",
+  to: "/command-center",
+  icon: LayoutDashboard,
+  description: "Coordinate, dispatch & hand over",
+};
+
+export const prepareNav: NavItem = {
+  label: "Prepare",
+  to: "/prepare",
+  icon: ShieldCheck,
+  description: "Readiness plan & hazard advisories",
 };
 
 export const digitalTwinNav: NavItem = {
@@ -205,6 +221,8 @@ export const navSections: NavSection[] = [
         description: "Emergency activation",
       },
       digitalTwinNav,
+      commandCentreNav,
+      prepareNav,
       {
         label: "Report accident",
         to: "/report",

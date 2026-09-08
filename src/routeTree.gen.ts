@@ -36,6 +36,7 @@ import { Route as AppMenuRouteImport } from './routes/_app.menu'
 import { Route as AppNearbyRouteImport } from './routes/_app.nearby'
 import { Route as AppNotesRouteImport } from './routes/_app.notes'
 import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
+import { Route as AppPrepareRouteImport } from './routes/_app.prepare'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppReportRouteImport } from './routes/_app.report'
 import { Route as AppResqAiRouteImport } from './routes/_app.resq-ai'
@@ -184,6 +185,11 @@ const AppNotificationsRoute = AppNotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPrepareRoute = AppPrepareRouteImport.update({
+  id: '/prepare',
+  path: '/prepare',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -278,6 +284,7 @@ export interface FileRoutesByFullPath {
   '/nearby': typeof AppNearbyRoute
   '/notes': typeof AppNotesRoute
   '/notifications': typeof AppNotificationsRoute
+  '/prepare': typeof AppPrepareRoute
   '/profile': typeof AppProfileRoute
   '/report': typeof AppReportRoute
   '/resq-ai': typeof AppResqAiRoute
@@ -319,6 +326,7 @@ export interface FileRoutesByTo {
   '/nearby': typeof AppNearbyRoute
   '/notes': typeof AppNotesRoute
   '/notifications': typeof AppNotificationsRoute
+  '/prepare': typeof AppPrepareRoute
   '/profile': typeof AppProfileRoute
   '/report': typeof AppReportRoute
   '/resq-ai': typeof AppResqAiRoute
@@ -362,6 +370,7 @@ export interface FileRoutesById {
   '/_app/nearby': typeof AppNearbyRoute
   '/_app/notes': typeof AppNotesRoute
   '/_app/notifications': typeof AppNotificationsRoute
+  '/_app/prepare': typeof AppPrepareRoute
   '/_app/profile': typeof AppProfileRoute
   '/_app/report': typeof AppReportRoute
   '/_app/resq-ai': typeof AppResqAiRoute
@@ -405,6 +414,7 @@ export interface FileRouteTypes {
     | '/nearby'
     | '/notes'
     | '/notifications'
+    | '/prepare'
     | '/profile'
     | '/report'
     | '/resq-ai'
@@ -446,6 +456,7 @@ export interface FileRouteTypes {
     | '/nearby'
     | '/notes'
     | '/notifications'
+    | '/prepare'
     | '/profile'
     | '/report'
     | '/resq-ai'
@@ -488,6 +499,7 @@ export interface FileRouteTypes {
     | '/_app/nearby'
     | '/_app/notes'
     | '/_app/notifications'
+    | '/_app/prepare'
     | '/_app/profile'
     | '/_app/report'
     | '/_app/resq-ai'
@@ -708,6 +720,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppNotificationsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/prepare': {
+      id: '/_app/prepare'
+      path: '/prepare'
+      fullPath: '/prepare'
+      preLoaderRoute: typeof AppPrepareRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/profile': {
       id: '/_app/profile'
       path: '/profile'
@@ -824,6 +843,7 @@ interface AppRouteChildren {
   AppNearbyRoute: typeof AppNearbyRoute
   AppNotesRoute: typeof AppNotesRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
+  AppPrepareRoute: typeof AppPrepareRoute
   AppProfileRoute: typeof AppProfileRoute
   AppReportRoute: typeof AppReportRoute
   AppResqAiRoute: typeof AppResqAiRoute
@@ -856,6 +876,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppNearbyRoute: AppNearbyRoute,
   AppNotesRoute: AppNotesRoute,
   AppNotificationsRoute: AppNotificationsRoute,
+  AppPrepareRoute: AppPrepareRoute,
   AppProfileRoute: AppProfileRoute,
   AppReportRoute: AppReportRoute,
   AppResqAiRoute: AppResqAiRoute,
