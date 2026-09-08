@@ -669,6 +669,7 @@ export async function resolveEmergency(emergency: Emergency) {
       duration_seconds: duration,
     })
     .eq("id", emergency.id);
+  markPhase(emergency.id, "resolved", "Emergency marked as resolved.");
   await logEvent(emergency.id, emergency.user_id, "Resolved", "Emergency marked as resolved.");
   await notify(emergency.user_id, {
     category: "emergency",
