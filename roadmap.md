@@ -25,3 +25,16 @@ Each phase is verified before moving to the next.
 - [x] /sw.js verified present in dist/client and served 200 from root; offline.html fallback precached
 - [x] Update safety: cleanupOutdatedCaches, skipWaiting, clientsClaim, versioned cache names
 - [x] No API/auth/emergency responses cached (api + ~oauth bypassed)
+
+## Disaster-platform upgrade — Stage 1: incident backbone (done)
+- [x] Emergency record extended: public reference code, incident type/description, lifecycle phase + phase timestamp, responder/hospital/resolution status, people count, location accuracy, connectivity, mass-casualty flag, simulation flag, idempotency key
+- [x] `emergency_victims` table (per-person priority/status/notes) with owner+admin RLS, auto-synced headcount and mass-casualty flag
+- [x] Server-authorised state machine `transition_emergency` (forward-only, terminal cancelled/failed/expired, writes timeline event + actor)
+- [x] SOS workflow marks activated → assessing → alerting; resolve/cancel mark terminal phases
+- [x] Incident lifecycle + people-involved panel on the Emergency screen
+
+## Next stages (agreed with user)
+- [ ] Command Center (/command-center): live incident map, incident list, heatmap, real analytics
+- [ ] Responder + dispatch: responder role, accept/decline, resources with conflict prevention, hospital handoff
+- [ ] Labelled Simulation Mode seeding demo incidents (is_simulation flag already in place)
+- [ ] Prepare layer: preparedness checklists, family plan, shelters
