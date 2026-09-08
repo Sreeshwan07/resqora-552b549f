@@ -284,6 +284,10 @@ export async function createEmergency(options: {
   }
 
   await supabase.from("emergencies").update({ status: "ai_analysis" }).eq("id", data.id);
+  // Lifecycle: assessment starts once location capture has been attempted, and
+  // alerting starts as the notification workflow below runs.
+  markPhase(data.id, "assessing", "Location captured, situation being assessed.");
+  markPhase(data.id, "alerting", "Notifying contacts and emergency services.");
   await logEvent(
     data.id,
     options.userId,
