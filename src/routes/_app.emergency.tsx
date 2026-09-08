@@ -26,15 +26,12 @@ import { activeEmergencyQuery, contactsQuery, emergencyEventsQuery, profileQuery
 import { coordsOf, copyText, mapsLink } from "@/lib/alerts";
 import {
   EMERGENCY_TYPES,
-  STATUS_FLOW,
-  advanceEmergency,
   cancelEmergency,
   createEmergency,
   formatDuration,
   resolveEmergency,
-  statusIndex,
-  statusLabel,
 } from "@/lib/emergency";
+import { phaseLabel } from "@/lib/incident";
 
 export const Route = createFileRoute("/_app/emergency")({
   validateSearch: (search: Record<string, unknown>): { auto?: boolean } =>
@@ -146,13 +143,6 @@ function EmergencyPage() {
     setConfirmOpen(true);
   }
 
-  async function handleAdvance() {
-    if (!active.data) return;
-    setBusy(true);
-    await advanceEmergency(active.data);
-    await refresh();
-    setBusy(false);
-  }
 
   async function handleResolve() {
     if (!active.data) return;
@@ -181,7 +171,6 @@ function EmergencyPage() {
     await queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
   }
 
-  const currentStep = current ? statusIndex(current.status) : -1;
   const coords = coordsOf(current);
 
   return (
@@ -192,7 +181,7 @@ function EmergencyPage() {
         description="One tap shares your live location, medical ID and alerts your three trusted contacts."
         actions={
           current ? (
-            <StatusIndicator status="critical" label={statusLabel(current.status)} pulse />
+            <StatusIndicator status="critical" label={phaseLabel(current.phase)} pulse />
           ) : (
             <StatusIndicator status="safe" label="Standing by" />
           )
@@ -233,7 +222,7 @@ function EmergencyPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="grid gap-3 rounded-2xl border border-alert/40 bg-alert/5 p-4 sm:grid-cols-2"
               >
-                <LiveDetail label="Status" value={statusLabel(current.status)} />
+                <LiveDetail label="Status" value={phaseLabel(current.phase)} />
                 <LiveDetail
                   label="Emergency timer"
                   value={formatDuration(elapsed)}
@@ -262,9 +251,6 @@ function EmergencyPage() {
                 Cancel SOS
               </Button>
               <div className="flex flex-wrap justify-center gap-2">
-                <Button variant="ghost" size="sm" onClick={handleAdvance} disabled={busy}>
-                  Advance status
-                </Button>
                 <Button variant="ghost" size="sm" onClick={handleResolve} disabled={busy}>
                   <CheckCircle2 className="size-4" />
                   Mark resolved
@@ -327,33 +313,37 @@ function EmergencyPage() {
               <p className="mt-3 text-sm text-muted-foreground">
                 No active emergency. Steps appear here in real time when an SOS is sent.
               </p>
+            ) : !events.data || events.data.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">
+                Waiting for the first step to be recorded…
+              </p>
             ) : (
+              /* Every entry below is a recorded event from this emergency — nothing
+                 is shown as done before it actually happened. */
               <ol className="mt-4 space-y-4">
-                {STATUS_FLOW.map((step, index) => {
-                  const done = index <= currentStep;
-                  return (
-                    <li key={step.key} className="flex gap-3">
-                      <span className="flex flex-col items-center">
-                        <motion.span
-                          initial={false}
-                          animate={{ scale: done ? 1 : 0.75, opacity: done ? 1 : 0.4 }}
-                          className={
-                            done
-                              ? "size-3 rounded-full bg-alert"
-                              : "size-3 rounded-full bg-muted-foreground/40"
-                          }
-                        />
-                        {index < STATUS_FLOW.length - 1 && (
-                          <span className="mt-1 h-8 w-px bg-border" />
-                        )}
-                      </span>
-                      <div className="min-w-0 pb-1">
-                        <p className="text-sm font-medium text-foreground">{step.label}</p>
-                        <p className="text-xs text-muted-foreground">{step.detail}</p>
-                      </div>
-                    </li>
-                  );
-                })}
+                {events.data.map((event, index) => (
+                  <li key={event.id} className="flex gap-3">
+                    <span className="flex flex-col items-center">
+                      <motion.span
+                        initial={{ scale: 0.6, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="size-3 rounded-full bg-alert"
+                      />
+                      {index < events.data.length - 1 && (
+                        <span className="mt-1 h-8 w-px bg-border" />
+                      )}
+                    </span>
+                    <div className="min-w-0 pb-1">
+                      <p className="text-sm font-medium text-foreground">{event.label}</p>
+                      {event.detail && (
+                        <p className="text-xs text-muted-foreground">{event.detail}</p>
+                      )}
+                      <p className="mt-0.5 text-[11px] text-muted-foreground/80">
+                        {new Date(event.created_at).toLocaleTimeString()}
+                      </p>
+                    </div>
+                  </li>
+                ))}
               </ol>
             )}
             {events.data && events.data.length > 0 && (
