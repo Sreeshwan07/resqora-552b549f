@@ -28,6 +28,7 @@ import {
   Menu,
   LayoutDashboard,
   ShieldCheck,
+  HeartPulse,
 } from "lucide-react";
 import type { NavSection, NavItem } from "@/types";
 
@@ -236,6 +237,8 @@ export const navSections: NavSection[] = [
       },
       digitalTwinNav,
       commandCentreNav,
+      triageNav,
+      responderNav,
       prepareNav,
       {
         label: "Report accident",
@@ -306,7 +309,7 @@ export const mobileNav: NavItem[] = [
 export const mobileMenuSections: NavSection[] = [
   {
     title: "Emergency",
-    items: [reportNav, liveLocationNav, digitalTwinNav, activityNav],
+    items: [reportNav, liveLocationNav, digitalTwinNav, commandCentreNav, triageNav, responderNav, prepareNav, activityNav],
   },
   {
     title: "My safety",
