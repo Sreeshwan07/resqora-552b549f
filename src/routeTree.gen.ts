@@ -23,6 +23,7 @@ import { Route as AppCommandCenterRouteImport } from './routes/_app.command-cent
 import { Route as AppContactsRouteImport } from './routes/_app.contacts'
 import { Route as AppCoreRouteImport } from './routes/_app.core'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppDebriefRouteImport } from './routes/_app.debrief'
 import { Route as AppDigitalTwinRouteImport } from './routes/_app.digital-twin'
 import { Route as AppDocumentsRouteImport } from './routes/_app.documents'
 import { Route as AppDonorsRouteImport } from './routes/_app.donors'
@@ -120,6 +121,11 @@ const AppCoreRoute = AppCoreRouteImport.update({
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDebriefRoute = AppDebriefRouteImport.update({
+  id: '/debrief',
+  path: '/debrief',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDigitalTwinRoute = AppDigitalTwinRouteImport.update({
@@ -283,6 +289,7 @@ export interface FileRoutesByFullPath {
   '/contacts': typeof AppContactsRoute
   '/core': typeof AppCoreRoute
   '/dashboard': typeof AppDashboardRoute
+  '/debrief': typeof AppDebriefRoute
   '/digital-twin': typeof AppDigitalTwinRoute
   '/documents': typeof AppDocumentsRoute
   '/donors': typeof AppDonorsRoute
@@ -327,6 +334,7 @@ export interface FileRoutesByTo {
   '/contacts': typeof AppContactsRoute
   '/core': typeof AppCoreRoute
   '/dashboard': typeof AppDashboardRoute
+  '/debrief': typeof AppDebriefRoute
   '/digital-twin': typeof AppDigitalTwinRoute
   '/documents': typeof AppDocumentsRoute
   '/donors': typeof AppDonorsRoute
@@ -373,6 +381,7 @@ export interface FileRoutesById {
   '/_app/contacts': typeof AppContactsRoute
   '/_app/core': typeof AppCoreRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/debrief': typeof AppDebriefRoute
   '/_app/digital-twin': typeof AppDigitalTwinRoute
   '/_app/documents': typeof AppDocumentsRoute
   '/_app/donors': typeof AppDonorsRoute
@@ -419,6 +428,7 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/core'
     | '/dashboard'
+    | '/debrief'
     | '/digital-twin'
     | '/documents'
     | '/donors'
@@ -463,6 +473,7 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/core'
     | '/dashboard'
+    | '/debrief'
     | '/digital-twin'
     | '/documents'
     | '/donors'
@@ -508,6 +519,7 @@ export interface FileRouteTypes {
     | '/_app/contacts'
     | '/_app/core'
     | '/_app/dashboard'
+    | '/_app/debrief'
     | '/_app/digital-twin'
     | '/_app/documents'
     | '/_app/donors'
@@ -651,6 +663,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/debrief': {
+      id: '/_app/debrief'
+      path: '/debrief'
+      fullPath: '/debrief'
+      preLoaderRoute: typeof AppDebriefRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/digital-twin': {
@@ -868,6 +887,7 @@ interface AppRouteChildren {
   AppContactsRoute: typeof AppContactsRoute
   AppCoreRoute: typeof AppCoreRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppDebriefRoute: typeof AppDebriefRoute
   AppDigitalTwinRoute: typeof AppDigitalTwinRoute
   AppDocumentsRoute: typeof AppDocumentsRoute
   AppDonorsRoute: typeof AppDonorsRoute
@@ -903,6 +923,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppContactsRoute: AppContactsRoute,
   AppCoreRoute: AppCoreRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppDebriefRoute: AppDebriefRoute,
   AppDigitalTwinRoute: AppDigitalTwinRoute,
   AppDocumentsRoute: AppDocumentsRoute,
   AppDonorsRoute: AppDonorsRoute,
