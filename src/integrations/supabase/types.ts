@@ -128,6 +128,60 @@ export type Database = {
         }
         Relationships: []
       }
+      disaster_zones: {
+        Row: {
+          active: boolean
+          advisory: string | null
+          created_at: string
+          created_by: string | null
+          ends_at: string | null
+          id: string
+          is_simulation: boolean
+          latitude: number
+          longitude: number
+          name: string
+          radius_km: number
+          severity: string
+          starts_at: string
+          updated_at: string
+          zone_type: string
+        }
+        Insert: {
+          active?: boolean
+          advisory?: string | null
+          created_at?: string
+          created_by?: string | null
+          ends_at?: string | null
+          id?: string
+          is_simulation?: boolean
+          latitude: number
+          longitude: number
+          name: string
+          radius_km?: number
+          severity?: string
+          starts_at?: string
+          updated_at?: string
+          zone_type?: string
+        }
+        Update: {
+          active?: boolean
+          advisory?: string | null
+          created_at?: string
+          created_by?: string | null
+          ends_at?: string | null
+          id?: string
+          is_simulation?: boolean
+          latitude?: number
+          longitude?: number
+          name?: string
+          radius_km?: number
+          severity?: string
+          starts_at?: string
+          updated_at?: string
+          zone_type?: string
+        }
+        Relationships: []
+      }
       emergencies: {
         Row: {
           ack_at: string | null
@@ -664,6 +718,128 @@ export type Database = {
           },
         ]
       }
+      hospital_handoffs: {
+        Row: {
+          bed_or_ward: string | null
+          created_at: string
+          department: string | null
+          emergency_id: string
+          expected_arrival: string | null
+          handover_notes: string | null
+          hospital_name: string
+          id: string
+          received_at: string | null
+          received_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bed_or_ward?: string | null
+          created_at?: string
+          department?: string | null
+          emergency_id: string
+          expected_arrival?: string | null
+          handover_notes?: string | null
+          hospital_name: string
+          id?: string
+          received_at?: string | null
+          received_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bed_or_ward?: string | null
+          created_at?: string
+          department?: string | null
+          emergency_id?: string
+          expected_arrival?: string | null
+          handover_notes?: string | null
+          hospital_name?: string
+          id?: string
+          received_at?: string | null
+          received_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hospital_handoffs_emergency_id_fkey"
+            columns: ["emergency_id"]
+            isOneToOne: false
+            referencedRelation: "emergencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      incident_assignments: {
+        Row: {
+          accepted_at: string | null
+          assigned_by: string | null
+          completed_at: string | null
+          created_at: string
+          emergency_id: string
+          eta_minutes: number | null
+          id: string
+          notes: string | null
+          resource_id: string | null
+          resource_name: string
+          resource_type: string
+          responder_user_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          assigned_by?: string | null
+          completed_at?: string | null
+          created_at?: string
+          emergency_id: string
+          eta_minutes?: number | null
+          id?: string
+          notes?: string | null
+          resource_id?: string | null
+          resource_name: string
+          resource_type?: string
+          responder_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          assigned_by?: string | null
+          completed_at?: string | null
+          created_at?: string
+          emergency_id?: string
+          eta_minutes?: number | null
+          id?: string
+          notes?: string | null
+          resource_id?: string | null
+          resource_name?: string
+          resource_type?: string
+          responder_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_assignments_emergency_id_fkey"
+            columns: ["emergency_id"]
+            isOneToOne: false
+            referencedRelation: "emergencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_assignments_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "response_resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       location_pings: {
         Row: {
           accuracy: number | null
@@ -821,6 +997,42 @@ export type Database = {
         }
         Relationships: []
       }
+      preparedness_tasks: {
+        Row: {
+          category: string
+          completed_at: string | null
+          created_at: string
+          done: boolean
+          id: string
+          label: string
+          task_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          completed_at?: string | null
+          created_at?: string
+          done?: boolean
+          id?: string
+          label: string
+          task_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          completed_at?: string | null
+          created_at?: string
+          done?: boolean
+          id?: string
+          label?: string
+          task_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           allergies: string | null
@@ -955,6 +1167,119 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      responder_profiles: {
+        Row: {
+          active: boolean
+          availability: string
+          created_at: string
+          full_name: string
+          id: string
+          latitude: number | null
+          location_updated_at: string | null
+          longitude: number | null
+          organisation: string | null
+          phone: string | null
+          responder_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          availability?: string
+          created_at?: string
+          full_name: string
+          id?: string
+          latitude?: number | null
+          location_updated_at?: string | null
+          longitude?: number | null
+          organisation?: string | null
+          phone?: string | null
+          responder_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          availability?: string
+          created_at?: string
+          full_name?: string
+          id?: string
+          latitude?: number | null
+          location_updated_at?: string | null
+          longitude?: number | null
+          organisation?: string | null
+          phone?: string | null
+          responder_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      response_resources: {
+        Row: {
+          active: boolean
+          assigned_emergency_id: string | null
+          base_location: string | null
+          capacity: number
+          created_at: string
+          id: string
+          identifier: string | null
+          is_simulation: boolean
+          latitude: number | null
+          longitude: number | null
+          name: string
+          organisation: string | null
+          resource_type: string
+          responder_user_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          assigned_emergency_id?: string | null
+          base_location?: string | null
+          capacity?: number
+          created_at?: string
+          id?: string
+          identifier?: string | null
+          is_simulation?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          organisation?: string | null
+          resource_type?: string
+          responder_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          assigned_emergency_id?: string | null
+          base_location?: string | null
+          capacity?: number
+          created_at?: string
+          id?: string
+          identifier?: string | null
+          is_simulation?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          organisation?: string | null
+          resource_type?: string
+          responder_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "response_resources_assigned_emergency_id_fkey"
+            columns: ["assigned_emergency_id"]
+            isOneToOne: false
+            referencedRelation: "emergencies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       resqr_ids: {
         Row: {
@@ -1144,6 +1469,15 @@ export type Database = {
         }
         Returns: Json
       }
+      dispatch_resource: {
+        Args: {
+          _emergency_id: string
+          _eta_minutes?: number
+          _notes?: string
+          _resource_id: string
+        }
+        Returns: Json
+      }
       emergency_phase_rank: { Args: { _phase: string }; Returns: number }
       escalate_unacknowledged: {
         Args: { _emergency_id: string }
@@ -1231,6 +1565,17 @@ export type Database = {
           victim_name: string
         }[]
       }
+      record_hospital_handoff: {
+        Args: {
+          _bed?: string
+          _department?: string
+          _emergency_id: string
+          _eta?: string
+          _hospital: string
+          _notes?: string
+        }
+        Returns: Json
+      }
       search_blood_donors: {
         Args: { _city?: string; _group?: string }
         Returns: {
@@ -1259,9 +1604,13 @@ export type Database = {
         Args: { _emergency_id: string; _note?: string; _to_phase: string }
         Returns: Json
       }
+      update_assignment_status: {
+        Args: { _assignment_id: string; _eta_minutes?: number; _status: string }
+        Returns: Json
+      }
     }
     Enums: {
-      app_role: "admin" | "user" | "guardian"
+      app_role: "admin" | "user" | "guardian" | "responder"
       approval_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
@@ -1390,7 +1739,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user", "guardian"],
+      app_role: ["admin", "user", "guardian", "responder"],
       approval_status: ["pending", "approved", "rejected"],
     },
   },
