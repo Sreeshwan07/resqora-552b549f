@@ -87,7 +87,7 @@ function PreparePage() {
   const readiness = total === 0 ? 0 : Math.round((done / total) * 100);
   const nearby = zonesAround(
     zones.data ?? [],
-    position ? { latitude: position.latitude, longitude: position.longitude } : null,
+    position ? { latitude: position.lat, longitude: position.lng } : null,
   );
 
   return (
