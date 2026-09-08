@@ -9,6 +9,7 @@ import { StatusIndicator } from "@/components/system/status-indicator";
 import { ConfirmModal } from "@/components/system/confirm-modal";
 import { SosButton } from "@/components/resqora/sos-button";
 import { CrashDetectionPanel } from "@/components/resqora/crash-detection";
+import { IncidentPanel } from "@/components/resqora/incident-panel";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
