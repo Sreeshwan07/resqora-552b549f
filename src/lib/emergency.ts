@@ -26,6 +26,7 @@ import { logSecurityEvent } from "@/lib/audit";
 import { checkRateLimit, sanitizeMultiline } from "@/lib/security";
 import { generateActionPlan } from "@/lib/coordinator.functions";
 import { cachePlan, medicalContext, persistPlan } from "@/lib/core";
+import { markPhase } from "@/lib/incident";
 
 /**
  * Runs the AI Emergency Coordinator as soon as an SOS goes active so the action
@@ -205,6 +206,7 @@ export async function createEmergency(options: {
   // The session exists — surface it immediately; everything below is async work.
   const data = started.emergency;
   options.onCreated?.(data);
+  markPhase(data.id, "activated", "Incident opened on the user's device.");
 
   // A reused session was already announced, tracked and notified when it was
   // first created — never run the notification workflow a second time.
@@ -283,6 +285,10 @@ export async function createEmergency(options: {
   }
 
   await supabase.from("emergencies").update({ status: "ai_analysis" }).eq("id", data.id);
+  // Lifecycle: assessment starts once location capture has been attempted, and
+  // alerting starts as the notification workflow below runs.
+  markPhase(data.id, "assessing", "Location captured, situation being assessed.");
+  markPhase(data.id, "alerting", "Notifying contacts and emergency services.");
   await logEvent(
     data.id,
     options.userId,
@@ -663,6 +669,7 @@ export async function resolveEmergency(emergency: Emergency) {
       duration_seconds: duration,
     })
     .eq("id", emergency.id);
+  markPhase(emergency.id, "resolved", "Emergency marked as resolved.");
   await logEvent(emergency.id, emergency.user_id, "Resolved", "Emergency marked as resolved.");
   await notify(emergency.user_id, {
     category: "emergency",
@@ -703,6 +710,7 @@ export async function cancelEmergency(
   } catch {
     /* the session expires with the emergency anyway */
   }
+  markPhase(emergency.id, "cancelled", "Cancelled by the user.");
   await logEvent(emergency.id, emergency.user_id, "Cancelled", "You cancelled this alert.");
   void logSecurityEvent("SOS deactivated", "Emergency cancelled by the user", {
     emergency_id: emergency.id,
