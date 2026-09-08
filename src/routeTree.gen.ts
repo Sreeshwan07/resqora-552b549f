@@ -19,6 +19,7 @@ import { Route as AppActivityRouteImport } from './routes/_app.activity'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 import { Route as AppAssistantRouteImport } from './routes/_app.assistant'
 import { Route as AppCheckinsRouteImport } from './routes/_app.checkins'
+import { Route as AppCommandCenterRouteImport } from './routes/_app.command-center'
 import { Route as AppContactsRouteImport } from './routes/_app.contacts'
 import { Route as AppCoreRouteImport } from './routes/_app.core'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
@@ -96,6 +97,11 @@ const AppAssistantRoute = AppAssistantRouteImport.update({
 const AppCheckinsRoute = AppCheckinsRouteImport.update({
   id: '/checkins',
   path: '/checkins',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCommandCenterRoute = AppCommandCenterRouteImport.update({
+  id: '/command-center',
+  path: '/command-center',
   getParentRoute: () => AppRoute,
 } as any)
 const AppContactsRoute = AppContactsRouteImport.update({
@@ -255,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AppAdminRoute
   '/assistant': typeof AppAssistantRoute
   '/checkins': typeof AppCheckinsRoute
+  '/command-center': typeof AppCommandCenterRoute
   '/contacts': typeof AppContactsRoute
   '/core': typeof AppCoreRoute
   '/dashboard': typeof AppDashboardRoute
@@ -295,6 +302,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AppAdminRoute
   '/assistant': typeof AppAssistantRoute
   '/checkins': typeof AppCheckinsRoute
+  '/command-center': typeof AppCommandCenterRoute
   '/contacts': typeof AppContactsRoute
   '/core': typeof AppCoreRoute
   '/dashboard': typeof AppDashboardRoute
@@ -337,6 +345,7 @@ export interface FileRoutesById {
   '/_app/admin': typeof AppAdminRoute
   '/_app/assistant': typeof AppAssistantRoute
   '/_app/checkins': typeof AppCheckinsRoute
+  '/_app/command-center': typeof AppCommandCenterRoute
   '/_app/contacts': typeof AppContactsRoute
   '/_app/core': typeof AppCoreRoute
   '/_app/dashboard': typeof AppDashboardRoute
@@ -379,6 +388,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/assistant'
     | '/checkins'
+    | '/command-center'
     | '/contacts'
     | '/core'
     | '/dashboard'
@@ -419,6 +429,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/assistant'
     | '/checkins'
+    | '/command-center'
     | '/contacts'
     | '/core'
     | '/dashboard'
@@ -460,6 +471,7 @@ export interface FileRouteTypes {
     | '/_app/admin'
     | '/_app/assistant'
     | '/_app/checkins'
+    | '/_app/command-center'
     | '/_app/contacts'
     | '/_app/core'
     | '/_app/dashboard'
@@ -575,6 +587,13 @@ declare module '@tanstack/react-router' {
       path: '/checkins'
       fullPath: '/checkins'
       preLoaderRoute: typeof AppCheckinsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/command-center': {
+      id: '/_app/command-center'
+      path: '/command-center'
+      fullPath: '/command-center'
+      preLoaderRoute: typeof AppCommandCenterRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/contacts': {
@@ -788,6 +807,7 @@ interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
   AppAssistantRoute: typeof AppAssistantRoute
   AppCheckinsRoute: typeof AppCheckinsRoute
+  AppCommandCenterRoute: typeof AppCommandCenterRoute
   AppContactsRoute: typeof AppContactsRoute
   AppCoreRoute: typeof AppCoreRoute
   AppDashboardRoute: typeof AppDashboardRoute
@@ -819,6 +839,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRoute,
   AppAssistantRoute: AppAssistantRoute,
   AppCheckinsRoute: AppCheckinsRoute,
+  AppCommandCenterRoute: AppCommandCenterRoute,
   AppContactsRoute: AppContactsRoute,
   AppCoreRoute: AppCoreRoute,
   AppDashboardRoute: AppDashboardRoute,
