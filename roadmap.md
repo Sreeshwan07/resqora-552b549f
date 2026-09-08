@@ -10,13 +10,13 @@ Resumed from the mobile-first audit (Phases 1-37 done).
 - [x] F. Notification delivery-status semantics — verified honest labels ("ready" for WhatsApp, "delivered" per email recipient, etc.)
 
 ## Remaining (not started)
-- [ ] B. Realtime subscription audit — verify only one Supabase realtime channel per client, cleanup on unmount
-- [ ] G. Final QA matrix — targeted browser verification of SOS/Guardian/report flows
-- [ ] H. Performance targets — bundle/runtime profiling
-- [ ] I. Full security scan pass
-- [ ] J. Accessibility audit (focus traps, ARIA, color contrast)
-- [ ] K. Network resilience — offline queue retry/backoff review
-- [ ] L. Legacy cleanup — remove any remaining AEGIS references
+- [x] B. Realtime audit — no realtime channels are used; live views poll with React Query (single source, cleaned up by Query)
+- [x] G. QA — signed-in browser pass over SOS, Command Centre, Digital Twin, dispatch → handover → recovery → report
+- [x] H. Performance — production build clean; map/heavy views load only after hydration
+- [x] I. Security scan — responder contact/location and unit-to-incident links are no longer readable by every signed-in user
+- [ ] J. Accessibility audit — needs a screen-reader/contrast pass on a real device (not verifiable here)
+- [x] K. Network resilience — offline queue now retries on a widening delay until everything uploads
+- [x] L. Legacy cleanup — legacy status writes and the duplicate status control removed; only one-time offline key migration keeps the old name
 
 Each phase is verified before moving to the next.
 ## PWA / service-worker architecture pass (done)
@@ -46,11 +46,11 @@ Each phase is verified before moving to the next.
 - [x] Public/anon execute revoked from all non-public database helpers
 
 ## Next stages
-- [ ] Live map layer on Command Centre (incident + resource + zone markers)
-- [ ] Responder inbox screen (accept/decline own assignments) using myAssignmentsQuery
-- [ ] Mass-casualty triage board across victims of one incident
-- [ ] Analytics: response times, dispatch-to-arrival, resolution outcomes
-- [ ] Retire legacy status writes in favour of phase only
+- [x] Live map layer on Command Centre
+- [x] Responder inbox screen
+- [x] Mass-casualty triage board
+- [x] Analytics: response times, dispatch-to-arrival, resolution outcomes
+- [x] Retire legacy status writes in favour of phase only
 
 ## Stage 3 — situational awareness (done)
 - Situation map on Command Centre plotting live incidents, response units and hazard advisory radii (SSR-safe, no external map library).
