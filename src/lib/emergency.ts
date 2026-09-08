@@ -206,6 +206,7 @@ export async function createEmergency(options: {
   // The session exists — surface it immediately; everything below is async work.
   const data = started.emergency;
   options.onCreated?.(data);
+  markPhase(data.id, "activated", "Incident opened on the user's device.");
 
   // A reused session was already announced, tracked and notified when it was
   // first created — never run the notification workflow a second time.
