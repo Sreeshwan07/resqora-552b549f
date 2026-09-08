@@ -66,7 +66,7 @@ function resolveAddress(lat: number, lng: number) {
   if (key === lastResolvedKey) return;
   lastResolvedKey = key;
   set({ resolving: true });
-  void reverseGeocode(lat, lng).then((value) => {
+  void reverseGeocode(lat, lng).then((value: string | null) => {
     set({ resolving: false, ...(value ? { address: value } : {}) });
   });
 }
