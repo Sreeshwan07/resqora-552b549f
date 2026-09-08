@@ -137,25 +137,39 @@ export type Database = {
           ai_first_aid: string[] | null
           ai_recommendation: string | null
           ai_summary: string | null
+          connectivity_status: string
           created_at: string
           duration_seconds: number | null
           escalated_at: string | null
           escalation_level: number
+          hospital_status: string
           id: string
+          idempotency_key: string | null
+          incident_description: string | null
+          incident_type: string
+          is_mass_casualty: boolean
+          is_simulation: boolean
           latitude: number | null
           live_status: string
+          location_accuracy: number | null
           location_updated_at: string | null
           longitude: number | null
           notes: string | null
           notified_at: string | null
+          phase: string
+          phase_updated_at: string
+          public_code: string | null
           relay_state: string
+          resolution_status: string | null
           resolved_at: string | null
+          responder_status: string
           severity: string
           started_at: string
           status: string
           type: string
           updated_at: string
           user_id: string
+          victim_count: number
         }
         Insert: {
           ack_at?: string | null
@@ -165,25 +179,39 @@ export type Database = {
           ai_first_aid?: string[] | null
           ai_recommendation?: string | null
           ai_summary?: string | null
+          connectivity_status?: string
           created_at?: string
           duration_seconds?: number | null
           escalated_at?: string | null
           escalation_level?: number
+          hospital_status?: string
           id?: string
+          idempotency_key?: string | null
+          incident_description?: string | null
+          incident_type?: string
+          is_mass_casualty?: boolean
+          is_simulation?: boolean
           latitude?: number | null
           live_status?: string
+          location_accuracy?: number | null
           location_updated_at?: string | null
           longitude?: number | null
           notes?: string | null
           notified_at?: string | null
+          phase?: string
+          phase_updated_at?: string
+          public_code?: string | null
           relay_state?: string
+          resolution_status?: string | null
           resolved_at?: string | null
+          responder_status?: string
           severity?: string
           started_at?: string
           status?: string
           type?: string
           updated_at?: string
           user_id: string
+          victim_count?: number
         }
         Update: {
           ack_at?: string | null
@@ -193,25 +221,39 @@ export type Database = {
           ai_first_aid?: string[] | null
           ai_recommendation?: string | null
           ai_summary?: string | null
+          connectivity_status?: string
           created_at?: string
           duration_seconds?: number | null
           escalated_at?: string | null
           escalation_level?: number
+          hospital_status?: string
           id?: string
+          idempotency_key?: string | null
+          incident_description?: string | null
+          incident_type?: string
+          is_mass_casualty?: boolean
+          is_simulation?: boolean
           latitude?: number | null
           live_status?: string
+          location_accuracy?: number | null
           location_updated_at?: string | null
           longitude?: number | null
           notes?: string | null
           notified_at?: string | null
+          phase?: string
+          phase_updated_at?: string
+          public_code?: string | null
           relay_state?: string
+          resolution_status?: string | null
           resolved_at?: string | null
+          responder_status?: string
           severity?: string
           started_at?: string
           status?: string
           type?: string
           updated_at?: string
           user_id?: string
+          victim_count?: number
         }
         Relationships: []
       }
@@ -377,6 +419,56 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      emergency_victims: {
+        Row: {
+          assigned_responder: string | null
+          created_at: string
+          emergency_id: string
+          hospital: string | null
+          id: string
+          label: string
+          notes: string | null
+          priority: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_responder?: string | null
+          created_at?: string
+          emergency_id: string
+          hospital?: string | null
+          id?: string
+          label: string
+          notes?: string | null
+          priority?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_responder?: string | null
+          created_at?: string
+          emergency_id?: string
+          hospital?: string | null
+          id?: string
+          label?: string
+          notes?: string | null
+          priority?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_victims_emergency_id_fkey"
+            columns: ["emergency_id"]
+            isOneToOne: false
+            referencedRelation: "emergencies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       favorite_places: {
         Row: {
@@ -1052,6 +1144,7 @@ export type Database = {
         }
         Returns: Json
       }
+      emergency_phase_rank: { Args: { _phase: string }; Returns: number }
       escalate_unacknowledged: {
         Args: { _emergency_id: string }
         Returns: Json
@@ -1160,6 +1253,10 @@ export type Database = {
       }
       start_emergency_session: {
         Args: { _notes: string; _severity: string; _type: string }
+        Returns: Json
+      }
+      transition_emergency: {
+        Args: { _emergency_id: string; _note?: string; _to_phase: string }
         Returns: Json
       }
     }
