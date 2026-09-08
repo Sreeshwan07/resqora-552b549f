@@ -320,6 +320,7 @@ function EmergencyPage() {
               busy={busy}
             />
           )}
+          {current && <IncidentPanel incident={current} />}
           <div className="glass-panel rounded-2xl p-5">
             <h2 className="text-sm font-semibold text-foreground">Emergency timeline</h2>
             {!current ? (
