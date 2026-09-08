@@ -59,3 +59,10 @@ Each phase is verified before moving to the next.
 - Response performance analytics on Command Centre: median time to alert, to acknowledgement, to close; resolved rate; simulation vs real split.
 
 Open: full live incident end-to-end run on a physical device; real (non-simulation) response units.
+
+## Stage 4 — recovery, after-action reporting, end-to-end verification (done)
+- Recovery & report screen (/debrief): measured response timings (alert, acknowledgement, dispatch, on scene, handover, total), responding units, people involved, hospital handover, full timeline.
+- Recovery follow-up checklist (8 steps) recorded as timeline events on the incident itself, so the audit trail stays single-sourced.
+- Downloadable per-incident after-action PDF (incident summary, timings, units, people, handover, recovery state, timeline), simulation incidents clearly labelled.
+- Real end-to-end run verified in-app: SOS raised -> unit dispatched -> accepted/en route/on scene/completed -> hospital handover recorded -> recovery -> resolved -> report generated (incident BF0EB95E3B, 12 timeline events).
+- Fixed reverse geocoding: BigDataCloud now returns 400, so addresses resolve through Google Maps on the server (key never in the browser) with BigDataCloud as fallback.

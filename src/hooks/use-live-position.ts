@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { reverseGeocode } from "@/lib/geocode";
 
 export type LivePosition = {
   lat: number;
@@ -55,27 +56,8 @@ function set(patch: Partial<State>) {
   listeners.forEach((listener) => listener());
 }
 
-async function reverseGeocode(lat: number, lng: number) {
-  try {
-    const res = await fetch(
-      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`,
-    );
-    if (!res.ok) return null;
-    const data = (await res.json()) as {
-      locality?: string;
-      city?: string;
-      principalSubdivision?: string;
-      countryName?: string;
-    };
-    return (
-      [data.locality || data.city, data.principalSubdivision, data.countryName]
-        .filter(Boolean)
-        .join(", ") || null
-    );
-  } catch {
-    return null;
-  }
-}
+// Address lookup is shared with the emergency flow (Google, then OpenStreetMap).
+
 
 let lastResolvedKey: string | null = null;
 
@@ -84,7 +66,7 @@ function resolveAddress(lat: number, lng: number) {
   if (key === lastResolvedKey) return;
   lastResolvedKey = key;
   set({ resolving: true });
-  void reverseGeocode(lat, lng).then((value) => {
+  void reverseGeocode(lat, lng).then((value: string | null) => {
     set({ resolving: false, ...(value ? { address: value } : {}) });
   });
 }
