@@ -29,6 +29,7 @@ import {
   LayoutDashboard,
   ShieldCheck,
   HeartPulse,
+  Radio,
 } from "lucide-react";
 import type { NavSection, NavItem } from "@/types";
 

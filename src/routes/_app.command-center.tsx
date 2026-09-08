@@ -43,6 +43,8 @@ import {
   type AssignmentStatus,
 } from "@/lib/dispatch";
 import { zonesQuery, zoneSeverityLabel, zoneTypeLabel } from "@/lib/prepare";
+import { SituationMap, type MapPoint } from "@/components/resqora/situation-map";
+import { ResponseAnalytics } from "@/components/resqora/response-analytics";
 
 const REFRESH_MS = 10_000;
 
@@ -56,6 +58,8 @@ type CommandIncident = {
   victim_count: number;
   is_mass_casualty: boolean;
   is_simulation: boolean;
+  latitude: number | null;
+  longitude: number | null;
   responder_status: string | null;
   hospital_status: string | null;
   address: string | null;
@@ -72,7 +76,7 @@ const commandIncidentsQuery = (userId: string | undefined) =>
       const { data, error } = await supabase
         .from("emergencies")
         .select(
-          "id, public_code, type, severity, phase, status, victim_count, is_mass_casualty, is_simulation, responder_status, hospital_status, address, started_at",
+          "id, public_code, type, severity, phase, status, victim_count, is_mass_casualty, is_simulation, responder_status, hospital_status, address, started_at, latitude, longitude",
         )
         .order("started_at", { ascending: false })
         .limit(40);
@@ -126,6 +130,42 @@ function CommandCentrePage() {
   const committed = (resources.data ?? []).filter((resource) => resource.status !== "available");
   const peopleInvolved = live.reduce((total, incident) => total + (incident.victim_count || 0), 0);
 
+  const mapPoints: MapPoint[] = useMemo(() => {
+    const points: MapPoint[] = [];
+    for (const incident of live) {
+      if (incident.latitude === null || incident.longitude === null) continue;
+      points.push({
+        id: incident.id,
+        label: incident.public_code ?? incident.type,
+        latitude: incident.latitude,
+        longitude: incident.longitude,
+        kind: "incident",
+      });
+    }
+    for (const resource of resources.data ?? []) {
+      if (resource.latitude === null || resource.longitude === null) continue;
+      points.push({
+        id: resource.id,
+        label: resource.name,
+        latitude: resource.latitude,
+        longitude: resource.longitude,
+        kind: "resource",
+        muted: resource.status !== "available",
+      });
+    }
+    for (const zone of zones.data ?? []) {
+      points.push({
+        id: zone.id,
+        label: zone.name,
+        latitude: zone.latitude,
+        longitude: zone.longitude,
+        kind: "zone",
+        radiusKm: zone.radius_km,
+      });
+    }
+    return points;
+  }, [live, resources.data, zones.data]);
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -140,6 +180,15 @@ function CommandCentrePage() {
         <Stat icon={Ambulance} label="Help available" value={available.length} />
         <Stat icon={Radio} label="Hazard zones" value={(zones.data ?? []).length} />
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Situation map</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <SituationMap points={mapPoints} />
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
         <Card>
@@ -272,6 +321,8 @@ function CommandCentrePage() {
           </Card>
         </div>
       </div>
+
+      <ResponseAnalytics userId={user?.id} />
     </div>
   );
 }
