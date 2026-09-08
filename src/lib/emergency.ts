@@ -709,6 +709,7 @@ export async function cancelEmergency(
   } catch {
     /* the session expires with the emergency anyway */
   }
+  markPhase(emergency.id, "cancelled", "Cancelled by the user.");
   await logEvent(emergency.id, emergency.user_id, "Cancelled", "You cancelled this alert.");
   void logSecurityEvent("SOS deactivated", "Emergency cancelled by the user", {
     emergency_id: emergency.id,
