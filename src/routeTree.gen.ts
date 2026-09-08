@@ -19,6 +19,7 @@ import { Route as AppActivityRouteImport } from './routes/_app.activity'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 import { Route as AppAssistantRouteImport } from './routes/_app.assistant'
 import { Route as AppCheckinsRouteImport } from './routes/_app.checkins'
+import { Route as AppCommandCenterRouteImport } from './routes/_app.command-center'
 import { Route as AppContactsRouteImport } from './routes/_app.contacts'
 import { Route as AppCoreRouteImport } from './routes/_app.core'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
@@ -35,6 +36,7 @@ import { Route as AppMenuRouteImport } from './routes/_app.menu'
 import { Route as AppNearbyRouteImport } from './routes/_app.nearby'
 import { Route as AppNotesRouteImport } from './routes/_app.notes'
 import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
+import { Route as AppPrepareRouteImport } from './routes/_app.prepare'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppReportRouteImport } from './routes/_app.report'
 import { Route as AppResqAiRouteImport } from './routes/_app.resq-ai'
@@ -96,6 +98,11 @@ const AppAssistantRoute = AppAssistantRouteImport.update({
 const AppCheckinsRoute = AppCheckinsRouteImport.update({
   id: '/checkins',
   path: '/checkins',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCommandCenterRoute = AppCommandCenterRouteImport.update({
+  id: '/command-center',
+  path: '/command-center',
   getParentRoute: () => AppRoute,
 } as any)
 const AppContactsRoute = AppContactsRouteImport.update({
@@ -178,6 +185,11 @@ const AppNotificationsRoute = AppNotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPrepareRoute = AppPrepareRouteImport.update({
+  id: '/prepare',
+  path: '/prepare',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -255,6 +267,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AppAdminRoute
   '/assistant': typeof AppAssistantRoute
   '/checkins': typeof AppCheckinsRoute
+  '/command-center': typeof AppCommandCenterRoute
   '/contacts': typeof AppContactsRoute
   '/core': typeof AppCoreRoute
   '/dashboard': typeof AppDashboardRoute
@@ -271,6 +284,7 @@ export interface FileRoutesByFullPath {
   '/nearby': typeof AppNearbyRoute
   '/notes': typeof AppNotesRoute
   '/notifications': typeof AppNotificationsRoute
+  '/prepare': typeof AppPrepareRoute
   '/profile': typeof AppProfileRoute
   '/report': typeof AppReportRoute
   '/resq-ai': typeof AppResqAiRoute
@@ -295,6 +309,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AppAdminRoute
   '/assistant': typeof AppAssistantRoute
   '/checkins': typeof AppCheckinsRoute
+  '/command-center': typeof AppCommandCenterRoute
   '/contacts': typeof AppContactsRoute
   '/core': typeof AppCoreRoute
   '/dashboard': typeof AppDashboardRoute
@@ -311,6 +326,7 @@ export interface FileRoutesByTo {
   '/nearby': typeof AppNearbyRoute
   '/notes': typeof AppNotesRoute
   '/notifications': typeof AppNotificationsRoute
+  '/prepare': typeof AppPrepareRoute
   '/profile': typeof AppProfileRoute
   '/report': typeof AppReportRoute
   '/resq-ai': typeof AppResqAiRoute
@@ -337,6 +353,7 @@ export interface FileRoutesById {
   '/_app/admin': typeof AppAdminRoute
   '/_app/assistant': typeof AppAssistantRoute
   '/_app/checkins': typeof AppCheckinsRoute
+  '/_app/command-center': typeof AppCommandCenterRoute
   '/_app/contacts': typeof AppContactsRoute
   '/_app/core': typeof AppCoreRoute
   '/_app/dashboard': typeof AppDashboardRoute
@@ -353,6 +370,7 @@ export interface FileRoutesById {
   '/_app/nearby': typeof AppNearbyRoute
   '/_app/notes': typeof AppNotesRoute
   '/_app/notifications': typeof AppNotificationsRoute
+  '/_app/prepare': typeof AppPrepareRoute
   '/_app/profile': typeof AppProfileRoute
   '/_app/report': typeof AppReportRoute
   '/_app/resq-ai': typeof AppResqAiRoute
@@ -379,6 +397,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/assistant'
     | '/checkins'
+    | '/command-center'
     | '/contacts'
     | '/core'
     | '/dashboard'
@@ -395,6 +414,7 @@ export interface FileRouteTypes {
     | '/nearby'
     | '/notes'
     | '/notifications'
+    | '/prepare'
     | '/profile'
     | '/report'
     | '/resq-ai'
@@ -419,6 +439,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/assistant'
     | '/checkins'
+    | '/command-center'
     | '/contacts'
     | '/core'
     | '/dashboard'
@@ -435,6 +456,7 @@ export interface FileRouteTypes {
     | '/nearby'
     | '/notes'
     | '/notifications'
+    | '/prepare'
     | '/profile'
     | '/report'
     | '/resq-ai'
@@ -460,6 +482,7 @@ export interface FileRouteTypes {
     | '/_app/admin'
     | '/_app/assistant'
     | '/_app/checkins'
+    | '/_app/command-center'
     | '/_app/contacts'
     | '/_app/core'
     | '/_app/dashboard'
@@ -476,6 +499,7 @@ export interface FileRouteTypes {
     | '/_app/nearby'
     | '/_app/notes'
     | '/_app/notifications'
+    | '/_app/prepare'
     | '/_app/profile'
     | '/_app/report'
     | '/_app/resq-ai'
@@ -575,6 +599,13 @@ declare module '@tanstack/react-router' {
       path: '/checkins'
       fullPath: '/checkins'
       preLoaderRoute: typeof AppCheckinsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/command-center': {
+      id: '/_app/command-center'
+      path: '/command-center'
+      fullPath: '/command-center'
+      preLoaderRoute: typeof AppCommandCenterRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/contacts': {
@@ -689,6 +720,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppNotificationsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/prepare': {
+      id: '/_app/prepare'
+      path: '/prepare'
+      fullPath: '/prepare'
+      preLoaderRoute: typeof AppPrepareRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/profile': {
       id: '/_app/profile'
       path: '/profile'
@@ -788,6 +826,7 @@ interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
   AppAssistantRoute: typeof AppAssistantRoute
   AppCheckinsRoute: typeof AppCheckinsRoute
+  AppCommandCenterRoute: typeof AppCommandCenterRoute
   AppContactsRoute: typeof AppContactsRoute
   AppCoreRoute: typeof AppCoreRoute
   AppDashboardRoute: typeof AppDashboardRoute
@@ -804,6 +843,7 @@ interface AppRouteChildren {
   AppNearbyRoute: typeof AppNearbyRoute
   AppNotesRoute: typeof AppNotesRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
+  AppPrepareRoute: typeof AppPrepareRoute
   AppProfileRoute: typeof AppProfileRoute
   AppReportRoute: typeof AppReportRoute
   AppResqAiRoute: typeof AppResqAiRoute
@@ -819,6 +859,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRoute,
   AppAssistantRoute: AppAssistantRoute,
   AppCheckinsRoute: AppCheckinsRoute,
+  AppCommandCenterRoute: AppCommandCenterRoute,
   AppContactsRoute: AppContactsRoute,
   AppCoreRoute: AppCoreRoute,
   AppDashboardRoute: AppDashboardRoute,
@@ -835,6 +876,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppNearbyRoute: AppNearbyRoute,
   AppNotesRoute: AppNotesRoute,
   AppNotificationsRoute: AppNotificationsRoute,
+  AppPrepareRoute: AppPrepareRoute,
   AppProfileRoute: AppProfileRoute,
   AppReportRoute: AppReportRoute,
   AppResqAiRoute: AppResqAiRoute,

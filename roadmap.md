@@ -33,8 +33,21 @@ Each phase is verified before moving to the next.
 - [x] SOS workflow marks activated → assessing → alerting; resolve/cancel mark terminal phases
 - [x] Incident lifecycle + people-involved panel on the Emergency screen
 
-## Next stages (agreed with user)
-- [ ] Command Center (/command-center): live incident map, incident list, heatmap, real analytics
-- [ ] Responder + dispatch: responder role, accept/decline, resources with conflict prevention, hospital handoff
-- [ ] Labelled Simulation Mode seeding demo incidents (is_simulation flag already in place)
-- [ ] Prepare layer: preparedness checklists, family plan, shelters
+## Stage 2: coordination, dispatch, handover, prepare (done)
+- [x] Responder role; responder profiles with availability + live position
+- [x] Response resources (ambulance/fire/police/rescue/medical/shelter) with live status
+- [x] Server-side dispatch with double-booking prevention; advances incident to Dispatched + timeline entry
+- [x] Assignment accept/decline/en route/on scene/completed; auto-advances incident and frees the unit
+- [x] Hospital handover records (hospital, department, bed, notes) advancing the incident
+- [x] Disaster hazard zones with public advisory read access
+- [x] Command Centre screen: incident list, live counters, dispatch board, resource board, hazard zones
+- [x] Prepare screen: per-person readiness plan with progress, in-zone warning, advisories
+- [x] Labelled simulation resources and zones seeded (is_simulation)
+- [x] Public/anon execute revoked from all non-public database helpers
+
+## Next stages
+- [ ] Live map layer on Command Centre (incident + resource + zone markers)
+- [ ] Responder inbox screen (accept/decline own assignments) using myAssignmentsQuery
+- [ ] Mass-casualty triage board across victims of one incident
+- [ ] Analytics: response times, dispatch-to-arrival, resolution outcomes
+- [ ] Retire legacy status writes in favour of phase only
