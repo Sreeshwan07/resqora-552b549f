@@ -184,8 +184,9 @@ function SamaritanPage() {
   });
 
   const staleLocation = useMemo(() => {
+    // Matching ignores positions older than 30 minutes.
     const mins = minutesAgo(volunteer?.location_updated_at);
-    return mins == null || mins > 120;
+    return mins == null || mins > 30;
   }, [volunteer?.location_updated_at]);
 
   function toggleSkill(value: string) {
