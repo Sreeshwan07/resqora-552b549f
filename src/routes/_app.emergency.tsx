@@ -89,7 +89,6 @@ function EmergencyPage() {
     invalidate: ["active-emergency", "emergency-events", "emergency-volunteers", "notifications"],
   });
 
-
   // Landing page "Emergency SOS" arrives with ?auto=true and starts the
   // existing workflow immediately — no extra questions.
   useEffect(() => {

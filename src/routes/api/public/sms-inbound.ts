@@ -36,6 +36,9 @@ const Payload = z
 const PROVIDER_URL = "https://connector-gateway.lovable.dev/gatewayapi/mobile/single";
 const REPLAY_WINDOW_MS = 5 * 60_000;
 
+type SupabaseAdminClient =
+  (typeof import("@/integrations/supabase/client.server"))["supabaseAdmin"];
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -288,7 +291,6 @@ export const Route = createFileRoute("/api/public/sms-inbound")({
             console.error("RESQORA inbound SMS follow-up failed", followUp);
           }
         }
-
 
         if (result.reply) {
           const outcome = await sendReply(from, result.reply);
