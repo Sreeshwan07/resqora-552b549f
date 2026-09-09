@@ -66,3 +66,13 @@ Open: full live incident end-to-end run on a physical device; real (non-simulati
 - Downloadable per-incident after-action PDF (incident summary, timings, units, people, handover, recovery state, timeline), simulation incidents clearly labelled.
 - Real end-to-end run verified in-app: SOS raised -> unit dispatched -> accepted/en route/on scene/completed -> hospital handover recorded -> recovery -> resolved -> report generated (incident BF0EB95E3B, 12 timeline events).
 - Fixed reverse geocoding: BigDataCloud now returns 400, so addresses resolve through Google Maps on the server (key never in the browser) with BigDataCloud as fallback.
+
+## Stage 5 — Good Samaritan network + feature-phone SMS SOS
+- [x] Volunteer profiles, admin-only verification, skills, radius, availability, opt-in location
+- [x] Server-side distance matching, exclusive claiming, staged privacy (approx area before accept)
+- [x] Volunteer screen at /samaritan with realtime match updates; community panel on Emergency SOS
+- [x] Inbound SMS webhook (/api/public/sms-inbound): HMAC signature, replay window, rate limit, idempotency
+- [x] HELP/SOS/AMBULANCE/POLICE/FIRE/SAFE/STATUS/LOCATION handled through the existing emergency session
+- [x] Truthful location provenance (USER_PROVIDED / LAST_KNOWN / UNAVAILABLE) and reply delivery states
+- [ ] Blocked: SMS_WEBHOOK_SECRET + inbound number must be configured with the SMS provider before texting works
+- [ ] Blocked: end-to-end SMS test requires the live provider number
