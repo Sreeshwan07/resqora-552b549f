@@ -22,6 +22,7 @@ import {
   type Profile,
   type EmergencyContact,
 } from "@/lib/api";
+import { saveEmergencyContacts } from "@/lib/contacts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

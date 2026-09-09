@@ -27,6 +27,7 @@ import { computeSafetyScore, contactsQuery, profileQuery } from "@/lib/api";
 import { copyText } from "@/lib/alerts";
 import { ensureMedicalShareLink, revokeShareLink, shareUrl } from "@/lib/share";
 import { logSecurityEvent } from "@/lib/audit";
+import { saveEmergencyContacts } from "@/lib/contacts";
 import {
   contactSchema,
   firstIssue,
