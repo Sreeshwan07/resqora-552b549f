@@ -225,7 +225,7 @@ export type Database = {
           status: string
           type: string
           updated_at: string
-          user_id: string
+          user_id: string | null
           victim_count: number
         }
         Insert: {
@@ -270,7 +270,7 @@ export type Database = {
           status?: string
           type?: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           victim_count?: number
         }
         Update: {
@@ -315,7 +315,7 @@ export type Database = {
           status?: string
           type?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           victim_count?: number
         }
         Relationships: []
@@ -425,7 +425,7 @@ export type Database = {
           emergency_id: string
           id: string
           label: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -433,7 +433,7 @@ export type Database = {
           emergency_id: string
           id?: string
           label: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -441,7 +441,7 @@ export type Database = {
           emergency_id?: string
           id?: string
           label?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -1532,7 +1532,7 @@ export type Database = {
           responded_at: string | null
           status: string
           updated_at: string
-          victim_user_id: string
+          victim_user_id: string | null
           volunteer_id: string
           volunteer_user_id: string
         }
@@ -1549,7 +1549,7 @@ export type Database = {
           responded_at?: string | null
           status?: string
           updated_at?: string
-          victim_user_id: string
+          victim_user_id?: string | null
           volunteer_id: string
           volunteer_user_id: string
         }
@@ -1566,7 +1566,7 @@ export type Database = {
           responded_at?: string | null
           status?: string
           updated_at?: string
-          victim_user_id?: string
+          victim_user_id?: string | null
           volunteer_id?: string
           volunteer_user_id?: string
         }
@@ -1801,6 +1801,10 @@ export type Database = {
           _user_agent?: string
         }
         Returns: undefined
+      }
+      match_volunteers_for: {
+        Args: { _assistance?: string[]; _emergency_id: string }
+        Returns: number
       }
       my_guardian_links: {
         Args: never
