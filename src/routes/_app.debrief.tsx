@@ -70,11 +70,13 @@ function DebriefPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const incidents = useQuery(debriefIncidentsQuery());
-  const list = incidents.data ?? [];
   const active = useMemo<DebriefIncident | null>(() => {
+    const list = incidents.data ?? [];
     if (list.length === 0) return null;
     return list.find((incident) => incident.id === selectedId) ?? list[0];
-  }, [list, selectedId]);
+  }, [incidents.data, selectedId]);
+  const list = incidents.data ?? [];
+
 
   const events = useQuery(incidentEventsQuery(active?.id));
   const victims = useQuery(incidentVictimsQuery(active?.id));
