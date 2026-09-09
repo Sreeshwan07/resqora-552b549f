@@ -306,15 +306,16 @@ export const sendEmergencyAlerts = createServerFn({ method: "POST" })
       }
     }
 
-
     // 6. Audit trail on the emergency timeline (no secrets, no message body).
     const sentCount = results.filter((r) => r.status === "sent").length;
+    const attempted = pending.length - skipped;
     await supabase.from("emergency_events").insert({
       emergency_id: emergency.id,
       user_id: userId,
       label: data.kind === "resolved" ? "Resolution SMS dispatched" : "Emergency SMS dispatched",
-      detail: `${sentCount} of ${pending.length} contact(s) accepted by the SMS provider.`,
+      detail: `${sentCount} of ${attempted} contact(s) accepted by the SMS provider.`,
     });
+
 
     return { configured: true, alreadySent: false, results };
   });
