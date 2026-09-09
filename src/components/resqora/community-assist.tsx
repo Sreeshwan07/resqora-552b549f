@@ -10,6 +10,7 @@ import {
   requestVolunteerAssistance,
   skillLabels,
 } from "@/lib/volunteers";
+import { useRealtimeTables } from "@/hooks/use-realtime-tables";
 
 /**
  * Asks nearby *verified* volunteers for help on a live emergency. Matching,
