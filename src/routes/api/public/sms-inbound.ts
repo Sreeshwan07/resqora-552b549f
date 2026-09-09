@@ -130,7 +130,7 @@ async function geocodeLandmark(place: string) {
  * without a provider receipt, and a failure here never affects the emergency.
  */
 async function notifySmsContacts(
-  admin: { from: (t: string) => any; rpc: (n: string, a: unknown) => any },
+  admin: SupabaseAdminClient,
   input: { userId: string; emergencyId: string; reference: string; address: string | null },
 ) {
   const { data: contacts } = await admin
