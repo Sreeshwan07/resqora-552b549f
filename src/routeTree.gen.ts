@@ -43,6 +43,7 @@ import { Route as AppReportRouteImport } from './routes/_app.report'
 import { Route as AppResponderRouteImport } from './routes/_app.responder'
 import { Route as AppResqAiRouteImport } from './routes/_app.resq-ai'
 import { Route as AppResqrIdRouteImport } from './routes/_app.resqr-id'
+import { Route as AppSamaritanRouteImport } from './routes/_app.samaritan'
 import { Route as AppScanRouteImport } from './routes/_app.scan'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppShareCenterRouteImport } from './routes/_app.share-center'
@@ -224,6 +225,11 @@ const AppResqrIdRoute = AppResqrIdRouteImport.update({
   path: '/resqr-id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSamaritanRoute = AppSamaritanRouteImport.update({
+  id: '/samaritan',
+  path: '/samaritan',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppScanRoute = AppScanRouteImport.update({
   id: '/scan',
   path: '/scan',
@@ -315,6 +321,7 @@ export interface FileRoutesByFullPath {
   '/responder': typeof AppResponderRoute
   '/resq-ai': typeof AppResqAiRoute
   '/resqr-id': typeof AppResqrIdRoute
+  '/samaritan': typeof AppSamaritanRoute
   '/scan': typeof AppScanRoute
   '/settings': typeof AppSettingsRoute
   '/share-center': typeof AppShareCenterRoute
@@ -361,6 +368,7 @@ export interface FileRoutesByTo {
   '/responder': typeof AppResponderRoute
   '/resq-ai': typeof AppResqAiRoute
   '/resqr-id': typeof AppResqrIdRoute
+  '/samaritan': typeof AppSamaritanRoute
   '/scan': typeof AppScanRoute
   '/settings': typeof AppSettingsRoute
   '/share-center': typeof AppShareCenterRoute
@@ -409,6 +417,7 @@ export interface FileRoutesById {
   '/_app/responder': typeof AppResponderRoute
   '/_app/resq-ai': typeof AppResqAiRoute
   '/_app/resqr-id': typeof AppResqrIdRoute
+  '/_app/samaritan': typeof AppSamaritanRoute
   '/_app/scan': typeof AppScanRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/share-center': typeof AppShareCenterRoute
@@ -457,6 +466,7 @@ export interface FileRouteTypes {
     | '/responder'
     | '/resq-ai'
     | '/resqr-id'
+    | '/samaritan'
     | '/scan'
     | '/settings'
     | '/share-center'
@@ -503,6 +513,7 @@ export interface FileRouteTypes {
     | '/responder'
     | '/resq-ai'
     | '/resqr-id'
+    | '/samaritan'
     | '/scan'
     | '/settings'
     | '/share-center'
@@ -550,6 +561,7 @@ export interface FileRouteTypes {
     | '/_app/responder'
     | '/_app/resq-ai'
     | '/_app/resqr-id'
+    | '/_app/samaritan'
     | '/_app/scan'
     | '/_app/settings'
     | '/_app/share-center'
@@ -818,6 +830,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppResqrIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/samaritan': {
+      id: '/_app/samaritan'
+      path: '/samaritan'
+      fullPath: '/samaritan'
+      preLoaderRoute: typeof AppSamaritanRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/scan': {
       id: '/_app/scan'
       path: '/scan'
@@ -927,6 +946,7 @@ interface AppRouteChildren {
   AppResponderRoute: typeof AppResponderRoute
   AppResqAiRoute: typeof AppResqAiRoute
   AppResqrIdRoute: typeof AppResqrIdRoute
+  AppSamaritanRoute: typeof AppSamaritanRoute
   AppScanRoute: typeof AppScanRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppShareCenterRoute: typeof AppShareCenterRoute
@@ -963,6 +983,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppResponderRoute: AppResponderRoute,
   AppResqAiRoute: AppResqAiRoute,
   AppResqrIdRoute: AppResqrIdRoute,
+  AppSamaritanRoute: AppSamaritanRoute,
   AppScanRoute: AppScanRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppShareCenterRoute: AppShareCenterRoute,
