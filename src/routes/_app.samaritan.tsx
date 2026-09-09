@@ -94,29 +94,28 @@ function SamaritanPage() {
     setSeeded(true);
   }, [volunteer, seeded]);
 
-  // Live updates for offers/claims, torn down on unmount so no subscription leaks.
-  useEffect(() => {
-    if (!verified || !user?.id) return;
-    const channel = supabase
-      .channel(`volunteer-matches-${user.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "volunteer_incident_matches",
-          filter: `volunteer_user_id=eq.${user.id}`,
-        },
-        () => {
-          void queryClient.invalidateQueries({ queryKey: ["volunteer-requests"] });
-          void queryClient.invalidateQueries({ queryKey: ["volunteer-accepted"] });
-        },
-      )
-      .subscribe();
-    return () => {
-      void supabase.removeChannel(channel);
-    };
-  }, [verified, user?.id, queryClient]);
+  // Live offers/claims straight from the database — no manual refresh.
+  useRealtimeTables({
+    channel: user?.id ? `volunteer-matches-${user.id}` : null,
+    enabled: Boolean(verified && user?.id),
+    watch: [
+      { table: "volunteer_incident_matches", filter: `volunteer_user_id=eq.${user?.id ?? ""}` },
+    ],
+    invalidate: ["volunteer-requests", "volunteer-accepted"],
+    onChange: ({ eventType, row }) => {
+      const status = (row as { status?: string } | null)?.status;
+      if (eventType === "INSERT" && status === "offered") {
+        toast.warning("Emergency nearby — a new assistance request just arrived.");
+      }
+    },
+  });
+
+  // Real location tracking, only while on duty and opted in.
+  const tracking = useVolunteerTracking({
+    profileId: volunteer?.id,
+    enabled: Boolean(verified && volunteer?.availability === "available" && volunteer?.share_location),
+    onWritten: () => void queryClient.invalidateQueries({ queryKey: ["volunteer-profile"] }),
+  });
 
   const save = useMutation({
     mutationFn: async () => {
