@@ -77,6 +77,18 @@ function EmergencyPage() {
 
   const current = active.data;
 
+  // The timeline, status and volunteer answers update as the database changes.
+  useRealtimeTables({
+    channel: user?.id ? `my-emergency-${user.id}` : null,
+    enabled: Boolean(user?.id),
+    watch: [
+      { table: "emergencies", filter: `user_id=eq.${user?.id ?? ""}` },
+      { table: "emergency_events", filter: `user_id=eq.${user?.id ?? ""}` },
+    ],
+    invalidate: ["active-emergency", "emergency-events", "emergency-volunteers", "notifications"],
+  });
+
+
   // Landing page "Emergency SOS" arrives with ?auto=true and starts the
   // existing workflow immediately — no extra questions.
   useEffect(() => {
