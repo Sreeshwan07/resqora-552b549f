@@ -28,6 +28,13 @@ export function CommunityAssist({
   const volunteers = useQuery(emergencyVolunteersQuery(emergencyId));
   const [skills, setSkills] = useState<string[]>([]);
 
+  // Volunteer answers arrive from the database itself — no refresh needed.
+  useRealtimeTables({
+    channel: `emergency-volunteers-${emergencyId}`,
+    watch: [{ table: "volunteer_incident_matches", filter: `emergency_id=eq.${emergencyId}` }],
+    invalidate: ["emergency-volunteers", "emergency-events", "emergency-active"],
+  });
+
   const request = useMutation({
     mutationFn: async () => requestVolunteerAssistance(emergencyId, skills),
     onSuccess: (result) => {
