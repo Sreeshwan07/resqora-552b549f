@@ -222,6 +222,12 @@ export const sendEmergencyAlerts = createServerFn({ method: "POST" })
     if (!lovableKey || !connectionKey) {
       return { configured: false, alreadySent: false, results };
     }
+    const authHeaders: Record<string, string> = {
+      Authorization: `Bearer ${lovableKey}`,
+      "X-Connection-Api-Key": connectionKey,
+      "Content-Type": "application/json",
+    };
+
 
     /**
      * One contact's SMS, start to finish. Each call claims its own delivery row
