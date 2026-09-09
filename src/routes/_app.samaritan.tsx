@@ -21,7 +21,8 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/hooks/use-auth";
 import { useLivePosition } from "@/hooks/use-live-position";
-import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeTables } from "@/hooks/use-realtime-tables";
+import { useVolunteerTracking } from "@/hooks/use-volunteer-tracking";
 import {
   SAFETY_NOTICE,
   VERIFICATION_LABELS,
