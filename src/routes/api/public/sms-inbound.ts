@@ -36,6 +36,9 @@ const Payload = z
 const PROVIDER_URL = "https://connector-gateway.lovable.dev/gatewayapi/mobile/single";
 const REPLAY_WINDOW_MS = 5 * 60_000;
 
+type SupabaseAdminClient =
+  (typeof import("@/integrations/supabase/client.server"))["supabaseAdmin"];
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -93,6 +96,75 @@ async function sendReply(to: string, message: string) {
     const reason = error instanceof Error && error.name === "TimeoutError" ? "timeout" : "network";
     return { status: "failed" as const, error: reason };
   }
+}
+
+/**
+ * Turns a landmark the sender typed into real coordinates so nearby volunteers
+ * and dispatch can actually be matched. Returns null when the lookup fails —
+ * the emergency keeps its written location and is never given invented GPS.
+ */
+async function geocodeLandmark(place: string) {
+  const key = process.env["GOOGLE_MAPS_API_KEY"];
+  if (!key) return null;
+  try {
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(place)}&key=${key}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!response.ok) return null;
+    const payload = (await response.json()) as {
+      status?: string;
+      results?: { geometry?: { location?: { lat: number; lng: number } } }[];
+    };
+    const loc = payload.results?.[0]?.geometry?.location;
+    if (payload.status !== "OK" || !loc) return null;
+    return { lat: loc.lat, lng: loc.lng };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Notifies the emergency contacts of an SMS-raised emergency. Each attempt is
+ * recorded with its real outcome (sent/failed); nothing is marked delivered
+ * without a provider receipt, and a failure here never affects the emergency.
+ */
+async function notifySmsContacts(
+  admin: SupabaseAdminClient,
+  input: { userId: string; emergencyId: string; reference: string; address: string | null },
+) {
+  const { data: contacts } = await admin
+    .from("emergency_contacts")
+    .select("id, name, phone")
+    .eq("user_id", input.userId)
+    .order("position", { ascending: true })
+    .limit(5);
+  const list = (contacts ?? []) as { id: string; name: string; phone: string }[];
+  if (list.length === 0) return 0;
+
+  const message = `RESQORA emergency ${input.reference}: an emergency was reported by SMS${
+    input.address ? ` near ${input.address}` : ""
+  }. Please try to make contact.`;
+
+  const results = await Promise.allSettled(
+    list.map(async (contact) => {
+      const outcome = await sendReply(contact.phone, message);
+      await admin.from("emergency_alert_deliveries").insert({
+        user_id: input.userId,
+        emergency_id: input.emergencyId,
+        contact_id: contact.id,
+        contact_name: contact.name,
+        contact_phone: contact.phone,
+        channel: "sms",
+        kind: "alert",
+        status: outcome.status,
+        error: outcome.error ?? null,
+        sent_at: outcome.status === "sent" ? new Date().toISOString() : null,
+      });
+      return outcome.status === "sent";
+    }),
+  );
+  return results.filter((r) => r.status === "fulfilled" && r.value).length;
 }
 
 export const Route = createFileRoute("/api/public/sms-inbound")({
@@ -159,10 +231,66 @@ export const Route = createFileRoute("/api/public/sms-inbound")({
           reply?: string | null;
           emergency_id?: string | null;
           event_id?: string | null;
+          registered?: boolean;
         };
 
         // A retried webhook is acknowledged without sending a second SMS.
         if (result.duplicate) return json({ ok: true, duplicate: true });
+
+        // Resolve the written landmark into coordinates so the existing
+        // matching/dispatch logic can run, then notify emergency contacts.
+        // Both are secondary: the emergency session already exists and stands
+        // on its own if either step fails.
+        if (result.emergency_id) {
+          try {
+            const { data: em } = await supabaseAdmin
+              .from("emergencies")
+              .select("id, user_id, address, latitude, longitude, public_code")
+              .eq("id", result.emergency_id)
+              .maybeSingle();
+            if (em) {
+              const reference = em.public_code ?? em.id.slice(0, 8).toUpperCase();
+              if (em.address && em.latitude == null) {
+                const coords = await geocodeLandmark(em.address);
+                if (coords) {
+                  // Writing coordinates re-runs volunteer matching in the database.
+                  await supabaseAdmin
+                    .from("emergencies")
+                    .update({
+                      latitude: coords.lat,
+                      longitude: coords.lng,
+                      location_updated_at: new Date().toISOString(),
+                    })
+                    .eq("id", em.id);
+                  await supabaseAdmin.from("emergency_events").insert({
+                    emergency_id: em.id,
+                    user_id: em.user_id,
+                    label: "Location resolved from landmark",
+                    detail: `Coordinates found for "${em.address}" (from the sender's message).`,
+                  });
+                }
+              }
+              if (em.user_id) {
+                const sent = await notifySmsContacts(supabaseAdmin, {
+                  userId: em.user_id,
+                  emergencyId: em.id,
+                  reference,
+                  address: em.address,
+                });
+                if (sent > 0) {
+                  await supabaseAdmin.from("emergency_events").insert({
+                    emergency_id: em.id,
+                    user_id: em.user_id,
+                    label: "Emergency contacts notified",
+                    detail: `${sent} contact(s) were sent an SMS by the provider.`,
+                  });
+                }
+              }
+            }
+          } catch (followUp) {
+            console.error("RESQORA inbound SMS follow-up failed", followUp);
+          }
+        }
 
         if (result.reply) {
           const outcome = await sendReply(from, result.reply);

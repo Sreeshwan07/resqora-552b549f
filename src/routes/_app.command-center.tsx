@@ -45,6 +45,9 @@ import {
 import { zonesQuery, zoneSeverityLabel, zoneTypeLabel } from "@/lib/prepare";
 import { SituationMap, type MapPoint } from "@/components/resqora/situation-map";
 import { ResponseAnalytics } from "@/components/resqora/response-analytics";
+import { useRealtimeTables } from "@/hooks/use-realtime-tables";
+import { locationSourceLabel } from "@/lib/sms-sos";
+import { emergencyVolunteersQuery, skillLabels } from "@/lib/volunteers";
 
 const REFRESH_MS = 10_000;
 
@@ -64,6 +67,8 @@ type CommandIncident = {
   hospital_status: string | null;
   address: string | null;
   started_at: string;
+  source: string | null;
+  location_source: string | null;
 };
 
 /** Incidents the signed-in person is allowed to see (their own, or all for an admin). */
@@ -76,7 +81,7 @@ const commandIncidentsQuery = (userId: string | undefined) =>
       const { data, error } = await supabase
         .from("emergencies")
         .select(
-          "id, public_code, type, severity, phase, status, victim_count, is_mass_casualty, is_simulation, responder_status, hospital_status, address, started_at, latitude, longitude",
+          "id, public_code, type, severity, phase, status, victim_count, is_mass_casualty, is_simulation, responder_status, hospital_status, address, started_at, latitude, longitude, source, location_source",
         )
         .order("started_at", { ascending: false })
         .limit(40);
@@ -112,6 +117,26 @@ function CommandCentrePage() {
   const resources = useQuery({ ...resourcesQuery(), refetchInterval: REFRESH_MS });
   const zones = useQuery(zonesQuery());
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Incidents raised in the app or by SMS, dispatch changes and volunteer
+  // answers all arrive live from the database.
+  useRealtimeTables({
+    channel: user?.id ? `command-centre-${user.id}` : null,
+    enabled: Boolean(user?.id),
+    watch: [
+      { table: "emergencies" },
+      { table: "incident_assignments" },
+      { table: "volunteer_incident_matches" },
+      { table: "emergency_events" },
+    ],
+    invalidate: [
+      "command-incidents",
+      "response-resources",
+      "incident-assignments",
+      "emergency-volunteers",
+      "emergency-events",
+    ],
+  });
 
   const live = useMemo(
     () => (incidents.data ?? []).filter((incident) => !isClosedPhase(incident.phase)),
@@ -231,6 +256,12 @@ function CommandCentrePage() {
                       {incident.address ? ` · ${incident.address}` : ""}
                     </p>
                     <div className="mt-2 flex flex-wrap gap-1">
+                      {incident.source === "sms" && <Badge variant="outline">SMS</Badge>}
+                      {incident.location_source && (
+                        <Badge variant="outline">
+                          {locationSourceLabel(incident.location_source)}
+                        </Badge>
+                      )}
                       {incident.is_mass_casualty && <Badge variant="outline">Mass casualty</Badge>}
                       {incident.is_simulation && <Badge variant="outline">Simulation</Badge>}
                     </div>
@@ -356,8 +387,14 @@ function DispatchPanel({ incident }: { incident: CommandIncident }) {
     ...assignmentsQuery(incident.id),
     refetchInterval: REFRESH_MS,
   });
+  const volunteers = useQuery(emergencyVolunteersQuery(incident.id));
   const [resourceId, setResourceId] = useState("");
   const [eta, setEta] = useState("");
+
+  const communityAccepted = (volunteers.data ?? []).filter(
+    (v) => v.status === "accepted" || v.status === "completed",
+  );
+  const communityPending = (volunteers.data ?? []).filter((v) => v.status === "offered");
 
   const options = (resources.data ?? []).filter(
     (resource) =>
@@ -403,6 +440,28 @@ function DispatchPanel({ incident }: { incident: CommandIncident }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="rounded-xl border border-border p-3 text-xs text-muted-foreground">
+          <p>
+            Reported via {incident.source === "sms" ? "SMS" : "the app"} ·{" "}
+            {incident.address ?? "location not recorded"} (
+            {locationSourceLabel(incident.location_source)})
+          </p>
+          <p className="mt-1">
+            Community response:{" "}
+            {communityAccepted.length > 0
+              ? communityAccepted
+                  .map(
+                    (v) =>
+                      `${v.volunteer_name} (${skillLabels(v.skills).join(", ") || "volunteer"}${
+                        v.distance_km != null ? `, ${v.distance_km} km` : ""
+                      })`,
+                  )
+                  .join("; ")
+              : communityPending.length > 0
+                ? `${communityPending.length} volunteer(s) asked — awaiting an answer`
+                : "no verified community responder accepted"}
+          </p>
+        </div>
         <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_120px_auto] sm:items-end">
           <div className="space-y-1.5">
             <Label htmlFor="resource">Available help</Label>

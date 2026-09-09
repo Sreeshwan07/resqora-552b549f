@@ -10,6 +10,7 @@ import {
   requestVolunteerAssistance,
   skillLabels,
 } from "@/lib/volunteers";
+import { useRealtimeTables } from "@/hooks/use-realtime-tables";
 
 /**
  * Asks nearby *verified* volunteers for help on a live emergency. Matching,
@@ -26,6 +27,13 @@ export function CommunityAssist({
   const queryClient = useQueryClient();
   const volunteers = useQuery(emergencyVolunteersQuery(emergencyId));
   const [skills, setSkills] = useState<string[]>([]);
+
+  // Volunteer answers arrive from the database itself — no refresh needed.
+  useRealtimeTables({
+    channel: `emergency-volunteers-${emergencyId}`,
+    watch: [{ table: "volunteer_incident_matches", filter: `emergency_id=eq.${emergencyId}` }],
+    invalidate: ["emergency-volunteers", "emergency-events", "active-emergency"],
+  });
 
   const request = useMutation({
     mutationFn: async () => requestVolunteerAssistance(emergencyId, skills),
@@ -133,6 +141,12 @@ export function CommunityAssist({
       {pending.length > 0 && (
         <p className="text-xs text-muted-foreground">
           {pending.length} volunteer(s) asked — waiting for someone to accept.
+        </p>
+      )}
+
+      {pending.length === 0 && accepted.length === 0 && (volunteers.data ?? []).length > 0 && (
+        <p className="text-xs text-alert">
+          No verified community responder currently available nearby.
         </p>
       )}
     </div>

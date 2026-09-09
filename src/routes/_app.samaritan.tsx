@@ -21,7 +21,8 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/hooks/use-auth";
 import { useLivePosition } from "@/hooks/use-live-position";
-import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeTables } from "@/hooks/use-realtime-tables";
+import { useVolunteerTracking } from "@/hooks/use-volunteer-tracking";
 import {
   SAFETY_NOTICE,
   VERIFICATION_LABELS,
@@ -94,29 +95,28 @@ function SamaritanPage() {
     setSeeded(true);
   }, [volunteer, seeded]);
 
-  // Live updates for offers/claims, torn down on unmount so no subscription leaks.
-  useEffect(() => {
-    if (!verified || !user?.id) return;
-    const channel = supabase
-      .channel(`volunteer-matches-${user.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "volunteer_incident_matches",
-          filter: `volunteer_user_id=eq.${user.id}`,
-        },
-        () => {
-          void queryClient.invalidateQueries({ queryKey: ["volunteer-requests"] });
-          void queryClient.invalidateQueries({ queryKey: ["volunteer-accepted"] });
-        },
-      )
-      .subscribe();
-    return () => {
-      void supabase.removeChannel(channel);
-    };
-  }, [verified, user?.id, queryClient]);
+  // Live offers/claims straight from the database — no manual refresh.
+  useRealtimeTables({
+    channel: user?.id ? `volunteer-matches-${user.id}` : null,
+    enabled: Boolean(verified && user?.id),
+    watch: [
+      { table: "volunteer_incident_matches", filter: `volunteer_user_id=eq.${user?.id ?? ""}` },
+    ],
+    invalidate: ["volunteer-requests", "volunteer-accepted"],
+    onChange: ({ eventType, row }) => {
+      const status = (row as { status?: string } | null)?.status;
+      if (eventType === "INSERT" && status === "offered") {
+        toast.warning("Emergency nearby — a new assistance request just arrived.");
+      }
+    },
+  });
+
+  // Real location tracking, only while on duty and opted in.
+  const tracking = useVolunteerTracking({
+    profileId: volunteer?.id,
+    enabled: Boolean(verified && volunteer?.availability === "available" && volunteer?.share_location),
+    onWritten: () => void queryClient.invalidateQueries({ queryKey: ["volunteer-profile"] }),
+  });
 
   const save = useMutation({
     mutationFn: async () => {
@@ -184,8 +184,9 @@ function SamaritanPage() {
   });
 
   const staleLocation = useMemo(() => {
+    // Matching ignores positions older than 30 minutes.
     const mins = minutesAgo(volunteer?.location_updated_at);
-    return mins == null || mins > 120;
+    return mins == null || mins > 30;
   }, [volunteer?.location_updated_at]);
 
   function toggleSkill(value: string) {
@@ -337,6 +338,11 @@ function SamaritanPage() {
                     ? `Location updated ${minutesAgo(volunteer.location_updated_at)} min ago`
                     : "No location shared yet"}
                   {staleLocation && " — refresh it to be matched."}
+                  {volunteer.availability === "available" &&
+                    volunteer.share_location &&
+                    !tracking.error &&
+                    " Kept up to date automatically while you are available."}
+                  {tracking.error ? ` ${tracking.error}` : ""}
                 </p>
                 <Button
                   size="sm"

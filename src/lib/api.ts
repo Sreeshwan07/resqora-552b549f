@@ -4,7 +4,14 @@ import type { Database } from "@/integrations/supabase/types";
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type EmergencyContact = Database["public"]["Tables"]["emergency_contacts"]["Row"];
-export type Emergency = Database["public"]["Tables"]["emergencies"]["Row"];
+/**
+ * Emergencies raised inside the app always belong to a signed-in account. The
+ * column itself is nullable because an SMS from an unregistered phone can also
+ * open a real emergency; those are handled server-side and by operators, never
+ * through these account-scoped queries.
+ */
+export type EmergencyRow = Database["public"]["Tables"]["emergencies"]["Row"];
+export type Emergency = Omit<EmergencyRow, "user_id"> & { user_id: string };
 export type EmergencyEvent = Database["public"]["Tables"]["emergency_events"]["Row"];
 export type AppNotification = Database["public"]["Tables"]["notifications"]["Row"];
 
