@@ -95,6 +95,75 @@ async function sendReply(to: string, message: string) {
   }
 }
 
+/**
+ * Turns a landmark the sender typed into real coordinates so nearby volunteers
+ * and dispatch can actually be matched. Returns null when the lookup fails —
+ * the emergency keeps its written location and is never given invented GPS.
+ */
+async function geocodeLandmark(place: string) {
+  const key = process.env["GOOGLE_MAPS_API_KEY"];
+  if (!key) return null;
+  try {
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(place)}&key=${key}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!response.ok) return null;
+    const payload = (await response.json()) as {
+      status?: string;
+      results?: { geometry?: { location?: { lat: number; lng: number } } }[];
+    };
+    const loc = payload.results?.[0]?.geometry?.location;
+    if (payload.status !== "OK" || !loc) return null;
+    return { lat: loc.lat, lng: loc.lng };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Notifies the emergency contacts of an SMS-raised emergency. Each attempt is
+ * recorded with its real outcome (sent/failed); nothing is marked delivered
+ * without a provider receipt, and a failure here never affects the emergency.
+ */
+async function notifySmsContacts(
+  admin: { from: (t: string) => any; rpc: (n: string, a: unknown) => any },
+  input: { userId: string; emergencyId: string; reference: string; address: string | null },
+) {
+  const { data: contacts } = await admin
+    .from("emergency_contacts")
+    .select("id, name, phone")
+    .eq("user_id", input.userId)
+    .order("position", { ascending: true })
+    .limit(5);
+  const list = (contacts ?? []) as { id: string; name: string; phone: string }[];
+  if (list.length === 0) return 0;
+
+  const message = `RESQORA emergency ${input.reference}: an emergency was reported by SMS${
+    input.address ? ` near ${input.address}` : ""
+  }. Please try to make contact.`;
+
+  const results = await Promise.allSettled(
+    list.map(async (contact) => {
+      const outcome = await sendReply(contact.phone, message);
+      await admin.from("emergency_alert_deliveries").insert({
+        user_id: input.userId,
+        emergency_id: input.emergencyId,
+        contact_id: contact.id,
+        contact_name: contact.name,
+        contact_phone: contact.phone,
+        channel: "sms",
+        kind: "alert",
+        status: outcome.status,
+        error: outcome.error ?? null,
+        sent_at: outcome.status === "sent" ? new Date().toISOString() : null,
+      });
+      return outcome.status === "sent";
+    }),
+  );
+  return results.filter((r) => r.status === "fulfilled" && r.value).length;
+}
+
 export const Route = createFileRoute("/api/public/sms-inbound")({
   server: {
     handlers: {
