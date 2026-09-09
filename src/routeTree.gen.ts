@@ -52,6 +52,7 @@ import { Route as MTokenRouteImport } from './routes/m.$token'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as STokenRouteImport } from './routes/s.$token'
 import { Route as ApiPublicPushConfigRouteImport } from './routes/api/public/push-config'
+import { Route as ApiPublicSmsInboundRouteImport } from './routes/api/public/sms-inbound'
 import { Route as GuardianEmergencyIdTokenRouteImport } from './routes/guardian.$emergencyId.$token'
 
 const IndexRoute = IndexRouteImport.update({
@@ -268,6 +269,11 @@ const ApiPublicPushConfigRoute = ApiPublicPushConfigRouteImport.update({
   path: '/api/public/push-config',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSmsInboundRoute = ApiPublicSmsInboundRouteImport.update({
+  id: '/api/public/sms-inbound',
+  path: '/api/public/sms-inbound',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GuardianEmergencyIdTokenRoute =
   GuardianEmergencyIdTokenRouteImport.update({
     id: '/guardian/$emergencyId/$token',
@@ -318,6 +324,7 @@ export interface FileRoutesByFullPath {
   '/r/$code': typeof RCodeRoute
   '/s/$token': typeof STokenRoute
   '/api/public/push-config': typeof ApiPublicPushConfigRoute
+  '/api/public/sms-inbound': typeof ApiPublicSmsInboundRoute
   '/guardian/$emergencyId/$token': typeof GuardianEmergencyIdTokenRoute
 }
 export interface FileRoutesByTo {
@@ -363,6 +370,7 @@ export interface FileRoutesByTo {
   '/r/$code': typeof RCodeRoute
   '/s/$token': typeof STokenRoute
   '/api/public/push-config': typeof ApiPublicPushConfigRoute
+  '/api/public/sms-inbound': typeof ApiPublicSmsInboundRoute
   '/guardian/$emergencyId/$token': typeof GuardianEmergencyIdTokenRoute
 }
 export interface FileRoutesById {
@@ -410,6 +418,7 @@ export interface FileRoutesById {
   '/r/$code': typeof RCodeRoute
   '/s/$token': typeof STokenRoute
   '/api/public/push-config': typeof ApiPublicPushConfigRoute
+  '/api/public/sms-inbound': typeof ApiPublicSmsInboundRoute
   '/guardian/$emergencyId/$token': typeof GuardianEmergencyIdTokenRoute
 }
 export interface FileRouteTypes {
@@ -457,6 +466,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/s/$token'
     | '/api/public/push-config'
+    | '/api/public/sms-inbound'
     | '/guardian/$emergencyId/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -502,6 +512,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/s/$token'
     | '/api/public/push-config'
+    | '/api/public/sms-inbound'
     | '/guardian/$emergencyId/$token'
   id:
     | '__root__'
@@ -548,6 +559,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/s/$token'
     | '/api/public/push-config'
+    | '/api/public/sms-inbound'
     | '/guardian/$emergencyId/$token'
   fileRoutesById: FileRoutesById
 }
@@ -562,6 +574,7 @@ export interface RootRouteChildren {
   RCodeRoute: typeof RCodeRoute
   STokenRoute: typeof STokenRoute
   ApiPublicPushConfigRoute: typeof ApiPublicPushConfigRoute
+  ApiPublicSmsInboundRoute: typeof ApiPublicSmsInboundRoute
   GuardianEmergencyIdTokenRoute: typeof GuardianEmergencyIdTokenRoute
 }
 
@@ -868,6 +881,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPushConfigRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sms-inbound': {
+      id: '/api/public/sms-inbound'
+      path: '/api/public/sms-inbound'
+      fullPath: '/api/public/sms-inbound'
+      preLoaderRoute: typeof ApiPublicSmsInboundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/guardian/$emergencyId/$token': {
       id: '/guardian/$emergencyId/$token'
       path: '/guardian/$emergencyId/$token'
@@ -963,6 +983,7 @@ const rootRouteChildren: RootRouteChildren = {
   RCodeRoute: RCodeRoute,
   STokenRoute: STokenRoute,
   ApiPublicPushConfigRoute: ApiPublicPushConfigRoute,
+  ApiPublicSmsInboundRoute: ApiPublicSmsInboundRoute,
   GuardianEmergencyIdTokenRoute: GuardianEmergencyIdTokenRoute,
 }
 export const routeTree = rootRouteImport
