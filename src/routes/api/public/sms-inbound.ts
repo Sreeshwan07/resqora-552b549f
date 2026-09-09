@@ -228,10 +228,67 @@ export const Route = createFileRoute("/api/public/sms-inbound")({
           reply?: string | null;
           emergency_id?: string | null;
           event_id?: string | null;
+          registered?: boolean;
         };
 
         // A retried webhook is acknowledged without sending a second SMS.
         if (result.duplicate) return json({ ok: true, duplicate: true });
+
+        // Resolve the written landmark into coordinates so the existing
+        // matching/dispatch logic can run, then notify emergency contacts.
+        // Both are secondary: the emergency session already exists and stands
+        // on its own if either step fails.
+        if (result.emergency_id) {
+          try {
+            const { data: em } = await supabaseAdmin
+              .from("emergencies")
+              .select("id, user_id, address, latitude, longitude, public_code")
+              .eq("id", result.emergency_id)
+              .maybeSingle();
+            if (em) {
+              const reference = em.public_code ?? em.id.slice(0, 8).toUpperCase();
+              if (em.address && em.latitude == null) {
+                const coords = await geocodeLandmark(em.address);
+                if (coords) {
+                  // Writing coordinates re-runs volunteer matching in the database.
+                  await supabaseAdmin
+                    .from("emergencies")
+                    .update({
+                      latitude: coords.lat,
+                      longitude: coords.lng,
+                      location_updated_at: new Date().toISOString(),
+                    })
+                    .eq("id", em.id);
+                  await supabaseAdmin.from("emergency_events").insert({
+                    emergency_id: em.id,
+                    user_id: em.user_id,
+                    label: "Location resolved from landmark",
+                    detail: `Coordinates found for "${em.address}" (from the sender's message).`,
+                  });
+                }
+              }
+              if (em.user_id) {
+                const sent = await notifySmsContacts(supabaseAdmin, {
+                  userId: em.user_id,
+                  emergencyId: em.id,
+                  reference,
+                  address: em.address,
+                });
+                if (sent > 0) {
+                  await supabaseAdmin.from("emergency_events").insert({
+                    emergency_id: em.id,
+                    user_id: em.user_id,
+                    label: "Emergency contacts notified",
+                    detail: `${sent} contact(s) were sent an SMS by the provider.`,
+                  });
+                }
+              }
+            }
+          } catch (followUp) {
+            console.error("RESQORA inbound SMS follow-up failed", followUp);
+          }
+        }
+
 
         if (result.reply) {
           const outcome = await sendReply(from, result.reply);
