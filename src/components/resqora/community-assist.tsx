@@ -32,7 +32,7 @@ export function CommunityAssist({
   useRealtimeTables({
     channel: `emergency-volunteers-${emergencyId}`,
     watch: [{ table: "volunteer_incident_matches", filter: `emergency_id=eq.${emergencyId}` }],
-    invalidate: ["emergency-volunteers", "emergency-events", "emergency-active"],
+    invalidate: ["emergency-volunteers", "emergency-events", "active-emergency"],
   });
 
   const request = useMutation({
