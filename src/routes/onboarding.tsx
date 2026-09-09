@@ -22,6 +22,7 @@ import {
   type Profile,
   type EmergencyContact,
 } from "@/lib/api";
+import { saveEmergencyContacts } from "@/lib/contacts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -175,17 +176,14 @@ function OnboardingPage() {
         .eq("id", user.id);
       if (profileError) throw new Error(profileError.message);
 
-      await supabase.from("emergency_contacts").delete().eq("user_id", user.id);
-      const { error: contactError } = await supabase.from("emergency_contacts").insert(
-        contacts.map((contact, index) => ({
-          user_id: user.id,
-          name: contact.name.trim(),
-          relationship: contact.relationship.trim(),
-          phone: contact.phone.trim(),
-          position: index,
+      await saveEmergencyContacts(
+        user.id,
+        contacts.map((contact) => ({
+          name: contact.name,
+          relationship: contact.relationship,
+          phone: contact.phone,
         })),
       );
-      if (contactError) throw new Error(contactError.message);
 
       await notify(user.id, {
         category: "system",

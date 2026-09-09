@@ -27,6 +27,7 @@ import { computeSafetyScore, contactsQuery, profileQuery } from "@/lib/api";
 import { copyText } from "@/lib/alerts";
 import { ensureMedicalShareLink, revokeShareLink, shareUrl } from "@/lib/share";
 import { logSecurityEvent } from "@/lib/audit";
+import { saveEmergencyContacts } from "@/lib/contacts";
 import {
   contactSchema,
   firstIssue,
@@ -168,25 +169,24 @@ function ProfilePage() {
       cleaned.push(parsed.data);
     }
     setSaving(true);
-    await supabase.from("emergency_contacts").delete().eq("user_id", user.id);
-    const { error } = await supabase.from("emergency_contacts").insert(
-      cleaned.map((contact, index) => ({
-        user_id: user.id,
-        name: contact.name,
-        relationship: contact.relationship,
-        phone: contact.phone,
-        email: contact.email || null,
-        position: index,
-      })),
-    );
-    setSaving(false);
-    if (error) {
-      toast.error(error.message);
+    try {
+      // Atomic replace: validation and the swap happen in one transaction, so a
+      // failure never leaves the person without emergency contacts.
+      await saveEmergencyContacts(user.id, cleaned);
+    } catch (error) {
+      setSaving(false);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to save emergency contacts. Your existing contacts were not changed.",
+      );
+      await queryClient.invalidateQueries({ queryKey: ["contacts"] });
       return;
     }
+    setSaving(false);
     await queryClient.invalidateQueries();
     void logSecurityEvent("Emergency contacts changed", "Trusted contact list saved");
-    toast.success("Emergency contacts updated");
+    toast.success("Emergency contacts updated successfully");
   }
 
   return (

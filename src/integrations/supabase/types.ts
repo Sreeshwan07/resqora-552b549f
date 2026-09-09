@@ -1576,6 +1576,10 @@ export type Database = {
         }
         Returns: Json
       }
+      replace_emergency_contacts: {
+        Args: { p_contacts: Json; p_user_id: string }
+        Returns: number
+      }
       search_blood_donors: {
         Args: { _city?: string; _group?: string }
         Returns: {

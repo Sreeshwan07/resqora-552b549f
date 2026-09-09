@@ -222,73 +222,101 @@ export const sendEmergencyAlerts = createServerFn({ method: "POST" })
     if (!lovableKey || !connectionKey) {
       return { configured: false, alreadySent: false, results };
     }
+    const authHeaders: Record<string, string> = {
+      Authorization: `Bearer ${lovableKey}`,
+      "X-Connection-Api-Key": connectionKey,
+      "Content-Type": "application/json",
+    };
 
-    for (const row of pending) {
-      await supabase
+    /**
+     * One contact's SMS, start to finish. Each call claims its own delivery row
+     * atomically (pending/failed -> sending) so a retry or a second concurrent
+     * request can never send the same message twice, and it always resolves —
+     * a failure for one contact must not stop the others.
+     */
+    async function sendOne(row: (typeof pending)[number]): Promise<SendResult | null> {
+      // Atomic claim: the status filter is part of the UPDATE, so only one
+      // worker can move this row out of pending/failed.
+      const { data: claimed } = await supabase
         .from("emergency_alert_deliveries")
         .update({ status: "sending", error: null })
-        .eq("id", row.id);
+        .eq("id", row.id)
+        .in("status", ["pending", "failed"])
+        .select("id");
+      if (!claimed || claimed.length === 0) {
+        // Already being processed elsewhere — do not send a duplicate.
+        return null;
+      }
 
       const msisdn = Number((row.contact_phone ?? "").replace(/[^\d]/g, ""));
       if (!msisdn) {
         await recordOutcome(row.id, "failed", "Invalid phone number");
-        results.push({
+        return {
           id: row.id,
           contactId: row.contact_id,
           status: "failed",
           error: "Invalid phone number",
-        });
-        continue;
+        };
       }
 
       try {
         const response = await fetch(PROVIDER_URL, {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${lovableKey}`,
-            "X-Connection-Api-Key": connectionKey,
-            "Content-Type": "application/json",
-          },
+          headers: authHeaders,
           body: JSON.stringify({
             sender: "RESQORA",
             recipient: msisdn,
             message: message.slice(0, 1000),
           }),
+          signal: AbortSignal.timeout(20_000),
         });
         if (!response.ok) {
           const body = await response.text();
           // Provider detail stays in the server log only.
           console.error(`RESQORA SMS failed [${response.status}]: ${body.slice(0, 300)}`);
           await recordOutcome(row.id, "failed", `Provider error ${response.status}`);
-          results.push({
+          return {
             id: row.id,
             contactId: row.contact_id,
             status: "failed",
             error: `Provider error ${response.status}`,
-          });
-          continue;
+          };
         }
-        // Accepted by the provider — not proof of handset delivery.
+        // Accepted by the provider — not proof of handset delivery, so this
+        // stays "sent"; only a provider delivery receipt may set "delivered".
         await recordOutcome(row.id, "sent");
-        results.push({ id: row.id, contactId: row.contact_id, status: "sent" });
-      } catch {
-        await recordOutcome(row.id, "failed", "Network error");
-        results.push({
-          id: row.id,
-          contactId: row.contact_id,
-          status: "failed",
-          error: "Network error",
-        });
+        return { id: row.id, contactId: row.contact_id, status: "sent" };
+      } catch (error) {
+        const reason =
+          error instanceof Error && error.name === "TimeoutError"
+            ? "Provider timeout"
+            : "Network error";
+        await recordOutcome(row.id, "failed", reason);
+        return { id: row.id, contactId: row.contact_id, status: "failed", error: reason };
+      }
+    }
+
+    // Independent recipients go out in parallel — allSettled, so one provider
+    // failure never cancels the remaining life-safety notifications.
+    const settled = await Promise.allSettled(pending.map((row) => sendOne(row)));
+    let skipped = 0;
+    for (const outcome of settled) {
+      if (outcome.status === "fulfilled") {
+        if (outcome.value) results.push(outcome.value);
+        else skipped += 1;
+      } else {
+        console.error("RESQORA SMS worker error", outcome.reason);
       }
     }
 
     // 6. Audit trail on the emergency timeline (no secrets, no message body).
     const sentCount = results.filter((r) => r.status === "sent").length;
+    const attempted = pending.length - skipped;
     await supabase.from("emergency_events").insert({
       emergency_id: emergency.id,
       user_id: userId,
       label: data.kind === "resolved" ? "Resolution SMS dispatched" : "Emergency SMS dispatched",
-      detail: `${sentCount} of ${pending.length} contact(s) accepted by the SMS provider.`,
+      detail: `${sentCount} of ${attempted} contact(s) accepted by the SMS provider.`,
     });
 
     return { configured: true, alreadySent: false, results };
