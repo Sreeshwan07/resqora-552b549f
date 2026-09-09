@@ -440,6 +440,28 @@ function DispatchPanel({ incident }: { incident: CommandIncident }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="rounded-xl border border-border p-3 text-xs text-muted-foreground">
+          <p>
+            Reported via {incident.source === "sms" ? "SMS" : "the app"} ·{" "}
+            {incident.address ?? "location not recorded"} (
+            {locationSourceLabel(incident.location_source)})
+          </p>
+          <p className="mt-1">
+            Community response:{" "}
+            {communityAccepted.length > 0
+              ? communityAccepted
+                  .map(
+                    (v) =>
+                      `${v.volunteer_name} (${skillLabels(v.skills).join(", ") || "volunteer"}${
+                        v.distance_km != null ? `, ${v.distance_km} km` : ""
+                      })`,
+                  )
+                  .join("; ")
+              : communityPending.length > 0
+                ? `${communityPending.length} volunteer(s) asked — awaiting an answer`
+                : "no verified community responder accepted"}
+          </p>
+        </div>
         <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_120px_auto] sm:items-end">
           <div className="space-y-1.5">
             <Label htmlFor="resource">Available help</Label>
