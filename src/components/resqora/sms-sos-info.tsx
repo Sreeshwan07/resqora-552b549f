@@ -14,8 +14,7 @@ export function SmsSosInfo() {
       </div>
       {SMS_SOS_CONFIGURED ? (
         <p className="text-sm text-muted-foreground">
-          From any phone, text{" "}
-          <span className="font-semibold text-foreground">HELP</span> to{" "}
+          From any phone, text <span className="font-semibold text-foreground">HELP</span> to{" "}
           <a href={`sms:${SMS_SOS_NUMBER}?body=HELP`} className="font-semibold text-primary">
             {SMS_SOS_NUMBER}
           </a>

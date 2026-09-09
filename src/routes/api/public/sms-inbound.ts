@@ -45,7 +45,10 @@ function json(body: unknown, status = 200) {
 
 function verifySignature(raw: string, header: string | null, secret: string) {
   if (!header) return false;
-  const provided = header.replace(/^sha256=/i, "").trim().toLowerCase();
+  const provided = header
+    .replace(/^sha256=/i, "")
+    .trim()
+    .toLowerCase();
   const expected = createHmac("sha256", secret).update(raw).digest("hex");
   if (provided.length !== expected.length) return false;
   try {
@@ -78,7 +81,9 @@ async function sendReply(to: string, message: string) {
     });
     if (!response.ok) {
       const detail = await response.text();
-      console.error(`RESQORA inbound SMS reply failed [${response.status}]: ${detail.slice(0, 200)}`);
+      console.error(
+        `RESQORA inbound SMS reply failed [${response.status}]: ${detail.slice(0, 200)}`,
+      );
       // Accepted by the provider is the strongest claim we can make; a real
       // delivery receipt is required before anything is called "delivered".
       return { status: "failed" as const, error: `provider_${response.status}` };

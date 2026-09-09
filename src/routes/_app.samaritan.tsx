@@ -191,9 +191,7 @@ function SamaritanPage() {
   function toggleSkill(value: string) {
     setForm((f) => ({
       ...f,
-      skills: f.skills.includes(value)
-        ? f.skills.filter((s) => s !== value)
-        : [...f.skills, value],
+      skills: f.skills.includes(value) ? f.skills.filter((s) => s !== value) : [...f.skills, value],
     }));
   }
 
@@ -367,9 +365,7 @@ function SamaritanPage() {
             ) : requests.isLoading ? (
               <p className="text-sm text-muted-foreground">Checking for requests…</p>
             ) : (requests.data ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No open requests near you right now.
-              </p>
+              <p className="text-sm text-muted-foreground">No open requests near you right now.</p>
             ) : (
               <ul className="space-y-3">
                 {requests.data!.map((request) => (
@@ -390,9 +386,7 @@ function SamaritanPage() {
                     <div className="mt-3 flex gap-2">
                       <Button
                         size="sm"
-                        onClick={() =>
-                          respond.mutate({ matchId: request.match_id, accept: true })
-                        }
+                        onClick={() => respond.mutate({ matchId: request.match_id, accept: true })}
                         disabled={respond.isPending}
                       >
                         Accept
@@ -400,9 +394,7 @@ function SamaritanPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() =>
-                          respond.mutate({ matchId: request.match_id, accept: false })
-                        }
+                        onClick={() => respond.mutate({ matchId: request.match_id, accept: false })}
                         disabled={respond.isPending}
                       >
                         Decline

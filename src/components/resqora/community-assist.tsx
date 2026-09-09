@@ -68,7 +68,9 @@ export function CommunityAssist({
               aria-pressed={on}
               onClick={() =>
                 setSkills((s) =>
-                  s.includes(skill.value) ? s.filter((x) => x !== skill.value) : [...s, skill.value],
+                  s.includes(skill.value)
+                    ? s.filter((x) => x !== skill.value)
+                    : [...s, skill.value],
                 )
               }
               className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${

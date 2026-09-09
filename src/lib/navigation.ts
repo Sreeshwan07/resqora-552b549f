@@ -328,18 +328,56 @@ export const mobileNav: NavItem[] = [
 export const mobileMenuSections: NavSection[] = [
   {
     title: "Emergency",
-    items: [reportNav, liveLocationNav, digitalTwinNav, commandCentreNav, triageNav, responderNav, prepareNav, samaritanNav, debriefNav, activityNav],
+    items: [
+      reportNav,
+      liveLocationNav,
+      digitalTwinNav,
+      commandCentreNav,
+      triageNav,
+      responderNav,
+      prepareNav,
+      samaritanNav,
+      debriefNav,
+      activityNav,
+    ],
   },
   {
     title: "My safety",
-    items: [resqrIdNav, medicalIdNav, contactsNav, checkinsNav, { label: "Emergency history", to: "/history", icon: History, description: "Previous SOS and reports" }],
+    items: [
+      resqrIdNav,
+      medicalIdNav,
+      contactsNav,
+      checkinsNav,
+      {
+        label: "Emergency history",
+        to: "/history",
+        icon: History,
+        description: "Previous SOS and reports",
+      },
+    ],
   },
   {
     title: "Tools",
-    items: [{ label: "Nearby services", to: "/nearby", icon: MapPinned, description: "Hospitals, police, fire, blood banks" }, donorsNav, coreNav, notesNav, documentsNav],
+    items: [
+      {
+        label: "Nearby services",
+        to: "/nearby",
+        icon: MapPinned,
+        description: "Hospitals, police, fire, blood banks",
+      },
+      donorsNav,
+      coreNav,
+      notesNav,
+      documentsNav,
+    ],
   },
   {
     title: "Account",
-    items: [{ label: "Profile", to: "/profile", icon: UserRound, description: "Account details" }, { label: "Settings", to: "/settings", icon: Settings, description: "Preferences & privacy" }, { label: "About", to: "/about", icon: Info, description: "Platform information" }, supportPageNav],
+    items: [
+      { label: "Profile", to: "/profile", icon: UserRound, description: "Account details" },
+      { label: "Settings", to: "/settings", icon: Settings, description: "Preferences & privacy" },
+      { label: "About", to: "/about", icon: Info, description: "Platform information" },
+      supportPageNav,
+    ],
   },
 ];

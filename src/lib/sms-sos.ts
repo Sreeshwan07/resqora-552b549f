@@ -5,7 +5,8 @@
  * is not configured the UI says so instead of showing a number that does not
  * work. All SMS provider credentials stay server-side.
  */
-export const SMS_SOS_NUMBER = (import.meta.env["VITE_RESQORA_SMS_NUMBER"] as string | undefined) ?? "";
+export const SMS_SOS_NUMBER =
+  (import.meta.env["VITE_RESQORA_SMS_NUMBER"] as string | undefined) ?? "";
 
 export const SMS_SOS_CONFIGURED = SMS_SOS_NUMBER.trim().length > 0;
 

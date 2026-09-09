@@ -145,7 +145,6 @@ function EmergencyPage() {
     setConfirmOpen(true);
   }
 
-
   async function handleResolve() {
     if (!active.data) return;
     setBusy(true);
