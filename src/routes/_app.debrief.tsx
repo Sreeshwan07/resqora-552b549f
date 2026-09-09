@@ -19,7 +19,12 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { assignmentsQuery, handoffsQuery, assignmentStatusLabel, resourceTypeLabel } from "@/lib/dispatch";
+import {
+  assignmentsQuery,
+  handoffsQuery,
+  assignmentStatusLabel,
+  resourceTypeLabel,
+} from "@/lib/dispatch";
 import {
   RECOVERY_STEPS,
   completedRecoverySteps,
@@ -47,8 +52,7 @@ export const Route = createFileRoute("/_app/debrief")({
       { property: "og:title", content: "Recovery & incident report — RESQORA" },
       {
         property: "og:description",
-        content:
-          "After-action reporting and recovery follow-up for every RESQORA incident.",
+        content: "After-action reporting and recovery follow-up for every RESQORA incident.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -77,7 +81,6 @@ function DebriefPage() {
   }, [incidents.data, selectedId]);
   const list = incidents.data ?? [];
 
-
   const events = useQuery(incidentEventsQuery(active?.id));
   const victims = useQuery(incidentVictimsQuery(active?.id));
   const assignments = useQuery(assignmentsQuery(active?.id));
@@ -88,9 +91,7 @@ function DebriefPage() {
   const assignmentList = assignments.data ?? [];
   const handoffList = handoffs.data ?? [];
 
-  const metrics = active
-    ? incidentMetrics(active, eventList, assignmentList, handoffList)
-    : null;
+  const metrics = active ? incidentMetrics(active, eventList, assignmentList, handoffList) : null;
   const done = completedRecoverySteps(eventList);
   const recoveryProgress = Math.round((done.size / RECOVERY_STEPS.length) * 100);
 
@@ -195,7 +196,8 @@ function DebriefPage() {
                       {incident.public_code || incident.incident_type}
                     </span>
                     <span className="block text-xs text-muted-foreground">
-                      {new Date(incident.started_at).toLocaleString()} · {phaseLabel(incident.phase)}
+                      {new Date(incident.started_at).toLocaleString()} ·{" "}
+                      {phaseLabel(incident.phase)}
                       {incident.is_simulation ? " · Simulation" : ""}
                     </span>
                   </button>

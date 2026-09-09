@@ -187,7 +187,6 @@ function ProfilePage() {
     await queryClient.invalidateQueries();
     void logSecurityEvent("Emergency contacts changed", "Trusted contact list saved");
     toast.success("Emergency contacts updated successfully");
-
   }
 
   return (

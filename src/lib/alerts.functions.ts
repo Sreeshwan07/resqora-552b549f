@@ -228,7 +228,6 @@ export const sendEmergencyAlerts = createServerFn({ method: "POST" })
       "Content-Type": "application/json",
     };
 
-
     /**
      * One contact's SMS, start to finish. Each call claims its own delivery row
      * atomically (pending/failed -> sending) so a retry or a second concurrent
@@ -289,7 +288,9 @@ export const sendEmergencyAlerts = createServerFn({ method: "POST" })
         return { id: row.id, contactId: row.contact_id, status: "sent" };
       } catch (error) {
         const reason =
-          error instanceof Error && error.name === "TimeoutError" ? "Provider timeout" : "Network error";
+          error instanceof Error && error.name === "TimeoutError"
+            ? "Provider timeout"
+            : "Network error";
         await recordOutcome(row.id, "failed", reason);
         return { id: row.id, contactId: row.contact_id, status: "failed", error: reason };
       }
@@ -317,7 +318,6 @@ export const sendEmergencyAlerts = createServerFn({ method: "POST" })
       label: data.kind === "resolved" ? "Resolution SMS dispatched" : "Emergency SMS dispatched",
       detail: `${sentCount} of ${attempted} contact(s) accepted by the SMS provider.`,
     });
-
 
     return { configured: true, alreadySent: false, results };
   });

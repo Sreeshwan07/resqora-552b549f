@@ -185,7 +185,6 @@ function OnboardingPage() {
         })),
       );
 
-
       await notify(user.id, {
         category: "system",
         title: "Emergency protection activated",
