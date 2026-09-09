@@ -338,6 +338,11 @@ function SamaritanPage() {
                     ? `Location updated ${minutesAgo(volunteer.location_updated_at)} min ago`
                     : "No location shared yet"}
                   {staleLocation && " — refresh it to be matched."}
+                  {volunteer.availability === "available" &&
+                    volunteer.share_location &&
+                    !tracking.error &&
+                    " Kept up to date automatically while you are available."}
+                  {tracking.error ? ` ${tracking.error}` : ""}
                 </p>
                 <Button
                   size="sm"
