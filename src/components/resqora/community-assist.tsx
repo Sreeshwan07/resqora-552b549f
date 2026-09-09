@@ -143,6 +143,12 @@ export function CommunityAssist({
           {pending.length} volunteer(s) asked — waiting for someone to accept.
         </p>
       )}
+
+      {pending.length === 0 && accepted.length === 0 && (volunteers.data ?? []).length > 0 && (
+        <p className="text-xs text-alert">
+          No verified community responder currently available nearby.
+        </p>
+      )}
     </div>
   );
 }
