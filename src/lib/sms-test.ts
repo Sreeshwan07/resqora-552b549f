@@ -73,7 +73,10 @@ export const SMS_TEST_STEPS: TestStep[] = [
     title: "4 · Community matching",
     action:
       "Have a verified volunteer nearby (available, sharing location, position updated in the last 30 minutes) keep the Good Samaritan page open. Then request community assistance for this incident if it was not offered automatically.",
-    timeline: ["Community assistance requested", "Volunteer accepted (after the volunteer accepts)"],
+    timeline: [
+      "Community assistance requested",
+      "Volunteer accepted (after the volunteer accepts)",
+    ],
     realtime: [
       "The offer appears on the volunteer's device with no refresh, with an alert toast.",
       "After Accept, the Command Centre dispatch panel shows the volunteer's name, skills and distance live.",
@@ -112,14 +115,8 @@ export const SMS_TEST_STEPS: TestStep[] = [
     title: "7 · Dispatch and hospital handoff",
     action:
       "From the Command Centre, dispatch a unit, move it through Accepted → En route → On scene → Completed, then record a hospital handoff.",
-    timeline: [
-      "Resource dispatched",
-      "Assignment status changes",
-      "Hospital handoff recorded",
-    ],
-    realtime: [
-      "Assignment and responder status update on the incident screen with no refresh.",
-    ],
+    timeline: ["Resource dispatched", "Assignment status changes", "Hospital handoff recorded"],
+    realtime: ["Assignment and responder status update on the incident screen with no refresh."],
     verify: [
       "Responder and hospital status on the incident reflect the real assignment rows.",
       "Every change is timestamped in the timeline.",

@@ -241,8 +241,8 @@ function SmsTestPage() {
         <CardContent className="space-y-4">
           {(incidents.data ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No emergency has arrived by SMS on this account yet. Once a test message is received it
-              will appear here on its own.
+              No emergency has arrived by SMS on this account yet. Once a test message is received
+              it will appear here on its own.
             </p>
           ) : (
             <>
