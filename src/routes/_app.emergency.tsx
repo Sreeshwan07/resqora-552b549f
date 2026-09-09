@@ -307,6 +307,13 @@ function EmergencyPage() {
             />
           )}
           {current && <IncidentPanel incident={current} />}
+          {current && (
+            <CommunityAssist
+              emergencyId={current.id}
+              hasLocation={current.latitude != null && current.longitude != null}
+            />
+          )}
+          <SmsSosInfo />
           <div className="glass-panel rounded-2xl p-5">
             <h2 className="text-sm font-semibold text-foreground">Emergency timeline</h2>
             {!current ? (
