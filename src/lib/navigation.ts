@@ -31,6 +31,7 @@ import {
   HeartPulse,
   Radio,
   ClipboardCheck,
+  ClipboardList,
   HandHeart,
 } from "lucide-react";
 import type { NavSection, NavItem } from "@/types";
@@ -134,6 +135,13 @@ export const samaritanNav: NavItem = {
   to: "/samaritan",
   icon: HandHeart,
   description: "Volunteer nearby & accept requests",
+};
+
+export const smsTestNav: NavItem = {
+  label: "SMS SOS test plan",
+  to: "/sms-test",
+  icon: ClipboardList,
+  description: "Run the feature-phone emergency end to end",
 };
 
 export const prepareNav: NavItem = {
@@ -258,6 +266,7 @@ export const navSections: NavSection[] = [
       responderNav,
       prepareNav,
       samaritanNav,
+      smsTestNav,
       debriefNav,
       {
         label: "Report accident",
@@ -337,6 +346,7 @@ export const mobileMenuSections: NavSection[] = [
       responderNav,
       prepareNav,
       samaritanNav,
+      smsTestNav,
       debriefNav,
       activityNav,
     ],

@@ -47,6 +47,7 @@ import { Route as AppSamaritanRouteImport } from './routes/_app.samaritan'
 import { Route as AppScanRouteImport } from './routes/_app.scan'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppShareCenterRouteImport } from './routes/_app.share-center'
+import { Route as AppSmsTestRouteImport } from './routes/_app.sms-test'
 import { Route as AppSupportRouteImport } from './routes/_app.support'
 import { Route as AppTriageRouteImport } from './routes/_app.triage'
 import { Route as MTokenRouteImport } from './routes/m.$token'
@@ -245,6 +246,11 @@ const AppShareCenterRoute = AppShareCenterRouteImport.update({
   path: '/share-center',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSmsTestRoute = AppSmsTestRouteImport.update({
+  id: '/sms-test',
+  path: '/sms-test',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSupportRoute = AppSupportRouteImport.update({
   id: '/support',
   path: '/support',
@@ -325,6 +331,7 @@ export interface FileRoutesByFullPath {
   '/scan': typeof AppScanRoute
   '/settings': typeof AppSettingsRoute
   '/share-center': typeof AppShareCenterRoute
+  '/sms-test': typeof AppSmsTestRoute
   '/support': typeof AppSupportRoute
   '/triage': typeof AppTriageRoute
   '/m/$token': typeof MTokenRoute
@@ -372,6 +379,7 @@ export interface FileRoutesByTo {
   '/scan': typeof AppScanRoute
   '/settings': typeof AppSettingsRoute
   '/share-center': typeof AppShareCenterRoute
+  '/sms-test': typeof AppSmsTestRoute
   '/support': typeof AppSupportRoute
   '/triage': typeof AppTriageRoute
   '/m/$token': typeof MTokenRoute
@@ -421,6 +429,7 @@ export interface FileRoutesById {
   '/_app/scan': typeof AppScanRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/share-center': typeof AppShareCenterRoute
+  '/_app/sms-test': typeof AppSmsTestRoute
   '/_app/support': typeof AppSupportRoute
   '/_app/triage': typeof AppTriageRoute
   '/m/$token': typeof MTokenRoute
@@ -470,6 +479,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/settings'
     | '/share-center'
+    | '/sms-test'
     | '/support'
     | '/triage'
     | '/m/$token'
@@ -517,6 +527,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/settings'
     | '/share-center'
+    | '/sms-test'
     | '/support'
     | '/triage'
     | '/m/$token'
@@ -565,6 +576,7 @@ export interface FileRouteTypes {
     | '/_app/scan'
     | '/_app/settings'
     | '/_app/share-center'
+    | '/_app/sms-test'
     | '/_app/support'
     | '/_app/triage'
     | '/m/$token'
@@ -858,6 +870,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppShareCenterRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/sms-test': {
+      id: '/_app/sms-test'
+      path: '/sms-test'
+      fullPath: '/sms-test'
+      preLoaderRoute: typeof AppSmsTestRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/support': {
       id: '/_app/support'
       path: '/support'
@@ -950,6 +969,7 @@ interface AppRouteChildren {
   AppScanRoute: typeof AppScanRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppShareCenterRoute: typeof AppShareCenterRoute
+  AppSmsTestRoute: typeof AppSmsTestRoute
   AppSupportRoute: typeof AppSupportRoute
   AppTriageRoute: typeof AppTriageRoute
 }
@@ -987,6 +1007,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppScanRoute: AppScanRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppShareCenterRoute: AppShareCenterRoute,
+  AppSmsTestRoute: AppSmsTestRoute,
   AppSupportRoute: AppSupportRoute,
   AppTriageRoute: AppTriageRoute,
 }

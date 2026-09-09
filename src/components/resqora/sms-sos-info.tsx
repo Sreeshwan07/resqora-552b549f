@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { MessageSquare } from "lucide-react";
 import { SMS_COMMANDS, SMS_SOS_CONFIGURED, SMS_SOS_NUMBER } from "@/lib/sms-sos";
 
@@ -33,6 +34,12 @@ export function SmsSosInfo() {
           </li>
         ))}
       </ul>
+      <p className="text-xs text-muted-foreground">
+        <Link to="/sms-test" className="font-semibold text-primary">
+          Open the SMS test plan
+        </Link>{" "}
+        to check this path end to end.
+      </p>
       <p className="text-xs text-muted-foreground">
         A text message cannot send GPS. RESQORA uses the landmark you type, or your last known
         RESQORA location, and always says which one it used.
