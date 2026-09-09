@@ -10,6 +10,8 @@ import { ConfirmModal } from "@/components/system/confirm-modal";
 import { SosButton } from "@/components/resqora/sos-button";
 import { CrashDetectionPanel } from "@/components/resqora/crash-detection";
 import { IncidentPanel } from "@/components/resqora/incident-panel";
+import { CommunityAssist } from "@/components/resqora/community-assist";
+import { SmsSosInfo } from "@/components/resqora/sms-sos-info";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -142,7 +144,6 @@ function EmergencyPage() {
     setPendingType(emergencyType);
     setConfirmOpen(true);
   }
-
 
   async function handleResolve() {
     if (!active.data) return;
@@ -307,6 +308,13 @@ function EmergencyPage() {
             />
           )}
           {current && <IncidentPanel incident={current} />}
+          {current && (
+            <CommunityAssist
+              emergencyId={current.id}
+              hasLocation={current.latitude != null && current.longitude != null}
+            />
+          )}
+          <SmsSosInfo />
           <div className="glass-panel rounded-2xl p-5">
             <h2 className="text-sm font-semibold text-foreground">Emergency timeline</h2>
             {!current ? (

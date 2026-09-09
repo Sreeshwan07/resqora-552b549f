@@ -43,6 +43,7 @@ import { Route as AppReportRouteImport } from './routes/_app.report'
 import { Route as AppResponderRouteImport } from './routes/_app.responder'
 import { Route as AppResqAiRouteImport } from './routes/_app.resq-ai'
 import { Route as AppResqrIdRouteImport } from './routes/_app.resqr-id'
+import { Route as AppSamaritanRouteImport } from './routes/_app.samaritan'
 import { Route as AppScanRouteImport } from './routes/_app.scan'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppShareCenterRouteImport } from './routes/_app.share-center'
@@ -52,6 +53,7 @@ import { Route as MTokenRouteImport } from './routes/m.$token'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as STokenRouteImport } from './routes/s.$token'
 import { Route as ApiPublicPushConfigRouteImport } from './routes/api/public/push-config'
+import { Route as ApiPublicSmsInboundRouteImport } from './routes/api/public/sms-inbound'
 import { Route as GuardianEmergencyIdTokenRouteImport } from './routes/guardian.$emergencyId.$token'
 
 const IndexRoute = IndexRouteImport.update({
@@ -223,6 +225,11 @@ const AppResqrIdRoute = AppResqrIdRouteImport.update({
   path: '/resqr-id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSamaritanRoute = AppSamaritanRouteImport.update({
+  id: '/samaritan',
+  path: '/samaritan',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppScanRoute = AppScanRouteImport.update({
   id: '/scan',
   path: '/scan',
@@ -268,6 +275,11 @@ const ApiPublicPushConfigRoute = ApiPublicPushConfigRouteImport.update({
   path: '/api/public/push-config',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSmsInboundRoute = ApiPublicSmsInboundRouteImport.update({
+  id: '/api/public/sms-inbound',
+  path: '/api/public/sms-inbound',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GuardianEmergencyIdTokenRoute =
   GuardianEmergencyIdTokenRouteImport.update({
     id: '/guardian/$emergencyId/$token',
@@ -309,6 +321,7 @@ export interface FileRoutesByFullPath {
   '/responder': typeof AppResponderRoute
   '/resq-ai': typeof AppResqAiRoute
   '/resqr-id': typeof AppResqrIdRoute
+  '/samaritan': typeof AppSamaritanRoute
   '/scan': typeof AppScanRoute
   '/settings': typeof AppSettingsRoute
   '/share-center': typeof AppShareCenterRoute
@@ -318,6 +331,7 @@ export interface FileRoutesByFullPath {
   '/r/$code': typeof RCodeRoute
   '/s/$token': typeof STokenRoute
   '/api/public/push-config': typeof ApiPublicPushConfigRoute
+  '/api/public/sms-inbound': typeof ApiPublicSmsInboundRoute
   '/guardian/$emergencyId/$token': typeof GuardianEmergencyIdTokenRoute
 }
 export interface FileRoutesByTo {
@@ -354,6 +368,7 @@ export interface FileRoutesByTo {
   '/responder': typeof AppResponderRoute
   '/resq-ai': typeof AppResqAiRoute
   '/resqr-id': typeof AppResqrIdRoute
+  '/samaritan': typeof AppSamaritanRoute
   '/scan': typeof AppScanRoute
   '/settings': typeof AppSettingsRoute
   '/share-center': typeof AppShareCenterRoute
@@ -363,6 +378,7 @@ export interface FileRoutesByTo {
   '/r/$code': typeof RCodeRoute
   '/s/$token': typeof STokenRoute
   '/api/public/push-config': typeof ApiPublicPushConfigRoute
+  '/api/public/sms-inbound': typeof ApiPublicSmsInboundRoute
   '/guardian/$emergencyId/$token': typeof GuardianEmergencyIdTokenRoute
 }
 export interface FileRoutesById {
@@ -401,6 +417,7 @@ export interface FileRoutesById {
   '/_app/responder': typeof AppResponderRoute
   '/_app/resq-ai': typeof AppResqAiRoute
   '/_app/resqr-id': typeof AppResqrIdRoute
+  '/_app/samaritan': typeof AppSamaritanRoute
   '/_app/scan': typeof AppScanRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/share-center': typeof AppShareCenterRoute
@@ -410,6 +427,7 @@ export interface FileRoutesById {
   '/r/$code': typeof RCodeRoute
   '/s/$token': typeof STokenRoute
   '/api/public/push-config': typeof ApiPublicPushConfigRoute
+  '/api/public/sms-inbound': typeof ApiPublicSmsInboundRoute
   '/guardian/$emergencyId/$token': typeof GuardianEmergencyIdTokenRoute
 }
 export interface FileRouteTypes {
@@ -448,6 +466,7 @@ export interface FileRouteTypes {
     | '/responder'
     | '/resq-ai'
     | '/resqr-id'
+    | '/samaritan'
     | '/scan'
     | '/settings'
     | '/share-center'
@@ -457,6 +476,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/s/$token'
     | '/api/public/push-config'
+    | '/api/public/sms-inbound'
     | '/guardian/$emergencyId/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -493,6 +513,7 @@ export interface FileRouteTypes {
     | '/responder'
     | '/resq-ai'
     | '/resqr-id'
+    | '/samaritan'
     | '/scan'
     | '/settings'
     | '/share-center'
@@ -502,6 +523,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/s/$token'
     | '/api/public/push-config'
+    | '/api/public/sms-inbound'
     | '/guardian/$emergencyId/$token'
   id:
     | '__root__'
@@ -539,6 +561,7 @@ export interface FileRouteTypes {
     | '/_app/responder'
     | '/_app/resq-ai'
     | '/_app/resqr-id'
+    | '/_app/samaritan'
     | '/_app/scan'
     | '/_app/settings'
     | '/_app/share-center'
@@ -548,6 +571,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/s/$token'
     | '/api/public/push-config'
+    | '/api/public/sms-inbound'
     | '/guardian/$emergencyId/$token'
   fileRoutesById: FileRoutesById
 }
@@ -562,6 +586,7 @@ export interface RootRouteChildren {
   RCodeRoute: typeof RCodeRoute
   STokenRoute: typeof STokenRoute
   ApiPublicPushConfigRoute: typeof ApiPublicPushConfigRoute
+  ApiPublicSmsInboundRoute: typeof ApiPublicSmsInboundRoute
   GuardianEmergencyIdTokenRoute: typeof GuardianEmergencyIdTokenRoute
 }
 
@@ -805,6 +830,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppResqrIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/samaritan': {
+      id: '/_app/samaritan'
+      path: '/samaritan'
+      fullPath: '/samaritan'
+      preLoaderRoute: typeof AppSamaritanRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/scan': {
       id: '/_app/scan'
       path: '/scan'
@@ -868,6 +900,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPushConfigRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sms-inbound': {
+      id: '/api/public/sms-inbound'
+      path: '/api/public/sms-inbound'
+      fullPath: '/api/public/sms-inbound'
+      preLoaderRoute: typeof ApiPublicSmsInboundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/guardian/$emergencyId/$token': {
       id: '/guardian/$emergencyId/$token'
       path: '/guardian/$emergencyId/$token'
@@ -907,6 +946,7 @@ interface AppRouteChildren {
   AppResponderRoute: typeof AppResponderRoute
   AppResqAiRoute: typeof AppResqAiRoute
   AppResqrIdRoute: typeof AppResqrIdRoute
+  AppSamaritanRoute: typeof AppSamaritanRoute
   AppScanRoute: typeof AppScanRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppShareCenterRoute: typeof AppShareCenterRoute
@@ -943,6 +983,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppResponderRoute: AppResponderRoute,
   AppResqAiRoute: AppResqAiRoute,
   AppResqrIdRoute: AppResqrIdRoute,
+  AppSamaritanRoute: AppSamaritanRoute,
   AppScanRoute: AppScanRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppShareCenterRoute: AppShareCenterRoute,
@@ -963,6 +1004,7 @@ const rootRouteChildren: RootRouteChildren = {
   RCodeRoute: RCodeRoute,
   STokenRoute: STokenRoute,
   ApiPublicPushConfigRoute: ApiPublicPushConfigRoute,
+  ApiPublicSmsInboundRoute: ApiPublicSmsInboundRoute,
   GuardianEmergencyIdTokenRoute: GuardianEmergencyIdTokenRoute,
 }
 export const routeTree = rootRouteImport

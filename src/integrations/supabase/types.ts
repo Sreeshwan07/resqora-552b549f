@@ -206,6 +206,7 @@ export type Database = {
           latitude: number | null
           live_status: string
           location_accuracy: number | null
+          location_source: string | null
           location_updated_at: string | null
           longitude: number | null
           notes: string | null
@@ -214,10 +215,12 @@ export type Database = {
           phase_updated_at: string
           public_code: string | null
           relay_state: string
+          reporter_phone: string | null
           resolution_status: string | null
           resolved_at: string | null
           responder_status: string
           severity: string
+          source: string
           started_at: string
           status: string
           type: string
@@ -248,6 +251,7 @@ export type Database = {
           latitude?: number | null
           live_status?: string
           location_accuracy?: number | null
+          location_source?: string | null
           location_updated_at?: string | null
           longitude?: number | null
           notes?: string | null
@@ -256,10 +260,12 @@ export type Database = {
           phase_updated_at?: string
           public_code?: string | null
           relay_state?: string
+          reporter_phone?: string | null
           resolution_status?: string | null
           resolved_at?: string | null
           responder_status?: string
           severity?: string
+          source?: string
           started_at?: string
           status?: string
           type?: string
@@ -290,6 +296,7 @@ export type Database = {
           latitude?: number | null
           live_status?: string
           location_accuracy?: number | null
+          location_source?: string | null
           location_updated_at?: string | null
           longitude?: number | null
           notes?: string | null
@@ -298,10 +305,12 @@ export type Database = {
           phase_updated_at?: string
           public_code?: string | null
           relay_state?: string
+          reporter_phone?: string | null
           resolution_status?: string | null
           resolved_at?: string | null
           responder_status?: string
           severity?: string
+          source?: string
           started_at?: string
           status?: string
           type?: string
@@ -1429,6 +1438,65 @@ export type Database = {
           },
         ]
       }
+      sms_webhook_events: {
+        Row: {
+          body: string | null
+          command: string | null
+          emergency_id: string | null
+          error: string | null
+          id: string
+          matched_user_id: string | null
+          payload_hash: string
+          processed_at: string | null
+          provider: string
+          provider_message_id: string
+          received_at: string
+          reply: string | null
+          sender_phone: string
+          status: string
+        }
+        Insert: {
+          body?: string | null
+          command?: string | null
+          emergency_id?: string | null
+          error?: string | null
+          id?: string
+          matched_user_id?: string | null
+          payload_hash: string
+          processed_at?: string | null
+          provider: string
+          provider_message_id: string
+          received_at?: string
+          reply?: string | null
+          sender_phone: string
+          status?: string
+        }
+        Update: {
+          body?: string | null
+          command?: string | null
+          emergency_id?: string | null
+          error?: string | null
+          id?: string
+          matched_user_id?: string | null
+          payload_hash?: string
+          processed_at?: string | null
+          provider?: string
+          provider_message_id?: string
+          received_at?: string
+          reply?: string | null
+          sender_phone?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_webhook_events_emergency_id_fkey"
+            columns: ["emergency_id"]
+            isOneToOne: false
+            referencedRelation: "emergencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1449,6 +1517,173 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      volunteer_incident_matches: {
+        Row: {
+          assistance_required: string[]
+          completed_at: string | null
+          created_at: string
+          distance_km: number | null
+          emergency_id: string
+          emergency_type: string | null
+          exclusive: boolean
+          id: string
+          offered_at: string
+          responded_at: string | null
+          status: string
+          updated_at: string
+          victim_user_id: string
+          volunteer_id: string
+          volunteer_user_id: string
+        }
+        Insert: {
+          assistance_required?: string[]
+          completed_at?: string | null
+          created_at?: string
+          distance_km?: number | null
+          emergency_id: string
+          emergency_type?: string | null
+          exclusive?: boolean
+          id?: string
+          offered_at?: string
+          responded_at?: string | null
+          status?: string
+          updated_at?: string
+          victim_user_id: string
+          volunteer_id: string
+          volunteer_user_id: string
+        }
+        Update: {
+          assistance_required?: string[]
+          completed_at?: string | null
+          created_at?: string
+          distance_km?: number | null
+          emergency_id?: string
+          emergency_type?: string | null
+          exclusive?: boolean
+          id?: string
+          offered_at?: string
+          responded_at?: string | null
+          status?: string
+          updated_at?: string
+          victim_user_id?: string
+          volunteer_id?: string
+          volunteer_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "volunteer_incident_matches_emergency_id_fkey"
+            columns: ["emergency_id"]
+            isOneToOne: false
+            referencedRelation: "emergencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "volunteer_incident_matches_volunteer_id_fkey"
+            columns: ["volunteer_id"]
+            isOneToOne: false
+            referencedRelation: "volunteer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      volunteer_profiles: {
+        Row: {
+          active: boolean
+          availability: string
+          created_at: string
+          experience: string | null
+          full_name: string
+          id: string
+          latitude: number | null
+          location_updated_at: string | null
+          longitude: number | null
+          phone: string
+          radius_km: number
+          share_location: boolean
+          skills: string[]
+          updated_at: string
+          user_id: string
+          verification_note: string | null
+          verification_status: Database["public"]["Enums"]["volunteer_status"]
+        }
+        Insert: {
+          active?: boolean
+          availability?: string
+          created_at?: string
+          experience?: string | null
+          full_name: string
+          id?: string
+          latitude?: number | null
+          location_updated_at?: string | null
+          longitude?: number | null
+          phone: string
+          radius_km?: number
+          share_location?: boolean
+          skills?: string[]
+          updated_at?: string
+          user_id: string
+          verification_note?: string | null
+          verification_status?: Database["public"]["Enums"]["volunteer_status"]
+        }
+        Update: {
+          active?: boolean
+          availability?: string
+          created_at?: string
+          experience?: string | null
+          full_name?: string
+          id?: string
+          latitude?: number | null
+          location_updated_at?: string | null
+          longitude?: number | null
+          phone?: string
+          radius_km?: number
+          share_location?: boolean
+          skills?: string[]
+          updated_at?: string
+          user_id?: string
+          verification_note?: string | null
+          verification_status?: Database["public"]["Enums"]["volunteer_status"]
+        }
+        Relationships: []
+      }
+      volunteer_verifications: {
+        Row: {
+          created_at: string
+          decided_by: string | null
+          id: string
+          note: string | null
+          status: Database["public"]["Enums"]["volunteer_status"]
+          user_id: string
+          volunteer_id: string
+        }
+        Insert: {
+          created_at?: string
+          decided_by?: string | null
+          id?: string
+          note?: string | null
+          status: Database["public"]["Enums"]["volunteer_status"]
+          user_id: string
+          volunteer_id: string
+        }
+        Update: {
+          created_at?: string
+          decided_by?: string | null
+          id?: string
+          note?: string | null
+          status?: Database["public"]["Enums"]["volunteer_status"]
+          user_id?: string
+          volunteer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "volunteer_verifications_volunteer_id_fkey"
+            columns: ["volunteer_id"]
+            isOneToOne: false
+            referencedRelation: "volunteer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -1479,6 +1714,18 @@ export type Database = {
         Returns: Json
       }
       emergency_phase_rank: { Args: { _phase: string }; Returns: number }
+      emergency_volunteers: {
+        Args: { _emergency_id: string }
+        Returns: {
+          distance_km: number
+          match_id: string
+          responded_at: string
+          skills: string[]
+          status: string
+          volunteer_name: string
+          volunteer_phone: string
+        }[]
+      }
       escalate_unacknowledged: {
         Args: { _emergency_id: string }
         Returns: Json
@@ -1565,6 +1812,7 @@ export type Database = {
           victim_name: string
         }[]
       }
+      normalise_phone: { Args: { _phone: string }; Returns: string }
       record_hospital_handoff: {
         Args: {
           _bed?: string
@@ -1579,6 +1827,15 @@ export type Database = {
       replace_emergency_contacts: {
         Args: { p_contacts: Json; p_user_id: string }
         Returns: number
+      }
+      request_volunteer_assistance: {
+        Args: {
+          _assistance?: string[]
+          _emergency_id: string
+          _exclusive?: boolean
+          _radius_km?: number
+        }
+        Returns: Json
       }
       search_blood_donors: {
         Args: { _city?: string; _group?: string }
@@ -1600,6 +1857,20 @@ export type Database = {
         }
         Returns: Json
       }
+      sms_ingest: {
+        Args: {
+          _body: string
+          _from: string
+          _message_id: string
+          _payload_hash: string
+          _provider: string
+        }
+        Returns: Json
+      }
+      sms_record_delivery: {
+        Args: { _error?: string; _event_id: string; _status: string }
+        Returns: undefined
+      }
       start_emergency_session: {
         Args: { _notes: string; _severity: string; _type: string }
         Returns: Json
@@ -1612,10 +1883,58 @@ export type Database = {
         Args: { _assignment_id: string; _eta_minutes?: number; _status: string }
         Returns: Json
       }
+      volunteer_accepted_incidents: {
+        Args: never
+        Returns: {
+          address: string
+          assistance_required: string[]
+          emergency_id: string
+          emergency_status: string
+          emergency_type: string
+          latitude: number
+          location_source: string
+          longitude: number
+          match_id: string
+          notes: string
+          phase: string
+          reference: string
+          responded_at: string
+          severity: string
+          status: string
+          victim_name: string
+        }[]
+      }
+      volunteer_complete: {
+        Args: { _match_id: string; _note?: string }
+        Returns: Json
+      }
+      volunteer_requests: {
+        Args: never
+        Returns: {
+          approx_area: string
+          assistance_required: string[]
+          distance_km: number
+          emergency_type: string
+          exclusive: boolean
+          match_id: string
+          offered_at: string
+          status: string
+        }[]
+      }
+      volunteer_respond: {
+        Args: { _accept: boolean; _match_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "user" | "guardian" | "responder"
       approval_status: "pending" | "approved" | "rejected"
+      volunteer_status:
+        | "pending"
+        | "verified"
+        | "suspended"
+        | "expired"
+        | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1745,6 +2064,13 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user", "guardian", "responder"],
       approval_status: ["pending", "approved", "rejected"],
+      volunteer_status: [
+        "pending",
+        "verified",
+        "suspended",
+        "expired",
+        "rejected",
+      ],
     },
   },
 } as const
