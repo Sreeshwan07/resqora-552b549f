@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
+import { useRealtimeTables } from "@/hooks/use-realtime-tables";
 import { supabase } from "@/integrations/supabase/client";
 import { activeEmergencyQuery, contactsQuery, emergencyEventsQuery, profileQuery } from "@/lib/api";
 import { coordsOf, copyText, mapsLink } from "@/lib/alerts";
