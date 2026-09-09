@@ -159,13 +159,16 @@ export const Route = createFileRoute("/api/public/sms-inbound")({
         // A retried webhook is acknowledged without sending a second SMS.
         if (result.duplicate) return json({ ok: true, duplicate: true });
 
-        if (result.reply && result.event_id) {
+        if (result.reply) {
           const outcome = await sendReply(from, result.reply);
-          await supabaseAdmin.rpc("sms_record_delivery", {
-            _event_id: result.event_id,
-            _status: outcome.status,
-            _error: outcome.error ?? undefined,
-          });
+          // Only a processed message has a delivery row to update.
+          if (result.event_id) {
+            await supabaseAdmin.rpc("sms_record_delivery", {
+              _event_id: result.event_id,
+              _status: outcome.status,
+              _error: outcome.error ?? undefined,
+            });
+          }
         }
 
         return json({ ok: true, emergencyId: result.emergency_id ?? null });
