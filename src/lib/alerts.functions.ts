@@ -263,11 +263,7 @@ export const sendEmergencyAlerts = createServerFn({ method: "POST" })
       try {
         const response = await fetch(PROVIDER_URL, {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${lovableKey}`,
-            "X-Connection-Api-Key": connectionKey,
-            "Content-Type": "application/json",
-          },
+          headers: authHeaders,
           body: JSON.stringify({
             sender: "RESQORA",
             recipient: msisdn,
