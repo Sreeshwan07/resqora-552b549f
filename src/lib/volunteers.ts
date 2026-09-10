@@ -198,20 +198,28 @@ export type VolunteerInput = {
  * self-granted verification, so signing up can only ever produce "pending".
  */
 export async function saveVolunteerProfile(userId: string, input: VolunteerInput) {
-  const name = input.fullName.trim();
-  const phone = input.phone.trim();
-  if (name.length < 2) throw new Error("Enter your full name.");
-  if (phone.replace(/\D/g, "").length < 7) throw new Error("Enter a valid phone number.");
-  if (input.skills.length === 0) throw new Error("Choose at least one skill you can offer.");
-  const radius = Math.min(50, Math.max(1, Number(input.radiusKm) || 5));
+  // Same rules as `public.validate_volunteer_input` — the trigger re-checks
+  // everything, so a hand-crafted API call cannot store a bad number.
+  const parsed = volunteerSignupSchema.safeParse({
+    fullName: input.fullName,
+    phone: input.phone,
+    skills: input.skills,
+    radiusKm: Number(input.radiusKm) || 5,
+  });
+  if (!parsed.success) throw new Error(firstIssue(parsed.error));
+
+  const name = parsed.data.fullName;
+  const phone = parsed.data.phone;
+  const radius = Math.min(50, Math.max(1, parsed.data.radiusKm));
 
   const hasPosition = input.latitude != null && input.longitude != null;
   const payload = {
     user_id: userId,
     full_name: name.slice(0, 80),
-    phone: phone.slice(0, 30),
-    skills: input.skills,
+    phone,
+    skills: parsed.data.skills,
     experience: input.experience.trim().slice(0, 500) || null,
+
     radius_km: radius,
     availability: input.availability,
     share_location: input.shareLocation,
