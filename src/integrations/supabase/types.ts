@@ -1789,6 +1789,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_person_name: { Args: { _name: string }; Returns: boolean }
       log_guardian_access: {
         Args: { _emergency_id: string; _token: string }
         Returns: undefined
@@ -1816,6 +1817,8 @@ export type Database = {
           victim_name: string
         }[]
       }
+      normalise_email: { Args: { _email: string }; Returns: string }
+      normalise_mobile: { Args: { _phone: string }; Returns: string }
       normalise_phone: { Args: { _phone: string }; Returns: string }
       record_hospital_handoff: {
         Args: {
