@@ -11,6 +11,8 @@
  */
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { firstIssue, volunteerSignupSchema } from "@/lib/validation";
+
 
 export const VOLUNTEER_SKILLS = [
   { value: "first_aid", label: "First Aid" },
