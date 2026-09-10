@@ -62,41 +62,31 @@ export function safeHttpUrl(value: string | null | undefined): string | null {
 /* Validation schemas                                                  */
 /* ------------------------------------------------------------------ */
 
-export const emailSchema = z
-  .string()
-  .trim()
-  .min(5, "Enter a valid email address")
-  .max(255, "That email address is too long")
-  .email("Enter a valid email address");
-
-export const passwordSchema = z
-  .string()
-  .min(8, "Password must be at least 8 characters")
-  .max(128, "Password must be shorter than 128 characters");
-
-export const personNameSchema = z
-  .string()
-  .transform((value) => sanitizeText(value, 120))
-  .refine((value) => value.length >= 2, "Enter a name with at least 2 characters");
-
-export const phoneSchema = z
-  .string()
-  .transform((value) => sanitizePhone(value))
-  .refine((value) => /^[+]?[\d()\-\s]{6,24}$/.test(value), "Enter a valid phone number");
-
-export const contactSchema = z.object({
-  name: personNameSchema,
-  relationship: z.string().transform((v) => sanitizeText(v, 60)),
-  phone: phoneSchema,
-  email: z
-    .string()
-    .optional()
-    .transform((v) => (v ? sanitizeText(v, 255) : ""))
-    .refine((v) => v === "" || emailSchema.safeParse(v).success, "Enter a valid email address"),
-});
+/**
+ * All field rules now live in a single place (`@/lib/validation`) and are
+ * mirrored by database triggers. These re-exports keep existing call sites
+ * working while guaranteeing there is only ONE phone/email/name rule.
+ */
+export {
+  emailSchema,
+  optionalEmailSchema,
+  passwordSchema,
+  personNameSchema,
+  mobileSchema,
+  mobileSchema as phoneSchema,
+  emergencyContactSchema as contactSchema,
+  firstIssue,
+  normalizeMobile,
+  normalizeEmail,
+  toPhoneDigits,
+  MESSAGES as VALIDATION_MESSAGES,
+} from "@/lib/validation";
 
 export const noteSchema = z.object({
-  title: z.string().transform((v) => sanitizeText(v, 120)),
+  title: z
+    .string()
+    .transform((v) => sanitizeText(v, 120))
+    .refine((v) => v.length >= 2, "Enter a title of at least 2 characters"),
   category: z.string().transform((v) => sanitizeText(v, 40)),
   content: z
     .string()
@@ -104,10 +94,6 @@ export const noteSchema = z.object({
     .refine((v) => v.length > 0, "Add some content for this note"),
 });
 
-/** Human-readable message for the first validation failure. */
-export function firstIssue(error: z.ZodError) {
-  return error.issues[0]?.message ?? "Please check the details you entered";
-}
 
 /* ------------------------------------------------------------------ */
 /* Client-side abuse throttling                                        */
