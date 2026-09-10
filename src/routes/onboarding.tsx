@@ -139,30 +139,123 @@ function OnboardingPage() {
     }
   }, [existingContacts]);
 
+  const personalErrors = useMemo(
+    () => ({
+      full_name: fieldError(personNameSchema, form.full_name, { touched: touched.full_name }),
+      phone: fieldError(mobileSchema, form.phone, { touched: touched.phone }),
+      date_of_birth: fieldError(optionalDobSchema, form.date_of_birth, {
+        touched: touched.date_of_birth,
+      }),
+      current_city: fieldError(citySchema, form.current_city, { touched: touched.current_city }),
+      home_address: fieldError(optionalAddressSchema, form.home_address, {
+        touched: touched.home_address,
+      }),
+    }),
+    [form, touched],
+  );
+
+  const contactErrors = useMemo(
+    () =>
+      contacts.map((contact, index) => ({
+        name: fieldError(personNameSchema, contact.name, { touched: touched[`c${index}-name`] }),
+        relationship: fieldError(relationshipSchema, contact.relationship, {
+          touched: touched[`c${index}-relationship`],
+        }),
+        phone:
+          fieldError(mobileSchema, contact.phone, { touched: touched[`c${index}-phone`] }) ??
+          (touched[`c${index}-phone`] &&
+          contacts.some(
+            (other, otherIndex) =>
+              otherIndex < index &&
+              normalizeMobile(other.phone) &&
+              normalizeMobile(other.phone) === normalizeMobile(contact.phone),
+          )
+            ? "This number is already saved as an emergency contact."
+            : null),
+      })),
+    [contacts, touched],
+  );
+
   const stepValid = useMemo(() => {
-    if (step === 0)
-      return Boolean(form.full_name.trim() && form.phone.trim() && form.current_city.trim());
-    if (step === 1) return Boolean(form.blood_group);
-    if (step === 2)
-      return contacts.every(
-        (c) => c.name.trim() && c.relationship.trim() && c.phone.trim().length >= 7,
+    if (step === 0) {
+      return (
+        !fieldError(personNameSchema, form.full_name) &&
+        !fieldError(mobileSchema, form.phone) &&
+        !fieldError(citySchema, form.current_city) &&
+        !fieldError(optionalDobSchema, form.date_of_birth) &&
+        !fieldError(optionalAddressSchema, form.home_address)
       );
+    }
+    if (step === 1) return Boolean(form.blood_group);
+    if (step === 2) {
+      const checked = validateContacts(contacts, { ownPhone: form.phone });
+      return checked.ok;
+    }
     return true;
   }, [step, form, contacts]);
 
+  function touchAll(keys: string[]) {
+    setTouched((prev) => {
+      const next = { ...prev };
+      for (const key of keys) next[key] = true;
+      return next;
+    });
+  }
+
+  function handleContinue() {
+    if (step === 0) touchAll(["full_name", "phone", "date_of_birth", "current_city", "home_address"]);
+    if (step === 2)
+      touchAll(
+        contacts.flatMap((_, index) => [
+          `c${index}-name`,
+          `c${index}-relationship`,
+          `c${index}-phone`,
+        ]),
+      );
+    if (!stepValid) {
+      setFormError(
+        step === 2
+          ? "Please fix the highlighted contact details before continuing."
+          : "Please fix the highlighted fields before continuing.",
+      );
+      return;
+    }
+    setFormError(null);
+    setStep((s) => s + 1);
+  }
+
   async function activate() {
     if (!user) return;
+    const parsedProfile = profileDetailsSchema.safeParse({
+      full_name: form.full_name,
+      phone: form.phone,
+      date_of_birth: form.date_of_birth,
+      current_city: form.current_city,
+      home_address: form.home_address,
+    });
+    if (!parsedProfile.success) {
+      setStep(0);
+      setFormError(firstIssue(parsedProfile.error));
+      return;
+    }
+    const checkedContacts = validateContacts(contacts, { ownPhone: form.phone });
+    if (!checkedContacts.ok) {
+      setStep(2);
+      setFormError(checkedContacts.issues[0]?.message ?? "Please check your emergency contacts.");
+      return;
+    }
+    setFormError(null);
     setSaving(true);
     try {
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
-          full_name: form.full_name.trim(),
-          date_of_birth: form.date_of_birth || null,
+          full_name: parsedProfile.data.full_name,
+          date_of_birth: parsedProfile.data.date_of_birth,
           gender: form.gender || null,
-          phone: form.phone.trim(),
-          home_address: form.home_address.trim() || null,
-          current_city: form.current_city.trim(),
+          phone: parsedProfile.data.phone,
+          home_address: parsedProfile.data.home_address,
+          current_city: parsedProfile.data.current_city,
           blood_group: form.blood_group,
           allergies: form.allergies.trim() || null,
           medical_conditions: form.medical_conditions.trim() || null,
@@ -176,14 +269,9 @@ function OnboardingPage() {
         .eq("id", user.id);
       if (profileError) throw new Error(profileError.message);
 
-      await saveEmergencyContacts(
-        user.id,
-        contacts.map((contact) => ({
-          name: contact.name,
-          relationship: contact.relationship,
-          phone: contact.phone,
-        })),
-      );
+      await saveEmergencyContacts(user.id, checkedContacts.contacts, {
+        ownPhone: parsedProfile.data.phone,
+      });
 
       await notify(user.id, {
         category: "system",
@@ -195,11 +283,14 @@ function OnboardingPage() {
       toast.success("You're protected — welcome to RESQORA");
       navigate({ to: "/dashboard", replace: true });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not save your profile");
+      const message = error instanceof Error ? error.message : "Could not save your profile";
+      setFormError(message);
+      toast.error(message);
     } finally {
       setSaving(false);
     }
   }
+
 
   const StepIcon = steps[step].icon;
 
