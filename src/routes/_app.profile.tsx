@@ -27,14 +27,28 @@ import { computeSafetyScore, contactsQuery, profileQuery } from "@/lib/api";
 import { copyText } from "@/lib/alerts";
 import { ensureMedicalShareLink, revokeShareLink, shareUrl } from "@/lib/share";
 import { logSecurityEvent } from "@/lib/audit";
-import { saveEmergencyContacts } from "@/lib/contacts";
+import { saveEmergencyContacts, validateContacts } from "@/lib/contacts";
+import { sanitizeMultiline, sanitizeText } from "@/lib/security";
 import {
-  contactSchema,
+  FieldError,
+  PhoneInputField,
+  TextInputField,
+} from "@/components/system/validated-field";
+import {
+  citySchema,
+  fieldError,
+  optionalAddressSchema,
+  optionalDobSchema,
+  optionalEmailSchema,
+  personNameSchema,
+  profileDetailsSchema,
+  relationshipSchema,
+  mobileSchema,
   firstIssue,
-  sanitizeMultiline,
-  sanitizePhone,
-  sanitizeText,
-} from "@/lib/security";
+  todayIso,
+  toPhoneDigits,
+} from "@/lib/validation";
+
 import { logActivity } from "@/lib/activity";
 
 export const Route = createFileRoute("/_app/profile")({
