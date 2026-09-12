@@ -539,31 +539,6 @@ function updateContact(
   setContacts((prev) => prev.map((c, i) => (i === index ? { ...c, ...patch } : c)));
 }
 
-function TextField({
-  label,
-  value,
-  onChange,
-  type = "text",
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  type?: string;
-}) {
-  const id = label.toLowerCase().replace(/[^a-z]+/g, "-");
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
-      <Input
-        id={id}
-        type={type}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-11 rounded-xl"
-      />
-    </div>
-  );
-}
 
 function AreaField({
   label,
