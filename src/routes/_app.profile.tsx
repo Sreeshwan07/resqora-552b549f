@@ -232,21 +232,30 @@ function ProfilePage() {
             </TabsList>
 
             <TabsContent value="personal" className="mt-6 grid gap-4 sm:grid-cols-2">
-              <Field
+              <TextInputField
                 label="Full name"
+                required
                 value={form.full_name}
+                error={personalErrors.full_name}
+                onBlur={() => markTouched("full_name")}
                 onChange={(v) => setForm({ ...form, full_name: v })}
               />
-              <Field
+              <PhoneInputField
                 label="Phone"
-                type="tel"
+                required
+                hint="10-digit Indian mobile number"
                 value={form.phone}
+                error={personalErrors.phone}
+                onBlur={() => markTouched("phone")}
                 onChange={(v) => setForm({ ...form, phone: v })}
               />
-              <Field
+              <TextInputField
                 label="Date of birth"
                 type="date"
+                max={todayIso()}
                 value={form.date_of_birth}
+                error={personalErrors.date_of_birth}
+                onBlur={() => markTouched("date_of_birth")}
                 onChange={(v) => setForm({ ...form, date_of_birth: v })}
               />
               <SelectField
@@ -255,17 +264,23 @@ function ProfilePage() {
                 onChange={(v) => setForm({ ...form, gender: v })}
                 options={["Female", "Male", "Non-binary", "Prefer not to say"]}
               />
-              <Field
+              <TextInputField
                 label="City"
+                required
                 value={form.current_city}
+                error={personalErrors.current_city}
+                onBlur={() => markTouched("current_city")}
                 onChange={(v) => setForm({ ...form, current_city: v })}
               />
-              <Field
+              <TextInputField
                 label="Home address"
                 value={form.home_address}
+                error={personalErrors.home_address}
+                onBlur={() => markTouched("home_address")}
                 onChange={(v) => setForm({ ...form, home_address: v })}
               />
-              <div className="sm:col-span-2">
+              <div className="sm:col-span-2 space-y-3">
+                <FieldError message={profileError} />
                 <Button variant="hero" onClick={saveProfile} disabled={saving}>
                   {saving ? (
                     <Loader2 className="size-4 animate-spin" />
@@ -276,6 +291,7 @@ function ProfilePage() {
                 </Button>
               </div>
             </TabsContent>
+
 
             <TabsContent value="medical" className="mt-6 grid gap-4">
               <SelectField
