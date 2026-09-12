@@ -100,12 +100,17 @@ function ProfilePage() {
     language: "en",
   });
   const [drafts, setDrafts] = useState<ContactDraft[]>([]);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [contactsError, setContactsError] = useState<string | null>(null);
+
+  const markTouched = (key: string) => setTouched((prev) => ({ ...prev, [key]: true }));
 
   useEffect(() => {
     if (!profile.data) return;
     setForm({
       full_name: profile.data.full_name ?? "",
-      phone: profile.data.phone ?? "",
+      phone: toPhoneDigits(profile.data.phone),
       date_of_birth: profile.data.date_of_birth ?? "",
       gender: profile.data.gender ?? "",
       current_city: profile.data.current_city ?? "",
@@ -124,12 +129,34 @@ function ProfilePage() {
       id: c.id,
       name: c.name,
       relationship: c.relationship,
-      phone: c.phone,
+      phone: toPhoneDigits(c.phone),
       email: c.email ?? "",
     }));
     while (base.length < 3) base.push({ name: "", relationship: "", phone: "", email: "" });
     setDrafts(base.slice(0, 3));
   }, [contacts.data]);
+
+  const personalErrors = {
+    full_name: fieldError(personNameSchema, form.full_name, { touched: touched.full_name }),
+    phone: fieldError(mobileSchema, form.phone, { touched: touched.phone }),
+    date_of_birth: fieldError(optionalDobSchema, form.date_of_birth, {
+      touched: touched.date_of_birth,
+    }),
+    current_city: fieldError(citySchema, form.current_city, { touched: touched.current_city }),
+    home_address: fieldError(optionalAddressSchema, form.home_address, {
+      touched: touched.home_address,
+    }),
+  };
+
+  const contactErrors = drafts.map((contact, index) => ({
+    name: fieldError(personNameSchema, contact.name, { touched: touched[`c${index}-name`] }),
+    relationship: fieldError(relationshipSchema, contact.relationship, {
+      touched: touched[`c${index}-relationship`],
+    }),
+    phone: fieldError(mobileSchema, contact.phone, { touched: touched[`c${index}-phone`] }),
+    email: fieldError(optionalEmailSchema, contact.email, { touched: touched[`c${index}-email`] }),
+  }));
+
 
   const score = computeSafetyScore(
     { ...(profile.data ?? {}), ...form } as never,
