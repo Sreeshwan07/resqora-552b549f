@@ -22,7 +22,27 @@ import {
   type Profile,
   type EmergencyContact,
 } from "@/lib/api";
-import { saveEmergencyContacts } from "@/lib/contacts";
+import { saveEmergencyContacts, validateContacts } from "@/lib/contacts";
+import {
+  PhoneInputField,
+  TextInputField,
+  FieldError,
+} from "@/components/system/validated-field";
+import {
+  citySchema,
+  fieldError,
+  firstIssue,
+  mobileSchema,
+  normalizeMobile,
+  optionalAddressSchema,
+  optionalDobSchema,
+  personNameSchema,
+  profileDetailsSchema,
+  relationshipSchema,
+  todayIso,
+  toPhoneDigits,
+} from "@/lib/validation";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -105,6 +125,11 @@ function OnboardingPage() {
     medications: "",
   });
   const [contacts, setContacts] = useState<ContactDraft[]>(emptyContacts);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const markTouched = (key: string) => setTouched((prev) => ({ ...prev, [key]: true }));
+
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth", replace: true });
@@ -117,7 +142,7 @@ function OnboardingPage() {
       full_name: profile.full_name ?? prev.full_name,
       date_of_birth: profile.date_of_birth ?? prev.date_of_birth,
       gender: profile.gender ?? prev.gender,
-      phone: profile.phone ?? prev.phone,
+      phone: toPhoneDigits(profile.phone ?? prev.phone),
       home_address: profile.home_address ?? prev.home_address,
       current_city: profile.current_city ?? prev.current_city,
       blood_group: profile.blood_group ?? prev.blood_group,
@@ -133,11 +158,12 @@ function OnboardingPage() {
         existingContacts.map((c) => ({
           name: c.name,
           relationship: c.relationship,
-          phone: c.phone,
+          phone: toPhoneDigits(c.phone),
         })),
       );
     }
   }, [existingContacts]);
+
 
   const personalErrors = useMemo(
     () => ({
