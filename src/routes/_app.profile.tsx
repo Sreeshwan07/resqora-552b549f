@@ -315,11 +315,12 @@ function ProfilePage() {
                 value={form.medications}
                 onChange={(v) => setForm({ ...form, medications: v })}
               />
-              <Field
+              <TextInputField
                 label="Preferred hospital"
                 value={form.preferred_hospital}
                 onChange={(v) => setForm({ ...form, preferred_hospital: v })}
               />
+
               <SelectField
                 label="Preferred language"
                 value={form.language}
@@ -349,38 +350,49 @@ function ProfilePage() {
                     Contact {index + 1}
                   </p>
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <Field
+                    <TextInputField
                       label="Name"
+                      required
                       value={contact.name}
+                      error={contactErrors[index]?.name}
+                      onBlur={() => markTouched(`c${index}-name`)}
                       onChange={(v) =>
                         setDrafts((prev) =>
                           prev.map((c, i) => (i === index ? { ...c, name: v } : c)),
                         )
                       }
                     />
-                    <Field
+                    <TextInputField
                       label="Relationship"
+                      required
                       value={contact.relationship}
+                      error={contactErrors[index]?.relationship}
+                      onBlur={() => markTouched(`c${index}-relationship`)}
                       onChange={(v) =>
                         setDrafts((prev) =>
                           prev.map((c, i) => (i === index ? { ...c, relationship: v } : c)),
                         )
                       }
                     />
-                    <Field
+                    <PhoneInputField
                       label="Phone"
-                      type="tel"
+                      required
                       value={contact.phone}
+                      error={contactErrors[index]?.phone}
+                      onBlur={() => markTouched(`c${index}-phone`)}
                       onChange={(v) =>
                         setDrafts((prev) =>
                           prev.map((c, i) => (i === index ? { ...c, phone: v } : c)),
                         )
                       }
                     />
-                    <Field
+                    <TextInputField
                       label="Email (for emergency emails)"
                       type="email"
+                      autoComplete="email"
                       value={contact.email}
+                      error={contactErrors[index]?.email}
+                      onBlur={() => markTouched(`c${index}-email`)}
                       onChange={(v) =>
                         setDrafts((prev) =>
                           prev.map((c, i) => (i === index ? { ...c, email: v } : c)),
@@ -390,10 +402,12 @@ function ProfilePage() {
                   </div>
                 </div>
               ))}
+              <FieldError message={contactsError} />
               <Button variant="hero" onClick={saveContacts} disabled={saving}>
                 {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
                 Save contacts
               </Button>
+
             </TabsContent>
           </Tabs>
         </div>
