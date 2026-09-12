@@ -27,14 +27,28 @@ import { computeSafetyScore, contactsQuery, profileQuery } from "@/lib/api";
 import { copyText } from "@/lib/alerts";
 import { ensureMedicalShareLink, revokeShareLink, shareUrl } from "@/lib/share";
 import { logSecurityEvent } from "@/lib/audit";
-import { saveEmergencyContacts } from "@/lib/contacts";
+import { saveEmergencyContacts, validateContacts } from "@/lib/contacts";
+import { sanitizeMultiline, sanitizeText } from "@/lib/security";
 import {
-  contactSchema,
+  FieldError,
+  PhoneInputField,
+  TextInputField,
+} from "@/components/system/validated-field";
+import {
+  citySchema,
+  fieldError,
+  optionalAddressSchema,
+  optionalDobSchema,
+  optionalEmailSchema,
+  personNameSchema,
+  profileDetailsSchema,
+  relationshipSchema,
+  mobileSchema,
   firstIssue,
-  sanitizeMultiline,
-  sanitizePhone,
-  sanitizeText,
-} from "@/lib/security";
+  todayIso,
+  toPhoneDigits,
+} from "@/lib/validation";
+
 import { logActivity } from "@/lib/activity";
 
 export const Route = createFileRoute("/_app/profile")({
@@ -86,12 +100,17 @@ function ProfilePage() {
     language: "en",
   });
   const [drafts, setDrafts] = useState<ContactDraft[]>([]);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [contactsError, setContactsError] = useState<string | null>(null);
+
+  const markTouched = (key: string) => setTouched((prev) => ({ ...prev, [key]: true }));
 
   useEffect(() => {
     if (!profile.data) return;
     setForm({
       full_name: profile.data.full_name ?? "",
-      phone: profile.data.phone ?? "",
+      phone: toPhoneDigits(profile.data.phone),
       date_of_birth: profile.data.date_of_birth ?? "",
       gender: profile.data.gender ?? "",
       current_city: profile.data.current_city ?? "",
@@ -110,12 +129,34 @@ function ProfilePage() {
       id: c.id,
       name: c.name,
       relationship: c.relationship,
-      phone: c.phone,
+      phone: toPhoneDigits(c.phone),
       email: c.email ?? "",
     }));
     while (base.length < 3) base.push({ name: "", relationship: "", phone: "", email: "" });
     setDrafts(base.slice(0, 3));
   }, [contacts.data]);
+
+  const personalErrors = {
+    full_name: fieldError(personNameSchema, form.full_name, { touched: touched.full_name }),
+    phone: fieldError(mobileSchema, form.phone, { touched: touched.phone }),
+    date_of_birth: fieldError(optionalDobSchema, form.date_of_birth, {
+      touched: touched.date_of_birth,
+    }),
+    current_city: fieldError(citySchema, form.current_city, { touched: touched.current_city }),
+    home_address: fieldError(optionalAddressSchema, form.home_address, {
+      touched: touched.home_address,
+    }),
+  };
+
+  const contactErrors = drafts.map((contact, index) => ({
+    name: fieldError(personNameSchema, contact.name, { touched: touched[`c${index}-name`] }),
+    relationship: fieldError(relationshipSchema, contact.relationship, {
+      touched: touched[`c${index}-relationship`],
+    }),
+    phone: fieldError(mobileSchema, contact.phone, { touched: touched[`c${index}-phone`] }),
+    email: fieldError(optionalEmailSchema, contact.email, { touched: touched[`c${index}-email`] }),
+  }));
+
 
   const score = computeSafetyScore(
     { ...(profile.data ?? {}), ...form } as never,
@@ -232,21 +273,30 @@ function ProfilePage() {
             </TabsList>
 
             <TabsContent value="personal" className="mt-6 grid gap-4 sm:grid-cols-2">
-              <Field
+              <TextInputField
                 label="Full name"
+                required
                 value={form.full_name}
+                error={personalErrors.full_name}
+                onBlur={() => markTouched("full_name")}
                 onChange={(v) => setForm({ ...form, full_name: v })}
               />
-              <Field
+              <PhoneInputField
                 label="Phone"
-                type="tel"
+                required
+                hint="10-digit Indian mobile number"
                 value={form.phone}
+                error={personalErrors.phone}
+                onBlur={() => markTouched("phone")}
                 onChange={(v) => setForm({ ...form, phone: v })}
               />
-              <Field
+              <TextInputField
                 label="Date of birth"
                 type="date"
+                max={todayIso()}
                 value={form.date_of_birth}
+                error={personalErrors.date_of_birth}
+                onBlur={() => markTouched("date_of_birth")}
                 onChange={(v) => setForm({ ...form, date_of_birth: v })}
               />
               <SelectField
@@ -255,17 +305,23 @@ function ProfilePage() {
                 onChange={(v) => setForm({ ...form, gender: v })}
                 options={["Female", "Male", "Non-binary", "Prefer not to say"]}
               />
-              <Field
+              <TextInputField
                 label="City"
+                required
                 value={form.current_city}
+                error={personalErrors.current_city}
+                onBlur={() => markTouched("current_city")}
                 onChange={(v) => setForm({ ...form, current_city: v })}
               />
-              <Field
+              <TextInputField
                 label="Home address"
                 value={form.home_address}
+                error={personalErrors.home_address}
+                onBlur={() => markTouched("home_address")}
                 onChange={(v) => setForm({ ...form, home_address: v })}
               />
-              <div className="sm:col-span-2">
+              <div className="sm:col-span-2 space-y-3">
+                <FieldError message={profileError} />
                 <Button variant="hero" onClick={saveProfile} disabled={saving}>
                   {saving ? (
                     <Loader2 className="size-4 animate-spin" />
@@ -276,6 +332,7 @@ function ProfilePage() {
                 </Button>
               </div>
             </TabsContent>
+
 
             <TabsContent value="medical" className="mt-6 grid gap-4">
               <SelectField
@@ -299,11 +356,12 @@ function ProfilePage() {
                 value={form.medications}
                 onChange={(v) => setForm({ ...form, medications: v })}
               />
-              <Field
+              <TextInputField
                 label="Preferred hospital"
                 value={form.preferred_hospital}
                 onChange={(v) => setForm({ ...form, preferred_hospital: v })}
               />
+
               <SelectField
                 label="Preferred language"
                 value={form.language}
@@ -333,38 +391,49 @@ function ProfilePage() {
                     Contact {index + 1}
                   </p>
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <Field
+                    <TextInputField
                       label="Name"
+                      required
                       value={contact.name}
+                      error={contactErrors[index]?.name}
+                      onBlur={() => markTouched(`c${index}-name`)}
                       onChange={(v) =>
                         setDrafts((prev) =>
                           prev.map((c, i) => (i === index ? { ...c, name: v } : c)),
                         )
                       }
                     />
-                    <Field
+                    <TextInputField
                       label="Relationship"
+                      required
                       value={contact.relationship}
+                      error={contactErrors[index]?.relationship}
+                      onBlur={() => markTouched(`c${index}-relationship`)}
                       onChange={(v) =>
                         setDrafts((prev) =>
                           prev.map((c, i) => (i === index ? { ...c, relationship: v } : c)),
                         )
                       }
                     />
-                    <Field
+                    <PhoneInputField
                       label="Phone"
-                      type="tel"
+                      required
                       value={contact.phone}
+                      error={contactErrors[index]?.phone}
+                      onBlur={() => markTouched(`c${index}-phone`)}
                       onChange={(v) =>
                         setDrafts((prev) =>
                           prev.map((c, i) => (i === index ? { ...c, phone: v } : c)),
                         )
                       }
                     />
-                    <Field
+                    <TextInputField
                       label="Email (for emergency emails)"
                       type="email"
+                      autoComplete="email"
                       value={contact.email}
+                      error={contactErrors[index]?.email}
+                      onBlur={() => markTouched(`c${index}-email`)}
                       onChange={(v) =>
                         setDrafts((prev) =>
                           prev.map((c, i) => (i === index ? { ...c, email: v } : c)),
@@ -374,10 +443,12 @@ function ProfilePage() {
                   </div>
                 </div>
               ))}
+              <FieldError message={contactsError} />
               <Button variant="hero" onClick={saveContacts} disabled={saving}>
                 {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
                 Save contacts
               </Button>
+
             </TabsContent>
           </Tabs>
         </div>

@@ -22,9 +22,29 @@ import {
   type Profile,
   type EmergencyContact,
 } from "@/lib/api";
-import { saveEmergencyContacts } from "@/lib/contacts";
+import { saveEmergencyContacts, validateContacts } from "@/lib/contacts";
+import {
+  PhoneInputField,
+  TextInputField,
+  FieldError,
+} from "@/components/system/validated-field";
+import {
+  citySchema,
+  fieldError,
+  firstIssue,
+  mobileSchema,
+  normalizeMobile,
+  optionalAddressSchema,
+  optionalDobSchema,
+  personNameSchema,
+  profileDetailsSchema,
+  relationshipSchema,
+  todayIso,
+  toPhoneDigits,
+} from "@/lib/validation";
+
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
@@ -105,6 +125,11 @@ function OnboardingPage() {
     medications: "",
   });
   const [contacts, setContacts] = useState<ContactDraft[]>(emptyContacts);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const markTouched = (key: string) => setTouched((prev) => ({ ...prev, [key]: true }));
+
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth", replace: true });
@@ -117,7 +142,7 @@ function OnboardingPage() {
       full_name: profile.full_name ?? prev.full_name,
       date_of_birth: profile.date_of_birth ?? prev.date_of_birth,
       gender: profile.gender ?? prev.gender,
-      phone: profile.phone ?? prev.phone,
+      phone: toPhoneDigits(profile.phone ?? prev.phone),
       home_address: profile.home_address ?? prev.home_address,
       current_city: profile.current_city ?? prev.current_city,
       blood_group: profile.blood_group ?? prev.blood_group,
@@ -133,11 +158,12 @@ function OnboardingPage() {
         existingContacts.map((c) => ({
           name: c.name,
           relationship: c.relationship,
-          phone: c.phone,
+          phone: toPhoneDigits(c.phone),
         })),
       );
     }
   }, [existingContacts]);
+
 
   const personalErrors = useMemo(
     () => ({
@@ -328,21 +354,30 @@ function OnboardingPage() {
             >
               {step === 0 && (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <TextField
+                  <TextInputField
                     label="Full name"
+                    required
                     value={form.full_name}
+                    error={personalErrors.full_name}
+                    onBlur={() => markTouched("full_name")}
                     onChange={(v) => setForm({ ...form, full_name: v })}
                   />
-                  <TextField
+                  <PhoneInputField
                     label="Phone number"
-                    type="tel"
+                    required
                     value={form.phone}
+                    error={personalErrors.phone}
+                    hint="10-digit Indian mobile number"
+                    onBlur={() => markTouched("phone")}
                     onChange={(v) => setForm({ ...form, phone: v })}
                   />
-                  <TextField
+                  <TextInputField
                     label="Date of birth"
                     type="date"
+                    max={todayIso()}
                     value={form.date_of_birth}
+                    error={personalErrors.date_of_birth}
+                    onBlur={() => markTouched("date_of_birth")}
                     onChange={(v) => setForm({ ...form, date_of_birth: v })}
                   />
                   <SelectField
@@ -351,18 +386,24 @@ function OnboardingPage() {
                     onChange={(v) => setForm({ ...form, gender: v })}
                     options={["Female", "Male", "Non-binary", "Prefer not to say"]}
                   />
-                  <TextField
+                  <TextInputField
                     label="City"
+                    required
                     value={form.current_city}
+                    error={personalErrors.current_city}
+                    onBlur={() => markTouched("current_city")}
                     onChange={(v) => setForm({ ...form, current_city: v })}
                   />
-                  <TextField
+                  <TextInputField
                     label="Home address"
                     value={form.home_address}
+                    error={personalErrors.home_address}
+                    onBlur={() => markTouched("home_address")}
                     onChange={(v) => setForm({ ...form, home_address: v })}
                   />
                 </div>
               )}
+
 
               {step === 1 && (
                 <div className="grid gap-4">
@@ -404,23 +445,32 @@ function OnboardingPage() {
                         Contact {index + 1}
                       </p>
                       <div className="grid gap-4 sm:grid-cols-3">
-                        <TextField
+                        <TextInputField
                           label="Name"
+                          required
                           value={contact.name}
+                          error={contactErrors[index]?.name}
+                          onBlur={() => markTouched(`c${index}-name`)}
                           onChange={(v) => updateContact(setContacts, index, { name: v })}
                         />
-                        <TextField
+                        <TextInputField
                           label="Relationship"
+                          required
                           value={contact.relationship}
+                          error={contactErrors[index]?.relationship}
+                          onBlur={() => markTouched(`c${index}-relationship`)}
                           onChange={(v) => updateContact(setContacts, index, { relationship: v })}
                         />
-                        <TextField
+                        <PhoneInputField
                           label="Phone"
-                          type="tel"
+                          required
                           value={contact.phone}
+                          error={contactErrors[index]?.phone}
+                          onBlur={() => markTouched(`c${index}-phone`)}
                           onChange={(v) => updateContact(setContacts, index, { phone: v })}
                         />
                       </div>
+
                     </div>
                   ))}
                 </div>
@@ -429,7 +479,7 @@ function OnboardingPage() {
               {step === 3 && (
                 <div className="space-y-4">
                   <ReviewBlock title="Personal">
-                    {form.full_name} · {form.phone} · {form.current_city}
+                    {form.full_name} · +91 {form.phone} · {form.current_city}
                   </ReviewBlock>
                   <ReviewBlock title="Medical ID">
                     Blood {form.blood_group || "—"} · Allergies: {form.allergies || "none"} ·
@@ -443,6 +493,12 @@ function OnboardingPage() {
             </motion.div>
           </AnimatePresence>
 
+          {formError && (
+            <div className="mt-6">
+              <FieldError message={formError} />
+            </div>
+          )}
+
           <div className="mt-8 flex items-center justify-between gap-3">
             <Button
               variant="ghost"
@@ -453,10 +509,11 @@ function OnboardingPage() {
               Back
             </Button>
             {step < steps.length - 1 ? (
-              <Button variant="hero" onClick={() => setStep((s) => s + 1)} disabled={!stepValid}>
+              <Button variant="hero" onClick={handleContinue}>
                 Continue
                 <ArrowRight className="size-4" />
               </Button>
+
             ) : (
               <Button variant="hero" onClick={activate} disabled={saving}>
                 {saving ? (
@@ -482,31 +539,6 @@ function updateContact(
   setContacts((prev) => prev.map((c, i) => (i === index ? { ...c, ...patch } : c)));
 }
 
-function TextField({
-  label,
-  value,
-  onChange,
-  type = "text",
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  type?: string;
-}) {
-  const id = label.toLowerCase().replace(/[^a-z]+/g, "-");
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
-      <Input
-        id={id}
-        type={type}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-11 rounded-xl"
-      />
-    </div>
-  );
-}
 
 function AreaField({
   label,
