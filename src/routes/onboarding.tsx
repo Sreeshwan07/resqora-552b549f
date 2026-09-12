@@ -479,7 +479,7 @@ function OnboardingPage() {
               {step === 3 && (
                 <div className="space-y-4">
                   <ReviewBlock title="Personal">
-                    {form.full_name} · {form.phone} · {form.current_city}
+                    {form.full_name} · +91 {form.phone} · {form.current_city}
                   </ReviewBlock>
                   <ReviewBlock title="Medical ID">
                     Blood {form.blood_group || "—"} · Allergies: {form.allergies || "none"} ·
@@ -493,6 +493,12 @@ function OnboardingPage() {
             </motion.div>
           </AnimatePresence>
 
+          {formError && (
+            <div className="mt-6">
+              <FieldError message={formError} />
+            </div>
+          )}
+
           <div className="mt-8 flex items-center justify-between gap-3">
             <Button
               variant="ghost"
@@ -503,10 +509,11 @@ function OnboardingPage() {
               Back
             </Button>
             {step < steps.length - 1 ? (
-              <Button variant="hero" onClick={() => setStep((s) => s + 1)} disabled={!stepValid}>
+              <Button variant="hero" onClick={handleContinue}>
                 Continue
                 <ArrowRight className="size-4" />
               </Button>
+
             ) : (
               <Button variant="hero" onClick={activate} disabled={saving}>
                 {saving ? (
