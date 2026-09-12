@@ -354,21 +354,30 @@ function OnboardingPage() {
             >
               {step === 0 && (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <TextField
+                  <TextInputField
                     label="Full name"
+                    required
                     value={form.full_name}
+                    error={personalErrors.full_name}
+                    onBlur={() => markTouched("full_name")}
                     onChange={(v) => setForm({ ...form, full_name: v })}
                   />
-                  <TextField
+                  <PhoneInputField
                     label="Phone number"
-                    type="tel"
+                    required
                     value={form.phone}
+                    error={personalErrors.phone}
+                    hint="10-digit Indian mobile number"
+                    onBlur={() => markTouched("phone")}
                     onChange={(v) => setForm({ ...form, phone: v })}
                   />
-                  <TextField
+                  <TextInputField
                     label="Date of birth"
                     type="date"
+                    max={todayIso()}
                     value={form.date_of_birth}
+                    error={personalErrors.date_of_birth}
+                    onBlur={() => markTouched("date_of_birth")}
                     onChange={(v) => setForm({ ...form, date_of_birth: v })}
                   />
                   <SelectField
@@ -377,18 +386,24 @@ function OnboardingPage() {
                     onChange={(v) => setForm({ ...form, gender: v })}
                     options={["Female", "Male", "Non-binary", "Prefer not to say"]}
                   />
-                  <TextField
+                  <TextInputField
                     label="City"
+                    required
                     value={form.current_city}
+                    error={personalErrors.current_city}
+                    onBlur={() => markTouched("current_city")}
                     onChange={(v) => setForm({ ...form, current_city: v })}
                   />
-                  <TextField
+                  <TextInputField
                     label="Home address"
                     value={form.home_address}
+                    error={personalErrors.home_address}
+                    onBlur={() => markTouched("home_address")}
                     onChange={(v) => setForm({ ...form, home_address: v })}
                   />
                 </div>
               )}
+
 
               {step === 1 && (
                 <div className="grid gap-4">
