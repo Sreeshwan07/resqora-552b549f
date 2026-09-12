@@ -445,23 +445,32 @@ function OnboardingPage() {
                         Contact {index + 1}
                       </p>
                       <div className="grid gap-4 sm:grid-cols-3">
-                        <TextField
+                        <TextInputField
                           label="Name"
+                          required
                           value={contact.name}
+                          error={contactErrors[index]?.name}
+                          onBlur={() => markTouched(`c${index}-name`)}
                           onChange={(v) => updateContact(setContacts, index, { name: v })}
                         />
-                        <TextField
+                        <TextInputField
                           label="Relationship"
+                          required
                           value={contact.relationship}
+                          error={contactErrors[index]?.relationship}
+                          onBlur={() => markTouched(`c${index}-relationship`)}
                           onChange={(v) => updateContact(setContacts, index, { relationship: v })}
                         />
-                        <TextField
+                        <PhoneInputField
                           label="Phone"
-                          type="tel"
+                          required
                           value={contact.phone}
+                          error={contactErrors[index]?.phone}
+                          onBlur={() => markTouched(`c${index}-phone`)}
                           onChange={(v) => updateContact(setContacts, index, { phone: v })}
                         />
                       </div>
+
                     </div>
                   ))}
                 </div>
