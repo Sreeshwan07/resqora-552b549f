@@ -143,11 +143,10 @@ function SamaritanPage() {
       if (!user?.id) throw new Error("Sign in first.");
       setTouched({ fullName: true, phone: true });
       const parsed = volunteerSignupSchema.safeParse({
-        full_name: form.fullName,
+        fullName: form.fullName,
         phone: form.phone,
         skills: form.skills,
-        experience: form.experience,
-        radius_km: form.radiusKm,
+        radiusKm: form.radiusKm,
       });
       if (!parsed.success) {
         const message = firstIssue(parsed.error);
@@ -157,12 +156,13 @@ function SamaritanPage() {
       setSaveError(null);
       return saveVolunteerProfile(user.id, {
         ...form,
-        fullName: parsed.data.full_name,
+        fullName: parsed.data.fullName,
         phone: parsed.data.phone,
         availability: volunteer?.availability === "offline" ? "offline" : "available",
         latitude: position?.lat ?? null,
         longitude: position?.lng ?? null,
       });
+
     },
     onSuccess: () => {
       toast.success(
