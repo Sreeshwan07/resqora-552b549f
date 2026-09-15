@@ -40,6 +40,20 @@ import {
   volunteerRequestsQuery,
 } from "@/lib/volunteers";
 import { locationSourceLabel } from "@/lib/sms-sos";
+import {
+  FieldError,
+  PhoneInputField,
+  TextInputField,
+} from "@/components/system/validated-field";
+import {
+  fieldError,
+  firstIssue,
+  mobileSchema,
+  personNameSchema,
+  toPhoneDigits,
+  volunteerSignupSchema,
+} from "@/lib/validation";
+
 
 export const Route = createFileRoute("/_app/samaritan")({
   head: () => ({
@@ -338,7 +352,10 @@ function SamaritanPage() {
             />
           </div>
 
+          <FieldError message={saveError} />
+
           <Button onClick={() => save.mutate()} disabled={save.isPending} className="w-full">
+
             {save.isPending && <Loader2 className="mr-2 size-4 animate-spin" aria-hidden="true" />}
             {volunteer ? "Save details" : "Join the network"}
           </Button>
