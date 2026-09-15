@@ -127,8 +127,24 @@ function SamaritanPage() {
   const save = useMutation({
     mutationFn: async () => {
       if (!user?.id) throw new Error("Sign in first.");
+      setTouched({ fullName: true, phone: true });
+      const parsed = volunteerSignupSchema.safeParse({
+        full_name: form.fullName,
+        phone: form.phone,
+        skills: form.skills,
+        experience: form.experience,
+        radius_km: form.radiusKm,
+      });
+      if (!parsed.success) {
+        const message = firstIssue(parsed.error);
+        setSaveError(message);
+        throw new Error(message);
+      }
+      setSaveError(null);
       return saveVolunteerProfile(user.id, {
         ...form,
+        fullName: parsed.data.full_name,
+        phone: parsed.data.phone,
         availability: volunteer?.availability === "offline" ? "offline" : "available",
         latitude: position?.lat ?? null,
         longitude: position?.lng ?? null,
@@ -144,6 +160,7 @@ function SamaritanPage() {
     },
     onError: (error: Error) => toast.error(error.message),
   });
+
 
   const toggleAvailability = useMutation({
     mutationFn: async (next: boolean) => {
