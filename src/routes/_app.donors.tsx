@@ -24,6 +24,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { profileQuery } from "@/lib/api";
 import { BLOOD_GROUPS, donorSearchQuery, myDonorQuery, revealDonorPhone } from "@/lib/resqora-data";
 import { logActivity } from "@/lib/activity";
+import {
+  FieldError,
+  PhoneInputField,
+  TextInputField,
+} from "@/components/system/validated-field";
+import {
+  citySchema,
+  donorListingSchema,
+  fieldError,
+  firstIssue,
+  mobileSchema,
+  toPhoneDigits,
+} from "@/lib/validation";
+
 
 export const Route = createFileRoute("/_app/donors")({
   head: () => ({
@@ -58,24 +72,38 @@ function DonorsPage() {
   const [form, setForm] = useState<{ blood_group: string; city: string; phone: string } | null>(
     null,
   );
+  const [touched, setTouched] = useState<{ city?: boolean; phone?: boolean }>({});
+  const [saveError, setSaveError] = useState<string | null>(null);
   const values = form ?? {
     blood_group: mine.data?.blood_group ?? profile.data?.blood_group ?? BLOOD_GROUPS[0],
     city: mine.data?.city ?? profile.data?.current_city ?? "",
-    phone: mine.data?.phone ?? profile.data?.phone ?? "",
+    phone: toPhoneDigits(mine.data?.phone ?? profile.data?.phone ?? ""),
   };
+
+  const cityError = fieldError(citySchema, values.city, { touched: touched.city });
+  const phoneError = fieldError(mobileSchema, values.phone, { touched: touched.phone });
 
   const save = useMutation({
     mutationFn: async (available: boolean) => {
-      if (!values.city.trim() || !values.phone.trim()) {
-        throw new Error("City and phone are required to list you as a donor");
+      setTouched({ city: true, phone: true });
+      const parsed = donorListingSchema.safeParse({
+        blood_group: values.blood_group,
+        city: values.city,
+        phone: values.phone,
+      });
+      if (!parsed.success) {
+        const message = firstIssue(parsed.error);
+        setSaveError(message);
+        throw new Error(message);
       }
+      setSaveError(null);
       const { error } = await supabase.from("blood_donors").upsert(
         {
           user_id: user!.id,
           full_name: profile.data?.full_name || "RESQORA donor",
-          blood_group: values.blood_group,
-          city: values.city.trim(),
-          phone: values.phone.trim(),
+          blood_group: parsed.data.blood_group,
+          city: parsed.data.city,
+          phone: parsed.data.phone,
           available,
         },
         { onConflict: "user_id" },
@@ -95,6 +123,7 @@ function DonorsPage() {
     },
     onError: (error: Error) => toast.error(error.message),
   });
+
 
   return (
     <>
@@ -133,22 +162,26 @@ function DonorsPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="donor-city">City</Label>
-            <Input
-              id="donor-city"
-              value={values.city}
-              onChange={(event) => setForm({ ...values, city: event.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="donor-phone">Contact phone</Label>
-            <Input
-              id="donor-phone"
-              value={values.phone}
-              onChange={(event) => setForm({ ...values, phone: event.target.value })}
-            />
-          </div>
+          <TextInputField
+            id="donor-city"
+            label="City"
+            required
+            value={values.city}
+            error={cityError}
+            onBlur={() => setTouched((prev) => ({ ...prev, city: true }))}
+            onChange={(v) => setForm({ ...values, city: v })}
+          />
+          <PhoneInputField
+            id="donor-phone"
+            label="Contact phone"
+            required
+            hint="10-digit Indian mobile number"
+            value={values.phone}
+            error={phoneError}
+            onBlur={() => setTouched((prev) => ({ ...prev, phone: true }))}
+            onChange={(v) => setForm({ ...values, phone: v })}
+          />
+          <FieldError message={saveError} />
           <Button
             variant="hero"
             className="w-full"
@@ -158,6 +191,7 @@ function DonorsPage() {
             <Droplets className="size-4" />
             {mine.data ? "Update my listing" : "Register as a donor"}
           </Button>
+
           <p className="text-xs text-muted-foreground">
             Only your name, blood group, city and phone are visible, and only while you're marked
             available.

@@ -196,24 +196,37 @@ function ResponderIdentity({
   const [name, setName] = useState(profile?.full_name ?? "");
   const [type, setType] = useState(profile?.responder_type ?? "ambulance");
   const [organisation, setOrganisation] = useState(profile?.organisation ?? "");
-  const [phone, setPhone] = useState(profile?.phone ?? "");
+  const [phone, setPhone] = useState(toPhoneDigits(profile?.phone ?? ""));
+  const [touched, setTouched] = useState<{ name?: boolean; phone?: boolean }>({});
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const nameError = fieldError(personNameSchema, name, { touched: touched.name });
+  const phoneError = fieldError(optionalMobileSchema, phone, { touched: touched.phone });
 
   const save = useMutation({
     mutationFn: async () => {
       if (!userId) throw new Error("Sign in first.");
-      if (!name.trim()) throw new Error("Add the name people should see.");
+      setTouched({ name: true, phone: true });
+      const parsed = responderProfileSchema.safeParse({ full_name: name, phone });
+      if (!parsed.success) {
+        const message = firstIssue(parsed.error);
+        setSaveError(message);
+        throw new Error(message);
+      }
+      setSaveError(null);
       const payload = {
         user_id: userId,
-        full_name: name.trim(),
+        full_name: parsed.data.full_name,
         responder_type: type,
         organisation: organisation.trim() || null,
-        phone: phone.trim() || null,
+        phone: parsed.data.phone || null,
         active: true,
       };
       const { error } = profile
         ? await supabase.from("responder_profiles").update(payload).eq("id", profile.id)
         : await supabase.from("responder_profiles").insert(payload);
       if (error) throw new Error(error.message);
+
     },
     onSuccess: async () => {
       toast.success("Responder details saved");

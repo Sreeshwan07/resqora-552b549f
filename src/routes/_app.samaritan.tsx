@@ -40,6 +40,20 @@ import {
   volunteerRequestsQuery,
 } from "@/lib/volunteers";
 import { locationSourceLabel } from "@/lib/sms-sos";
+import {
+  FieldError,
+  PhoneInputField,
+  TextInputField,
+} from "@/components/system/validated-field";
+import {
+  fieldError,
+  firstIssue,
+  mobileSchema,
+  personNameSchema,
+  toPhoneDigits,
+  volunteerSignupSchema,
+} from "@/lib/validation";
+
 
 export const Route = createFileRoute("/_app/samaritan")({
   head: () => ({
@@ -81,12 +95,17 @@ function SamaritanPage() {
     shareLocation: true,
   });
   const [seeded, setSeeded] = useState(false);
+  const [touched, setTouched] = useState<{ fullName?: boolean; phone?: boolean }>({});
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const nameError = fieldError(personNameSchema, form.fullName, { touched: touched.fullName });
+  const phoneError = fieldError(mobileSchema, form.phone, { touched: touched.phone });
 
   useEffect(() => {
     if (seeded || !volunteer) return;
     setForm({
       fullName: volunteer.full_name,
-      phone: volunteer.phone,
+      phone: toPhoneDigits(volunteer.phone),
       skills: volunteer.skills ?? [],
       experience: volunteer.experience ?? "",
       radiusKm: volunteer.radius_km,
@@ -94,6 +113,7 @@ function SamaritanPage() {
     });
     setSeeded(true);
   }, [volunteer, seeded]);
+
 
   // Live offers/claims straight from the database — no manual refresh.
   useRealtimeTables({
@@ -121,12 +141,28 @@ function SamaritanPage() {
   const save = useMutation({
     mutationFn: async () => {
       if (!user?.id) throw new Error("Sign in first.");
+      setTouched({ fullName: true, phone: true });
+      const parsed = volunteerSignupSchema.safeParse({
+        fullName: form.fullName,
+        phone: form.phone,
+        skills: form.skills,
+        radiusKm: form.radiusKm,
+      });
+      if (!parsed.success) {
+        const message = firstIssue(parsed.error);
+        setSaveError(message);
+        throw new Error(message);
+      }
+      setSaveError(null);
       return saveVolunteerProfile(user.id, {
         ...form,
+        fullName: parsed.data.fullName,
+        phone: parsed.data.phone,
         availability: volunteer?.availability === "offline" ? "offline" : "available",
         latitude: position?.lat ?? null,
         longitude: position?.lng ?? null,
       });
+
     },
     onSuccess: () => {
       toast.success(
@@ -138,6 +174,7 @@ function SamaritanPage() {
     },
     onError: (error: Error) => toast.error(error.message),
   });
+
 
   const toggleAvailability = useMutation({
     mutationFn: async (next: boolean) => {
@@ -231,25 +268,28 @@ function SamaritanPage() {
           )}
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="v-name">Full name</Label>
-              <Input
-                id="v-name"
-                value={form.fullName}
-                onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
-                placeholder="Your name"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="v-phone">Phone number</Label>
-              <Input
-                id="v-phone"
-                value={form.phone}
-                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                placeholder="+91…"
-              />
-            </div>
+            <TextInputField
+              id="v-name"
+              label="Full name"
+              required
+              placeholder="Your name"
+              value={form.fullName}
+              error={nameError}
+              onBlur={() => setTouched((prev) => ({ ...prev, fullName: true }))}
+              onChange={(v) => setForm((f) => ({ ...f, fullName: v }))}
+            />
+            <PhoneInputField
+              id="v-phone"
+              label="Phone number"
+              required
+              hint="10-digit Indian mobile number"
+              value={form.phone}
+              error={phoneError}
+              onBlur={() => setTouched((prev) => ({ ...prev, phone: true }))}
+              onChange={(v) => setForm((f) => ({ ...f, phone: v }))}
+            />
           </div>
+
 
           <div className="space-y-2">
             <Label>Skills you can offer</Label>
@@ -312,7 +352,10 @@ function SamaritanPage() {
             />
           </div>
 
+          <FieldError message={saveError} />
+
           <Button onClick={() => save.mutate()} disabled={save.isPending} className="w-full">
+
             {save.isPending && <Loader2 className="mr-2 size-4 animate-spin" aria-hidden="true" />}
             {volunteer ? "Save details" : "Join the network"}
           </Button>
