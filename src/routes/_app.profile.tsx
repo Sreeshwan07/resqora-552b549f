@@ -9,7 +9,7 @@ import { MedicalIdCard } from "@/components/resqora/medical-id-card";
 import { GuardianCard } from "@/components/resqora/guardian-card";
 import { SafetyScoreCard } from "@/components/resqora/safety-score-card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -557,31 +557,6 @@ function MedicalQrSection() {
   );
 }
 
-function Field({
-  label,
-  value,
-  onChange,
-  type = "text",
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  type?: string;
-}) {
-  const id = `field-${label.toLowerCase().replace(/[^a-z]+/g, "-")}`;
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
-      <Input
-        id={id}
-        type={type}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-11 rounded-xl"
-      />
-    </div>
-  );
-}
 
 function AreaField({
   label,
