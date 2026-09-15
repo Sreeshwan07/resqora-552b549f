@@ -165,16 +165,38 @@ function ProfilePage() {
 
   async function saveProfile() {
     if (!user) return;
+    setTouched((prev) => ({
+      ...prev,
+      full_name: true,
+      phone: true,
+      date_of_birth: true,
+      current_city: true,
+      home_address: true,
+    }));
+    const parsed = profileDetailsSchema.safeParse({
+      full_name: form.full_name,
+      phone: form.phone,
+      date_of_birth: form.date_of_birth,
+      current_city: form.current_city,
+      home_address: form.home_address,
+    });
+    if (!parsed.success) {
+      const message = firstIssue(parsed.error);
+      setProfileError(message);
+      toast.error(message);
+      return;
+    }
+    setProfileError(null);
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
       .update({
-        full_name: sanitizeText(form.full_name, 120) || null,
-        phone: sanitizePhone(form.phone) || null,
-        date_of_birth: form.date_of_birth || null,
+        full_name: parsed.data.full_name,
+        phone: parsed.data.phone,
+        date_of_birth: parsed.data.date_of_birth,
         gender: sanitizeText(form.gender, 40) || null,
-        current_city: sanitizeText(form.current_city, 120) || null,
-        home_address: sanitizeText(form.home_address, 300) || null,
+        current_city: parsed.data.current_city,
+        home_address: parsed.data.home_address,
         blood_group: sanitizeText(form.blood_group, 8) || null,
         allergies: sanitizeMultiline(form.allergies, 1000) || null,
         medical_conditions: sanitizeMultiline(form.medical_conditions, 1000) || null,
@@ -186,6 +208,7 @@ function ProfilePage() {
       .eq("id", user.id);
     setSaving(false);
     if (error) {
+      setProfileError(error.message);
       toast.error(error.message);
       return;
     }
@@ -196,31 +219,37 @@ function ProfilePage() {
 
   async function saveContacts() {
     if (!user) return;
-    const cleaned: { name: string; relationship: string; phone: string; email: string }[] = [];
-    for (const draft of drafts) {
-      const parsed = contactSchema.safeParse(draft);
-      if (!parsed.success) {
-        toast.error(firstIssue(parsed.error));
-        return;
-      }
-      if (!parsed.data.relationship) {
-        toast.error("Each contact needs a relationship");
-        return;
-      }
-      cleaned.push(parsed.data);
+    setTouched((prev) => {
+      const next = { ...prev };
+      drafts.forEach((_, index) => {
+        next[`c${index}-name`] = true;
+        next[`c${index}-relationship`] = true;
+        next[`c${index}-phone`] = true;
+        next[`c${index}-email`] = true;
+      });
+      return next;
+    });
+    const checked = validateContacts(drafts, { ownPhone: form.phone });
+    if (!checked.ok) {
+      const message = checked.issues[0]?.message ?? "Please check your emergency contacts.";
+      setContactsError(message);
+      toast.error(message);
+      return;
     }
+    setContactsError(null);
     setSaving(true);
     try {
       // Atomic replace: validation and the swap happen in one transaction, so a
       // failure never leaves the person without emergency contacts.
-      await saveEmergencyContacts(user.id, cleaned);
+      await saveEmergencyContacts(user.id, checked.contacts, { ownPhone: form.phone });
     } catch (error) {
       setSaving(false);
-      toast.error(
+      const message =
         error instanceof Error
           ? error.message
-          : "Unable to save emergency contacts. Your existing contacts were not changed.",
-      );
+          : "Unable to save emergency contacts. Your existing contacts were not changed.";
+      setContactsError(message);
+      toast.error(message);
       await queryClient.invalidateQueries({ queryKey: ["contacts"] });
       return;
     }
@@ -229,6 +258,7 @@ function ProfilePage() {
     void logSecurityEvent("Emergency contacts changed", "Trusted contact list saved");
     toast.success("Emergency contacts updated successfully");
   }
+
 
   return (
     <>
