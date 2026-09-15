@@ -81,12 +81,17 @@ function SamaritanPage() {
     shareLocation: true,
   });
   const [seeded, setSeeded] = useState(false);
+  const [touched, setTouched] = useState<{ fullName?: boolean; phone?: boolean }>({});
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const nameError = fieldError(personNameSchema, form.fullName, { touched: touched.fullName });
+  const phoneError = fieldError(mobileSchema, form.phone, { touched: touched.phone });
 
   useEffect(() => {
     if (seeded || !volunteer) return;
     setForm({
       fullName: volunteer.full_name,
-      phone: volunteer.phone,
+      phone: toPhoneDigits(volunteer.phone),
       skills: volunteer.skills ?? [],
       experience: volunteer.experience ?? "",
       radiusKm: volunteer.radius_km,
@@ -94,6 +99,7 @@ function SamaritanPage() {
     });
     setSeeded(true);
   }, [volunteer, seeded]);
+
 
   // Live offers/claims straight from the database — no manual refresh.
   useRealtimeTables({
