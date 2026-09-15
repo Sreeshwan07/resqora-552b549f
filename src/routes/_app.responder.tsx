@@ -16,7 +16,20 @@ import { EmptyState } from "@/components/system/empty-state";
 import { PanelSkeleton } from "@/components/system/loading-skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+  FieldError,
+  PhoneInputField,
+  TextInputField,
+} from "@/components/system/validated-field";
+import {
+  fieldError,
+  firstIssue,
+  optionalMobileSchema,
+  personNameSchema,
+  responderProfileSchema,
+  toPhoneDigits,
+} from "@/lib/validation";
+
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
