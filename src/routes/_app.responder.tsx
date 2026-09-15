@@ -261,15 +261,16 @@ function ResponderIdentity({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="responder-name">Name</Label>
-            <Input
-              id="responder-name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="Crew or team name"
-            />
-          </div>
+          <TextInputField
+            id="responder-name"
+            label="Name"
+            required
+            placeholder="Crew or team name"
+            value={name}
+            error={nameError}
+            onBlur={() => setTouched((prev) => ({ ...prev, name: true }))}
+            onChange={setName}
+          />
           <div className="space-y-1.5">
             <Label htmlFor="responder-type">Type</Label>
             <Select value={type} onValueChange={setType}>
@@ -285,27 +286,28 @@ function ResponderIdentity({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="responder-org">Organisation</Label>
-            <Input
-              id="responder-org"
-              value={organisation}
-              onChange={(event) => setOrganisation(event.target.value)}
-              placeholder="Service or NGO"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="responder-phone">Phone</Label>
-            <Input
-              id="responder-phone"
-              value={phone}
-              onChange={(event) => setPhone(event.target.value)}
-              placeholder="Contact number"
-            />
-          </div>
+          <TextInputField
+            id="responder-org"
+            label="Organisation"
+            placeholder="Service or NGO"
+            value={organisation}
+            onChange={setOrganisation}
+          />
+          <PhoneInputField
+            id="responder-phone"
+            label="Phone"
+            hint="Optional 10-digit mobile number"
+            value={phone}
+            error={phoneError}
+            onBlur={() => setTouched((prev) => ({ ...prev, phone: true }))}
+            onChange={setPhone}
+          />
         </div>
 
+        <FieldError message={saveError} />
+
         <div className="flex flex-wrap items-center gap-3">
+
           <Button onClick={() => save.mutate()} disabled={save.isPending}>
             {profile ? "Save details" : "Register as responder"}
           </Button>
