@@ -231,25 +231,28 @@ function SamaritanPage() {
           )}
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="v-name">Full name</Label>
-              <Input
-                id="v-name"
-                value={form.fullName}
-                onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
-                placeholder="Your name"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="v-phone">Phone number</Label>
-              <Input
-                id="v-phone"
-                value={form.phone}
-                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                placeholder="+91…"
-              />
-            </div>
+            <TextInputField
+              id="v-name"
+              label="Full name"
+              required
+              placeholder="Your name"
+              value={form.fullName}
+              error={nameError}
+              onBlur={() => setTouched((prev) => ({ ...prev, fullName: true }))}
+              onChange={(v) => setForm((f) => ({ ...f, fullName: v }))}
+            />
+            <PhoneInputField
+              id="v-phone"
+              label="Phone number"
+              required
+              hint="10-digit Indian mobile number"
+              value={form.phone}
+              error={phoneError}
+              onBlur={() => setTouched((prev) => ({ ...prev, phone: true }))}
+              onChange={(v) => setForm((f) => ({ ...f, phone: v }))}
+            />
           </div>
+
 
           <div className="space-y-2">
             <Label>Skills you can offer</Label>
