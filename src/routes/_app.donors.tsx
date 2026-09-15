@@ -24,6 +24,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { profileQuery } from "@/lib/api";
 import { BLOOD_GROUPS, donorSearchQuery, myDonorQuery, revealDonorPhone } from "@/lib/resqora-data";
 import { logActivity } from "@/lib/activity";
+import {
+  FieldError,
+  PhoneInputField,
+  TextInputField,
+} from "@/components/system/validated-field";
+import {
+  citySchema,
+  donorListingSchema,
+  fieldError,
+  firstIssue,
+  mobileSchema,
+  toPhoneDigits,
+} from "@/lib/validation";
+
 
 export const Route = createFileRoute("/_app/donors")({
   head: () => ({
@@ -148,22 +162,26 @@ function DonorsPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="donor-city">City</Label>
-            <Input
-              id="donor-city"
-              value={values.city}
-              onChange={(event) => setForm({ ...values, city: event.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="donor-phone">Contact phone</Label>
-            <Input
-              id="donor-phone"
-              value={values.phone}
-              onChange={(event) => setForm({ ...values, phone: event.target.value })}
-            />
-          </div>
+          <TextInputField
+            id="donor-city"
+            label="City"
+            required
+            value={values.city}
+            error={cityError}
+            onBlur={() => setTouched((prev) => ({ ...prev, city: true }))}
+            onChange={(v) => setForm({ ...values, city: v })}
+          />
+          <PhoneInputField
+            id="donor-phone"
+            label="Contact phone"
+            required
+            hint="10-digit Indian mobile number"
+            value={values.phone}
+            error={phoneError}
+            onBlur={() => setTouched((prev) => ({ ...prev, phone: true }))}
+            onChange={(v) => setForm({ ...values, phone: v })}
+          />
+          <FieldError message={saveError} />
           <Button
             variant="hero"
             className="w-full"
@@ -173,6 +191,7 @@ function DonorsPage() {
             <Droplets className="size-4" />
             {mine.data ? "Update my listing" : "Register as a donor"}
           </Button>
+
           <p className="text-xs text-muted-foreground">
             Only your name, blood group, city and phone are visible, and only while you're marked
             available.
