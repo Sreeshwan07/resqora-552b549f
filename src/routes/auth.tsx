@@ -398,8 +398,11 @@ function AuthPage() {
                     type="email"
                     value={email}
                     onChange={setEmail}
+                    onBlur={() => setTouched((prev) => ({ ...prev, email: true }))}
+                    error={emailError}
                     autoComplete="email"
                   />
+
                   <Button type="submit" variant="outline" className="w-full" disabled={busy}>
                     {busy ? (
                       <Loader2 className="size-4 animate-spin" />
