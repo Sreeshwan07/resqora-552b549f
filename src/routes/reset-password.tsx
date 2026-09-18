@@ -9,6 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/brand/logo";
 import { logSecurityEvent } from "@/lib/audit";
 import { firstIssue, passwordSchema } from "@/lib/security";
+import { FieldError } from "@/components/system/validated-field";
+import { fieldError } from "@/lib/validation";
+
 
 export const Route = createFileRoute("/reset-password")({
   ssr: false,
