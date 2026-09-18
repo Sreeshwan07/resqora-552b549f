@@ -407,20 +407,24 @@ function Field({
   icon: Icon,
   value,
   onChange,
+  onBlur,
   type = "text",
   autoComplete,
   hint,
   password,
+  error,
 }: {
   id: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   value: string;
   onChange: (value: string) => void;
+  onBlur?: () => void;
   type?: string;
   autoComplete?: string;
   hint?: string;
   password?: boolean;
+  error?: string | null;
 }) {
   const [visible, setVisible] = useState(false);
   return (
@@ -434,6 +438,9 @@ function Field({
           required
           autoComplete={autoComplete}
           value={value}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${id}-error` : undefined}
+          onBlur={onBlur}
           onChange={(event) => onChange(event.target.value)}
           className={password ? "h-11 rounded-xl pl-9 pr-11" : "h-11 rounded-xl pl-9"}
         />
@@ -448,10 +455,12 @@ function Field({
           </button>
         )}
       </div>
-      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+      <FieldError id={`${id}-error`} message={error} />
+      {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }
+
 
 function Divider() {
   return (
