@@ -28,6 +28,9 @@ import {
   passwordSchema,
   personNameSchema,
 } from "@/lib/security";
+import { FieldError } from "@/components/system/validated-field";
+import { fieldError } from "@/lib/validation";
+
 
 const searchSchema = z.object({
   redirect: z.string().optional(),
@@ -67,6 +70,14 @@ function AuthPage() {
   const [googleBusy, setGoogleBusy] = useState(false);
   const [remember, setRemember] = useState(true);
   const [sent, setSent] = useState<null | "confirm" | "reset">(null);
+  const [touched, setTouched] = useState<{ email?: boolean; password?: boolean; name?: boolean }>(
+    {},
+  );
+
+  const emailError = fieldError(emailSchema, email, { touched: touched.email });
+  const nameError = fieldError(personNameSchema, fullName, { touched: touched.name });
+  const passwordError = fieldError(passwordSchema, password, { touched: touched.password });
+
 
   const preferred = search.redirect && search.redirect.startsWith("/") ? search.redirect : null;
 
