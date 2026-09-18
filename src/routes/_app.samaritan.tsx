@@ -40,11 +40,7 @@ import {
   volunteerRequestsQuery,
 } from "@/lib/volunteers";
 import { locationSourceLabel } from "@/lib/sms-sos";
-import {
-  FieldError,
-  PhoneInputField,
-  TextInputField,
-} from "@/components/system/validated-field";
+import { FieldError, PhoneInputField, TextInputField } from "@/components/system/validated-field";
 import {
   fieldError,
   firstIssue,
@@ -53,7 +49,6 @@ import {
   toPhoneDigits,
   volunteerSignupSchema,
 } from "@/lib/validation";
-
 
 export const Route = createFileRoute("/_app/samaritan")({
   head: () => ({
@@ -114,7 +109,6 @@ function SamaritanPage() {
     setSeeded(true);
   }, [volunteer, seeded]);
 
-
   // Live offers/claims straight from the database — no manual refresh.
   useRealtimeTables({
     channel: user?.id ? `volunteer-matches-${user.id}` : null,
@@ -134,7 +128,9 @@ function SamaritanPage() {
   // Real location tracking, only while on duty and opted in.
   const tracking = useVolunteerTracking({
     profileId: volunteer?.id,
-    enabled: Boolean(verified && volunteer?.availability === "available" && volunteer?.share_location),
+    enabled: Boolean(
+      verified && volunteer?.availability === "available" && volunteer?.share_location,
+    ),
     onWritten: () => void queryClient.invalidateQueries({ queryKey: ["volunteer-profile"] }),
   });
 
@@ -162,7 +158,6 @@ function SamaritanPage() {
         latitude: position?.lat ?? null,
         longitude: position?.lng ?? null,
       });
-
     },
     onSuccess: () => {
       toast.success(
@@ -174,7 +169,6 @@ function SamaritanPage() {
     },
     onError: (error: Error) => toast.error(error.message),
   });
-
 
   const toggleAvailability = useMutation({
     mutationFn: async (next: boolean) => {
@@ -290,7 +284,6 @@ function SamaritanPage() {
             />
           </div>
 
-
           <div className="space-y-2">
             <Label>Skills you can offer</Label>
             <div className="flex flex-wrap gap-2">
@@ -355,7 +348,6 @@ function SamaritanPage() {
           <FieldError message={saveError} />
 
           <Button onClick={() => save.mutate()} disabled={save.isPending} className="w-full">
-
             {save.isPending && <Loader2 className="mr-2 size-4 animate-spin" aria-hidden="true" />}
             {volunteer ? "Save details" : "Join the network"}
           </Button>

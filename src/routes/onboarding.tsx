@@ -23,11 +23,7 @@ import {
   type EmergencyContact,
 } from "@/lib/api";
 import { saveEmergencyContacts, validateContacts } from "@/lib/contacts";
-import {
-  PhoneInputField,
-  TextInputField,
-  FieldError,
-} from "@/components/system/validated-field";
+import { PhoneInputField, TextInputField, FieldError } from "@/components/system/validated-field";
 import {
   citySchema,
   fieldError,
@@ -130,7 +126,6 @@ function OnboardingPage() {
 
   const markTouched = (key: string) => setTouched((prev) => ({ ...prev, [key]: true }));
 
-
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth", replace: true });
   }, [loading, user, navigate]);
@@ -163,7 +158,6 @@ function OnboardingPage() {
       );
     }
   }, [existingContacts]);
-
 
   const personalErrors = useMemo(
     () => ({
@@ -229,7 +223,8 @@ function OnboardingPage() {
   }
 
   function handleContinue() {
-    if (step === 0) touchAll(["full_name", "phone", "date_of_birth", "current_city", "home_address"]);
+    if (step === 0)
+      touchAll(["full_name", "phone", "date_of_birth", "current_city", "home_address"]);
     if (step === 2)
       touchAll(
         contacts.flatMap((_, index) => [
@@ -317,7 +312,6 @@ function OnboardingPage() {
     }
   }
 
-
   const StepIcon = steps[step].icon;
 
   return (
@@ -404,7 +398,6 @@ function OnboardingPage() {
                 </div>
               )}
 
-
               {step === 1 && (
                 <div className="grid gap-4">
                   <SelectField
@@ -470,7 +463,6 @@ function OnboardingPage() {
                           onChange={(v) => updateContact(setContacts, index, { phone: v })}
                         />
                       </div>
-
                     </div>
                   ))}
                 </div>
@@ -513,7 +505,6 @@ function OnboardingPage() {
                 Continue
                 <ArrowRight className="size-4" />
               </Button>
-
             ) : (
               <Button variant="hero" onClick={activate} disabled={saving}>
                 {saving ? (
@@ -538,7 +529,6 @@ function updateContact(
 ) {
   setContacts((prev) => prev.map((c, i) => (i === index ? { ...c, ...patch } : c)));
 }
-
 
 function AreaField({
   label,

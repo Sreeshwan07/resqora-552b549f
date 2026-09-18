@@ -28,6 +28,8 @@ import {
   passwordSchema,
   personNameSchema,
 } from "@/lib/security";
+import { FieldError } from "@/components/system/validated-field";
+import { fieldError } from "@/lib/validation";
 
 const searchSchema = z.object({
   redirect: z.string().optional(),
@@ -67,6 +69,13 @@ function AuthPage() {
   const [googleBusy, setGoogleBusy] = useState(false);
   const [remember, setRemember] = useState(true);
   const [sent, setSent] = useState<null | "confirm" | "reset">(null);
+  const [touched, setTouched] = useState<{ email?: boolean; password?: boolean; name?: boolean }>(
+    {},
+  );
+
+  const emailError = fieldError(emailSchema, email, { touched: touched.email });
+  const nameError = fieldError(personNameSchema, fullName, { touched: touched.name });
+  const passwordError = fieldError(passwordSchema, password, { touched: touched.password });
 
   const preferred = search.redirect && search.redirect.startsWith("/") ? search.redirect : null;
 
@@ -273,6 +282,8 @@ function AuthPage() {
                     type="email"
                     value={email}
                     onChange={setEmail}
+                    onBlur={() => setTouched((prev) => ({ ...prev, email: true }))}
+                    error={emailError}
                     autoComplete="email"
                   />
                   <Field
@@ -284,6 +295,7 @@ function AuthPage() {
                     onChange={setPassword}
                     autoComplete="current-password"
                   />
+
                   <div className="flex items-center justify-between">
                     <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
                       <Checkbox
@@ -332,6 +344,8 @@ function AuthPage() {
                     icon={UserRound}
                     value={fullName}
                     onChange={setFullName}
+                    onBlur={() => setTouched((prev) => ({ ...prev, name: true }))}
+                    error={nameError}
                     autoComplete="name"
                   />
                   <Field
@@ -341,6 +355,8 @@ function AuthPage() {
                     type="email"
                     value={email}
                     onChange={setEmail}
+                    onBlur={() => setTouched((prev) => ({ ...prev, email: true }))}
+                    error={emailError}
                     autoComplete="email"
                   />
                   <Field
@@ -350,9 +366,12 @@ function AuthPage() {
                     password
                     value={password}
                     onChange={setPassword}
+                    onBlur={() => setTouched((prev) => ({ ...prev, password: true }))}
+                    error={passwordError}
                     autoComplete="new-password"
                     hint="Minimum 8 characters"
                   />
+
                   <Button type="submit" variant="hero" className="w-full" disabled={busy}>
                     {busy ? (
                       <Loader2 className="size-4 animate-spin" />
@@ -377,8 +396,11 @@ function AuthPage() {
                     type="email"
                     value={email}
                     onChange={setEmail}
+                    onBlur={() => setTouched((prev) => ({ ...prev, email: true }))}
+                    error={emailError}
                     autoComplete="email"
                   />
+
                   <Button type="submit" variant="outline" className="w-full" disabled={busy}>
                     {busy ? (
                       <Loader2 className="size-4 animate-spin" />
@@ -407,20 +429,24 @@ function Field({
   icon: Icon,
   value,
   onChange,
+  onBlur,
   type = "text",
   autoComplete,
   hint,
   password,
+  error,
 }: {
   id: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   value: string;
   onChange: (value: string) => void;
+  onBlur?: () => void;
   type?: string;
   autoComplete?: string;
   hint?: string;
   password?: boolean;
+  error?: string | null;
 }) {
   const [visible, setVisible] = useState(false);
   return (
@@ -434,6 +460,9 @@ function Field({
           required
           autoComplete={autoComplete}
           value={value}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${id}-error` : undefined}
+          onBlur={onBlur}
           onChange={(event) => onChange(event.target.value)}
           className={password ? "h-11 rounded-xl pl-9 pr-11" : "h-11 rounded-xl pl-9"}
         />
@@ -448,7 +477,8 @@ function Field({
           </button>
         )}
       </div>
-      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+      <FieldError id={`${id}-error`} message={error} />
+      {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }

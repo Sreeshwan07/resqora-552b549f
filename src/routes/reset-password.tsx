@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/brand/logo";
 import { logSecurityEvent } from "@/lib/audit";
 import { firstIssue, passwordSchema } from "@/lib/security";
+import { FieldError } from "@/components/system/validated-field";
+import { fieldError } from "@/lib/validation";
 
 export const Route = createFileRoute("/reset-password")({
   ssr: false,
@@ -30,9 +32,15 @@ function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
+  const [touched, setTouched] = useState<{ password?: boolean; confirm?: boolean }>({});
+
+  const passwordError = fieldError(passwordSchema, password, { touched: touched.password });
+  const confirmError =
+    touched.confirm && confirm !== password ? "Both passwords must match." : null;
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    setTouched({ password: true, confirm: true });
     const parsed = passwordSchema.safeParse(password);
     if (!parsed.success) {
       toast.error(firstIssue(parsed.error));
@@ -78,10 +86,14 @@ function ResetPasswordPage() {
                 type="password"
                 required
                 value={password}
+                aria-invalid={passwordError ? true : undefined}
+                aria-describedby={passwordError ? "new-password-error" : undefined}
+                onBlur={() => setTouched((prev) => ({ ...prev, password: true }))}
                 onChange={(event) => setPassword(event.target.value)}
                 className="h-11 rounded-xl pl-9"
               />
             </div>
+            <FieldError id="new-password-error" message={passwordError} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="confirm-password">Confirm password</Label>
@@ -92,11 +104,16 @@ function ResetPasswordPage() {
                 type="password"
                 required
                 value={confirm}
+                aria-invalid={confirmError ? true : undefined}
+                aria-describedby={confirmError ? "confirm-password-error" : undefined}
+                onBlur={() => setTouched((prev) => ({ ...prev, confirm: true }))}
                 onChange={(event) => setConfirm(event.target.value)}
                 className="h-11 rounded-xl pl-9"
               />
             </div>
+            <FieldError id="confirm-password-error" message={confirmError} />
           </div>
+
           <Button type="submit" variant="hero" className="w-full" disabled={busy}>
             {busy && <Loader2 className="size-4 animate-spin" />}
             Update password

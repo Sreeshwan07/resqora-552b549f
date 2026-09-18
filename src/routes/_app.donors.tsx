@@ -24,11 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { profileQuery } from "@/lib/api";
 import { BLOOD_GROUPS, donorSearchQuery, myDonorQuery, revealDonorPhone } from "@/lib/resqora-data";
 import { logActivity } from "@/lib/activity";
-import {
-  FieldError,
-  PhoneInputField,
-  TextInputField,
-} from "@/components/system/validated-field";
+import { FieldError, PhoneInputField, TextInputField } from "@/components/system/validated-field";
 import {
   citySchema,
   donorListingSchema,
@@ -37,7 +33,6 @@ import {
   mobileSchema,
   toPhoneDigits,
 } from "@/lib/validation";
-
 
 export const Route = createFileRoute("/_app/donors")({
   head: () => ({
@@ -123,7 +118,6 @@ function DonorsPage() {
     },
     onError: (error: Error) => toast.error(error.message),
   });
-
 
   return (
     <>
