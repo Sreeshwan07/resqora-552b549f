@@ -346,6 +346,8 @@ function AuthPage() {
                     icon={UserRound}
                     value={fullName}
                     onChange={setFullName}
+                    onBlur={() => setTouched((prev) => ({ ...prev, name: true }))}
+                    error={nameError}
                     autoComplete="name"
                   />
                   <Field
@@ -355,6 +357,8 @@ function AuthPage() {
                     type="email"
                     value={email}
                     onChange={setEmail}
+                    onBlur={() => setTouched((prev) => ({ ...prev, email: true }))}
+                    error={emailError}
                     autoComplete="email"
                   />
                   <Field
@@ -364,9 +368,12 @@ function AuthPage() {
                     password
                     value={password}
                     onChange={setPassword}
+                    onBlur={() => setTouched((prev) => ({ ...prev, password: true }))}
+                    error={passwordError}
                     autoComplete="new-password"
                     hint="Minimum 8 characters"
                   />
+
                   <Button type="submit" variant="hero" className="w-full" disabled={busy}>
                     {busy ? (
                       <Loader2 className="size-4 animate-spin" />
