@@ -29,11 +29,7 @@ import { ensureMedicalShareLink, revokeShareLink, shareUrl } from "@/lib/share";
 import { logSecurityEvent } from "@/lib/audit";
 import { saveEmergencyContacts, validateContacts } from "@/lib/contacts";
 import { sanitizeMultiline, sanitizeText } from "@/lib/security";
-import {
-  FieldError,
-  PhoneInputField,
-  TextInputField,
-} from "@/components/system/validated-field";
+import { FieldError, PhoneInputField, TextInputField } from "@/components/system/validated-field";
 import {
   citySchema,
   fieldError,
@@ -157,7 +153,6 @@ function ProfilePage() {
     email: fieldError(optionalEmailSchema, contact.email, { touched: touched[`c${index}-email`] }),
   }));
 
-
   const score = computeSafetyScore(
     { ...(profile.data ?? {}), ...form } as never,
     (contacts.data ?? []) as never,
@@ -258,7 +253,6 @@ function ProfilePage() {
     void logSecurityEvent("Emergency contacts changed", "Trusted contact list saved");
     toast.success("Emergency contacts updated successfully");
   }
-
 
   return (
     <>
@@ -362,7 +356,6 @@ function ProfilePage() {
                 </Button>
               </div>
             </TabsContent>
-
 
             <TabsContent value="medical" className="mt-6 grid gap-4">
               <SelectField
@@ -478,7 +471,6 @@ function ProfilePage() {
                 {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
                 Save contacts
               </Button>
-
             </TabsContent>
           </Tabs>
         </div>
@@ -556,7 +548,6 @@ function MedicalQrSection() {
     </div>
   );
 }
-
 
 function AreaField({
   label,

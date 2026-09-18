@@ -16,11 +16,7 @@ import { EmptyState } from "@/components/system/empty-state";
 import { PanelSkeleton } from "@/components/system/loading-skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  FieldError,
-  PhoneInputField,
-  TextInputField,
-} from "@/components/system/validated-field";
+import { FieldError, PhoneInputField, TextInputField } from "@/components/system/validated-field";
 import {
   fieldError,
   firstIssue,
@@ -239,7 +235,6 @@ function ResponderIdentity({
         ? await supabase.from("responder_profiles").update(payload).eq("id", profile.id)
         : await supabase.from("responder_profiles").insert(payload);
       if (error) throw new Error(error.message);
-
     },
     onSuccess: async () => {
       toast.success("Responder details saved");
@@ -320,7 +315,6 @@ function ResponderIdentity({
         <FieldError message={saveError} />
 
         <div className="flex flex-wrap items-center gap-3">
-
           <Button onClick={() => save.mutate()} disabled={save.isPending}>
             {profile ? "Save details" : "Register as responder"}
           </Button>

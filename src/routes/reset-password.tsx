@@ -12,7 +12,6 @@ import { firstIssue, passwordSchema } from "@/lib/security";
 import { FieldError } from "@/components/system/validated-field";
 import { fieldError } from "@/lib/validation";
 
-
 export const Route = createFileRoute("/reset-password")({
   ssr: false,
   head: () => ({
