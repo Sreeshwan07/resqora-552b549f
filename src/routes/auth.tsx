@@ -284,6 +284,8 @@ function AuthPage() {
                     type="email"
                     value={email}
                     onChange={setEmail}
+                    onBlur={() => setTouched((prev) => ({ ...prev, email: true }))}
+                    error={emailError}
                     autoComplete="email"
                   />
                   <Field
@@ -295,6 +297,7 @@ function AuthPage() {
                     onChange={setPassword}
                     autoComplete="current-password"
                   />
+
                   <div className="flex items-center justify-between">
                     <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
                       <Checkbox
