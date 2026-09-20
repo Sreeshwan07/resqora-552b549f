@@ -23,7 +23,7 @@ const TOOLS = [
 export function EmergencyTools() {
   return (
     <section aria-label="Emergency tools" className="space-y-3">
-      <h2 className="font-display text-lg font-extrabold tracking-tight text-foreground sm:text-xl">
+      <h2 className="font-display text-lg font-extrabold text-foreground sm:text-xl">
         Emergency Tools
       </h2>
       <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
@@ -36,11 +36,11 @@ export function EmergencyTools() {
           >
             <Link
               to={tool.to}
-              className="soft-card group flex h-full min-h-28 flex-col justify-between gap-3 rounded-3xl p-4 transition-all hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:p-5"
+              className="soft-card group flex h-full min-h-24 items-center gap-3 rounded-2xl p-3.5 transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:min-h-28 sm:flex-col sm:items-start sm:justify-between sm:p-4"
             >
               <span
                 aria-hidden="true"
-                className="grid size-11 shrink-0 place-items-center rounded-2xl bg-teal/10 text-teal transition-colors group-hover:bg-teal/15"
+                className="grid size-10 shrink-0 place-items-center rounded-xl bg-teal/10 text-teal transition-colors group-hover:bg-teal/15 sm:size-11"
               >
                 <tool.icon className="size-5" />
               </span>

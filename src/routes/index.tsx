@@ -36,7 +36,7 @@ const RecentActivityFeed = lazy(() =>
 );
 
 function SectionFallback() {
-  return <div className="h-40 animate-pulse rounded-3xl border border-border bg-card" />;
+  return <div className="h-36 animate-pulse rounded-2xl border border-border bg-card" />;
 }
 
 export const Route = createFileRoute("/")({
@@ -91,7 +91,7 @@ function Index() {
     <div className="min-h-dvh bg-background">
       <LandingNav />
       <main>
-        <div className="mx-auto w-full max-w-5xl space-y-5 px-4 pb-28 pt-5 sm:space-y-7 sm:px-6 sm:py-8 lg:pb-10">
+        <div className="mx-auto w-full max-w-6xl space-y-5 px-4 pb-28 pt-4 sm:px-6 sm:pt-6 lg:space-y-6 lg:pb-12">
           <h1 className="sr-only">RESQORA — Every Second Matters. Every Life Connected.</h1>
 
           {locked ? (
@@ -102,16 +102,18 @@ function Index() {
 
               <InstallCard />
 
-              <EmergencyStatusCard
-                status={status}
-                now={now}
-                position={position}
-                address={address}
-                resolvingAddress={resolvingAddress}
-                denied={denied}
-              />
+              <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(22rem,0.85fr)]">
+                <EmergencyStatusCard
+                  status={status}
+                  now={now}
+                  position={position}
+                  address={address}
+                  resolvingAddress={resolvingAddress}
+                  denied={denied}
+                />
 
-              <EmergencyConsole />
+                <EmergencyConsole />
+              </div>
 
               <EmergencyTools />
 

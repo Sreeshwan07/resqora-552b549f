@@ -90,15 +90,22 @@ export function EmergencyConsole({ mode = "full" }: { mode?: "full" | "report" }
   }
 
   return (
-    <section aria-label="Emergency actions" className="space-y-3 sm:space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+    <section aria-label="Emergency actions" className="soft-card h-full space-y-3 rounded-2xl p-4 sm:p-5">
+      <div className="flex items-center justify-between gap-3 px-1">
+        <div>
+          <h2 className="font-display text-base font-extrabold text-foreground">Get emergency help</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">Choose the fastest action for your situation.</p>
+        </div>
+        <span className="size-2.5 shrink-0 rounded-full bg-success" aria-label="Emergency system ready" />
+      </div>
+      <div className="grid gap-3">
         {mode === "full" &&
           (sosActive ? (
             <Button
               size="xl"
               disabled={sosBusy}
               onClick={cancelSos}
-              className="h-20 rounded-3xl bg-success text-base font-bold text-success-foreground shadow-lg shadow-success/20 hover:bg-success/90 sm:h-24 sm:text-lg"
+              className="h-20 rounded-xl bg-success text-base font-bold text-success-foreground shadow-lg shadow-success/20 hover:bg-success/90 sm:h-24 sm:text-lg"
             >
               {sosBusy ? (
                 <Loader2 className="size-6 animate-spin" aria-hidden="true" />
@@ -111,7 +118,7 @@ export function EmergencyConsole({ mode = "full" }: { mode?: "full" | "report" }
             <Button
               size="xl"
               disabled={sosBusy}
-              className="h-20 rounded-3xl bg-alert text-base font-bold text-alert-foreground shadow-lg shadow-alert/25 hover:bg-alert/90 sm:h-24 sm:text-lg"
+              className="h-20 rounded-xl bg-alert text-base font-bold text-alert-foreground shadow-lg shadow-alert/25 transition-transform hover:bg-alert/90 active:scale-[0.98] sm:h-24 sm:text-lg"
               onClick={triggerSos}
             >
               {sosBusy ? (
@@ -127,7 +134,7 @@ export function EmergencyConsole({ mode = "full" }: { mode?: "full" | "report" }
           asChild
           size="xl"
           variant="outline"
-          className="soft-card h-20 rounded-3xl text-base font-bold text-foreground hover:bg-secondary sm:h-24 sm:text-lg"
+          className="h-12 rounded-xl border-border bg-background text-sm font-bold text-foreground hover:bg-secondary"
         >
           <Link to="/report">
             <Camera className="size-6" aria-hidden="true" />
