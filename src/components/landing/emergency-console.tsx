@@ -90,13 +90,23 @@ export function EmergencyConsole({ mode = "full" }: { mode?: "full" | "report" }
   }
 
   return (
-    <section aria-label="Emergency actions" className="soft-card h-full space-y-3 rounded-2xl p-4 sm:p-5">
+    <section
+      aria-label="Emergency actions"
+      className="soft-card h-full space-y-3 rounded-2xl p-4 sm:p-5"
+    >
       <div className="flex items-center justify-between gap-3 px-1">
         <div>
-          <h2 className="font-display text-base font-extrabold text-foreground">Get emergency help</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">Choose the fastest action for your situation.</p>
+          <h2 className="font-display text-base font-extrabold text-foreground">
+            Get emergency help
+          </h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Choose the fastest action for your situation.
+          </p>
         </div>
-        <span className="size-2.5 shrink-0 rounded-full bg-success" aria-label="Emergency system ready" />
+        <span
+          className="size-2.5 shrink-0 rounded-full bg-success"
+          aria-label="Emergency system ready"
+        />
       </div>
       <div className="grid gap-3">
         {mode === "full" &&

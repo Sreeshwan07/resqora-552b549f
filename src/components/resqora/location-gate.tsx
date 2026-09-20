@@ -64,10 +64,15 @@ export function LocationGate() {
     <Dialog open={open} onOpenChange={(value) => !value && setDismissed(true)}>
       <DialogContent className="max-w-md gap-5 rounded-2xl p-5 sm:p-6">
         <DialogHeader>
-          <span className="mb-1 grid size-11 place-items-center rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+          <span
+            className="mb-1 grid size-11 place-items-center rounded-xl bg-primary/10 text-primary"
+            aria-hidden="true"
+          >
             <MapPin className="size-5" />
           </span>
-          <DialogTitle className="text-left text-lg">Location helps emergency services find you</DialogTitle>
+          <DialogTitle className="text-left text-lg">
+            Location helps emergency services find you
+          </DialogTitle>
           <DialogDescription className="text-left leading-relaxed">
             {permissionBlocked
               ? "RESQORA needs your location to send responders and your trusted contacts an exact position, and to find the nearest hospitals, police, fire stations and blood banks."
@@ -90,7 +95,11 @@ export function LocationGate() {
           </form>
         ) : null}
 
-        {error && <p role="alert" className="rounded-xl bg-alert/10 p-3 text-xs leading-relaxed text-alert">{error}</p>}
+        {error && (
+          <p role="alert" className="rounded-xl bg-alert/10 p-3 text-xs leading-relaxed text-alert">
+            {error}
+          </p>
+        )}
 
         <p className="flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
           <ShieldCheck className="mt-0.5 size-4 shrink-0 text-success" aria-hidden="true" />

@@ -106,7 +106,9 @@ export function EmergencyStatusCard({
             Last update
           </dt>
           <dd className="mt-2 font-mono text-lg font-bold text-foreground">
-            {hydrated ? now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "--:--"}
+            {hydrated
+              ? now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+              : "--:--"}
           </dd>
         </div>
       </dl>

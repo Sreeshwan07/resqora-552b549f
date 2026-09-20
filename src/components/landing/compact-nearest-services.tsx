@@ -39,7 +39,9 @@ export function CompactNearestServices({
             <RefreshCw className={cn("size-4", nearby.isFetching && "animate-spin")} />
           </Button>
           <Button asChild variant="ghost" size="sm" className="h-9 rounded-lg text-xs font-bold">
-            <Link to="/nearby">View all <ChevronRight className="size-3.5" /></Link>
+            <Link to="/nearby">
+              View all <ChevronRight className="size-3.5" />
+            </Link>
           </Button>
         </div>
       </div>
