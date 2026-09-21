@@ -87,7 +87,8 @@ export const Route = createFileRoute("/_app/triage")({
       { property: "og:title", content: "RESQORA triage board" },
       {
         property: "og:description",
-        content: "Sort everyone involved in live incidents by triage priority and track each person.",
+        content:
+          "Sort everyone involved in live incidents by triage priority and track each person.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -110,7 +111,8 @@ function TriagePage() {
     const list = board.data?.victims ?? [];
     const filtered = filter === "all" ? list : list.filter((victim) => victim.priority === filter);
     return [...filtered].sort(
-      (a, b) => PRIORITY_ORDER.indexOf(a.priority as never) - PRIORITY_ORDER.indexOf(b.priority as never),
+      (a, b) =>
+        PRIORITY_ORDER.indexOf(a.priority as never) - PRIORITY_ORDER.indexOf(b.priority as never),
     );
   }, [board.data, filter]);
 
@@ -137,7 +139,9 @@ function TriagePage() {
             type="button"
             onClick={() => setFilter(filter === entry.value ? "all" : entry.value)}
             className={`rounded-2xl border p-3 text-left transition ${
-              filter === entry.value ? "border-primary bg-primary/5" : "border-border hover:bg-accent"
+              filter === entry.value
+                ? "border-primary bg-primary/5"
+                : "border-border hover:bg-accent"
             }`}
           >
             <p className={`text-xl font-semibold ${entry.tone}`}>{entry.count}</p>

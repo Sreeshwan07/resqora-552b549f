@@ -94,7 +94,6 @@ export const noteSchema = z.object({
     .refine((v) => v.length > 0, "Add some content for this note"),
 });
 
-
 /* ------------------------------------------------------------------ */
 /* Client-side abuse throttling                                        */
 /* ------------------------------------------------------------------ */

@@ -58,7 +58,6 @@ function set(patch: Partial<State>) {
 
 // Address lookup is shared with the emergency flow (Google, then OpenStreetMap).
 
-
 let lastResolvedKey: string | null = null;
 
 function resolveAddress(lat: number, lng: number) {
@@ -194,7 +193,7 @@ function startWatch() {
       set({ status: state.manual ? "manual" : "unavailable" });
     }, ACQUIRE_CEILING_MS);
   }
-// Only while an SOS is active: force a fresh fix every 10s even when the
+  // Only while an SOS is active: force a fresh fix every 10s even when the
   // device reports no movement. Normal browsing just follows the watcher.
   syncEmergencyInterval();
 }
@@ -249,7 +248,7 @@ export function setHighAccuracyTracking(enabled: boolean) {
 function bindVisibilityRecovery() {
   if (visibilityBound || typeof document === "undefined") return;
   visibilityBound = true;
-document.addEventListener("visibilitychange", () => {
+  document.addEventListener("visibilitychange", () => {
     // Pause the 10s emergency heartbeat while hidden; restart it on return.
     syncEmergencyInterval();
     if (document.visibilityState !== "visible") return;
@@ -284,7 +283,10 @@ function start() {
   }
 
   // Geolocation needs a secure context: http:// on a phone silently never fires.
-  if (!navigator.geolocation || (!window.isSecureContext && window.location.hostname !== "localhost")) {
+  if (
+    !navigator.geolocation ||
+    (!window.isSecureContext && window.location.hostname !== "localhost")
+  ) {
     if (!state.manual) set({ status: "unavailable" });
     return;
   }

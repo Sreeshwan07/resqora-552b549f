@@ -32,7 +32,8 @@ const PERMISSIONS_POLICY = [
   "payment=()",
   "usb=()",
   "magnetometer=()",
-  "gyroscope=()",
+  // Accident reports record device tilt alongside the photo evidence.
+  "gyroscope=(self)",
   "interest-cohort=()",
 ].join(", ");
 

@@ -246,9 +246,7 @@ export function isRealDate(value: string): boolean {
   if (!ISO_DATE_RE.test(value)) return false;
   const [y, m, d] = value.split("-").map(Number);
   const date = new Date(Date.UTC(y, m - 1, d));
-  return (
-    date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d
-  );
+  return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
 }
 
 export function ageFromDob(value: string | null | undefined): number | null {
@@ -308,7 +306,10 @@ export const volunteerSignupSchema = z.object({
   fullName: personNameSchema,
   phone: mobileSchema,
   skills: z.array(z.string()).min(1, MESSAGES.skills),
-  radiusKm: z.number().min(1, "Travel distance must be 1-50 km.").max(50, "Travel distance must be 1-50 km."),
+  radiusKm: z
+    .number()
+    .min(1, "Travel distance must be 1-50 km.")
+    .max(50, "Travel distance must be 1-50 km."),
 });
 
 export const donorListingSchema = z.object({

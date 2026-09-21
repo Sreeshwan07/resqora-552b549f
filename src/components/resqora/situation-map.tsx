@@ -28,8 +28,16 @@ const TONES: Record<MapPoint["kind"], { fill: string; ring: string; legend: stri
     ring: "var(--color-destructive)",
     legend: "Incidents",
   },
-  resource: { fill: "var(--color-primary)", ring: "var(--color-primary)", legend: "Response units" },
-  zone: { fill: "var(--color-muted-foreground)", ring: "var(--color-border)", legend: "Hazard areas" },
+  resource: {
+    fill: "var(--color-primary)",
+    ring: "var(--color-primary)",
+    legend: "Response units",
+  },
+  zone: {
+    fill: "var(--color-muted-foreground)",
+    ring: "var(--color-border)",
+    legend: "Hazard areas",
+  },
 };
 
 const W = 720;

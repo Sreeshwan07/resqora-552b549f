@@ -40,6 +40,17 @@ function useDeviceOrientation() {
   useEffect(() => {
     const screenType = window.screen?.orientation?.type ?? null;
     if (screenType) setOrientation(screenType.replace(/-/g, " "));
+    // Some embeddings disallow the motion sensors; subscribing anyway only
+    // produces a permissions-policy error, so check first and skip tilt.
+    const featurePolicy = (
+      document as Document & { featurePolicy?: { allowsFeature(f: string): boolean } }
+    ).featurePolicy;
+    const permissionsPolicy = (
+      document as Document & { permissionsPolicy?: { allowsFeature(f: string): boolean } }
+    ).permissionsPolicy;
+    const policy = permissionsPolicy ?? featurePolicy;
+    if (policy && !policy.allowsFeature("gyroscope")) return;
+
     const onTilt = (event: DeviceOrientationEvent) => {
       if (event.alpha == null && event.beta == null) return;
       setOrientation(

@@ -64,8 +64,7 @@ function PreparePage() {
   }, [user?.id, tasks.data, queryClient]);
 
   const toggle = useMutation({
-    mutationFn: (input: { id: string; done: boolean }) =>
-      setPreparednessDone(input.id, input.done),
+    mutationFn: (input: { id: string; done: boolean }) => setPreparednessDone(input.id, input.done),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["preparedness-tasks", user?.id] });
     },

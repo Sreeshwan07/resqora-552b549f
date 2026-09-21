@@ -22,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { BystanderActivate } from "@/components/resqora/bystander-activate";
 import { NOT_PROVIDED, resqrSummaryQuery } from "@/lib/resqr";
 
-
 export const Route = createFileRoute("/r/$code")({
   head: () => ({
     meta: [
@@ -163,7 +162,6 @@ function EmergencySummaryPage() {
           />
 
           <section className="mt-4 space-y-3">
-
             <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               Quick emergency actions
             </h2>

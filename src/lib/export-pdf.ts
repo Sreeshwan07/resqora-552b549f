@@ -157,7 +157,10 @@ export function exportIncidentReportPdf(input: {
       ["Severity", incident.severity],
       ["Stage reached", input.phaseLabel],
       ["Started", new Date(incident.started_at).toLocaleString()],
-      ["Closed", incident.resolved_at ? new Date(incident.resolved_at).toLocaleString() : "Still open"],
+      [
+        "Closed",
+        incident.resolved_at ? new Date(incident.resolved_at).toLocaleString() : "Still open",
+      ],
       [
         "Location",
         incident.address ||

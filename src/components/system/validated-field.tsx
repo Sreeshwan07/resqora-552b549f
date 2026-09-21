@@ -83,7 +83,10 @@ export function TextInputField({
         aria-describedby={error ? errorId : hint ? hintId : undefined}
         onChange={(event) => onChange(event.target.value)}
         onBlur={onBlur}
-        className={cn("h-11 rounded-xl", error && "border-destructive focus-visible:ring-destructive/40")}
+        className={cn(
+          "h-11 rounded-xl",
+          error && "border-destructive focus-visible:ring-destructive/40",
+        )}
       />
       {hint && !error && (
         <p id={hintId} className="text-xs text-muted-foreground">
@@ -203,7 +206,10 @@ export function TextAreaField({
         aria-describedby={error ? errorId : undefined}
         onChange={(event) => onChange(event.target.value)}
         onBlur={onBlur}
-        className={cn("rounded-xl", error && "border-destructive focus-visible:ring-destructive/40")}
+        className={cn(
+          "rounded-xl",
+          error && "border-destructive focus-visible:ring-destructive/40",
+        )}
       />
       {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
       <FieldError id={errorId} message={error} />
