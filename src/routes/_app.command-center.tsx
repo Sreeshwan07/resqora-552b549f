@@ -358,15 +358,7 @@ function CommandCentrePage() {
   );
 }
 
-function Stat({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof Users;
-  label: string;
-  value: number;
-}) {
+function Stat({ icon: Icon, label, value }: { icon: typeof Users; label: string; value: number }) {
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
       <span className="grid size-10 place-items-center rounded-xl bg-accent text-accent-foreground">
@@ -397,8 +389,7 @@ function DispatchPanel({ incident }: { incident: CommandIncident }) {
   const communityPending = (volunteers.data ?? []).filter((v) => v.status === "offered");
 
   const options = (resources.data ?? []).filter(
-    (resource) =>
-      resource.status === "available" || resource.assigned_emergency_id === incident.id,
+    (resource) => resource.status === "available" || resource.assigned_emergency_id === incident.id,
   );
 
   async function refresh() {
@@ -411,8 +402,7 @@ function DispatchPanel({ incident }: { incident: CommandIncident }) {
   }
 
   const dispatch = useMutation({
-    mutationFn: () =>
-      dispatchResource(incident.id, resourceId, eta ? Number(eta) : null, null),
+    mutationFn: () => dispatchResource(incident.id, resourceId, eta ? Number(eta) : null, null),
     onSuccess: async (result) => {
       setResourceId("");
       setEta("");

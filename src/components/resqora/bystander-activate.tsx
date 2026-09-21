@@ -60,8 +60,9 @@ export function BystanderActivate({
             : "Emergency raised on this person's behalf"}
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
-          Reference <span className="font-semibold text-foreground">{result.activation.reference}</span>
-          . Their trusted contacts can now see the live emergency.
+          Reference{" "}
+          <span className="font-semibold text-foreground">{result.activation.reference}</span>.
+          Their trusted contacts can now see the live emergency.
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
           {result.guardianEmailSent
@@ -105,7 +106,10 @@ export function BystanderActivate({
           ? `An emergency is already running for ${victimName}. Confirm you are with them so their contacts know help has arrived.`
           : `Raise the emergency for ${victimName}. No account needed — ${guardianName ?? "their guardian"} and their trusted contacts are alerted with your location.`}
       </p>
-      <label htmlFor="bystander-note" className="mt-4 block text-xs font-medium text-muted-foreground">
+      <label
+        htmlFor="bystander-note"
+        className="mt-4 block text-xs font-medium text-muted-foreground"
+      >
         What do you see? (optional)
       </label>
       <Textarea

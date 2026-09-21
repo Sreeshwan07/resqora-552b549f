@@ -144,7 +144,7 @@ export function SceneCapture({
     });
   }
 
-async function stage(file: Blob, kind: "photo" | "video", label: string) {
+  async function stage(file: Blob, kind: "photo" | "video", label: string) {
     setPreparing(true);
     try {
       // Photos are downscaled before storage so uploads stay small and the AI

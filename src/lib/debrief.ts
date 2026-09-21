@@ -150,8 +150,7 @@ export function incidentMetrics(
     timeToDispatchSeconds: seconds(start, dispatchAt),
     timeToOnSceneSeconds: seconds(start, onSceneAt),
     timeToHandoverSeconds: seconds(start, handoverAt),
-    totalDurationSeconds:
-      incident.duration_seconds ?? seconds(start, incident.resolved_at) ?? null,
+    totalDurationSeconds: incident.duration_seconds ?? seconds(start, incident.resolved_at) ?? null,
     escalations: incident.escalation_level ?? 0,
     unitsDispatched: assignments.length,
     unitsCompleted: assignments.filter((a) => a.status === "completed").length,
@@ -226,11 +225,7 @@ export function completedRecoverySteps(events: IncidentEvent[]) {
 }
 
 /** Records a completed recovery step on the incident's own timeline. */
-export async function markRecoveryStep(
-  emergencyId: string,
-  step: RecoveryStepKey,
-  note?: string,
-) {
+export async function markRecoveryStep(emergencyId: string, step: RecoveryStepKey, note?: string) {
   const { data: auth } = await supabase.auth.getUser();
   const userId = auth.user?.id;
   if (!userId) throw new Error("You need to be signed in.");

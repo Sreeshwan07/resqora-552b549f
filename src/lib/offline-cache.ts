@@ -20,9 +20,7 @@ export function saveOfflineSnapshot(
   if (typeof window === "undefined") return;
   const snapshot: OfflineSnapshot = {
     savedAt: new Date().toISOString(),
-    profile: profile
-      ? { full_name: profile.full_name, blood_group: profile.blood_group }
-      : null,
+    profile: profile ? { full_name: profile.full_name, blood_group: profile.blood_group } : null,
     contacts: contacts.slice(0, 3).map((c) => ({ name: c.name, phone: c.phone })),
   };
   try {

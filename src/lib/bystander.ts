@@ -81,8 +81,9 @@ export async function activateBystanderEmergency(input: {
 
   if (activation.guardian_email) {
     const time = new Date().toLocaleString();
-    const address =
-      coords ? `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}` : "Location unavailable";
+    const address = coords
+      ? `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`
+      : "Location unavailable";
     const mapLink = coords
       ? `https://www.google.com/maps/search/?api=1&query=${coords.latitude},${coords.longitude}`
       : "Pending location capture";

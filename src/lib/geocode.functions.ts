@@ -47,7 +47,6 @@ async function openStreetMap(lat: number, lng: number) {
 export const reverseGeocodeFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => schema.parse(data))
   .handler(async ({ data }): Promise<{ address: string | null }> => {
-    const address =
-      (await google(data.lat, data.lng)) ?? (await openStreetMap(data.lat, data.lng));
+    const address = (await google(data.lat, data.lng)) ?? (await openStreetMap(data.lat, data.lng));
     return { address };
   });

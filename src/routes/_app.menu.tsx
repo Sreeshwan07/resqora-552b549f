@@ -31,7 +31,11 @@ function MenuPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader icon={LayoutGrid} title="Menu" description="Everything RESQORA can do, grouped by what you need." />
+      <PageHeader
+        icon={LayoutGrid}
+        title="Menu"
+        description="Everything RESQORA can do, grouped by what you need."
+      />
 
       {mobileMenuSections.map((section) => (
         <section key={section.title} className="space-y-2">

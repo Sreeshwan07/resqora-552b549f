@@ -1,10 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import {
-  MESSAGES,
-  emergencyContactSchema,
-  firstIssue,
-  normalizeMobile,
-} from "@/lib/validation";
+import { MESSAGES, emergencyContactSchema, firstIssue, normalizeMobile } from "@/lib/validation";
 
 /**
  * One safe way to write the trusted-contact list.
