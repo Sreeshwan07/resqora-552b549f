@@ -6,6 +6,11 @@ import { useCheckinWatcher } from "@/hooks/use-checkin-watcher";
 export const Route = createFileRoute("/_app")({
   ssr: false,
   beforeLoad: async ({ location }) => {
+    // This subtree never renders on the server, and the session lives in browser
+    // storage, so the guard runs on the client only. Redirecting during SSR would
+    // hand the browser an /auth shell it then re-renders, which React reports as a
+    // hydration mismatch.
+    if (typeof window === "undefined") return;
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) {
       throw redirect({ to: "/auth", search: { redirect: location.href } });
