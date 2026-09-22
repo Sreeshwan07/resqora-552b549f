@@ -36,7 +36,9 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/auth")({
-  ssr: false,
+  // Server-rendered: the page body is SSR-safe (browser APIs are only touched in
+  // handlers/effects) and rendering it on the server avoids a hydration mismatch
+  // when a protected route redirects here mid-hydration.
   validateSearch: searchSchema,
   head: () => ({
     meta: [
