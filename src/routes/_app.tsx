@@ -21,7 +21,9 @@ function AppShellRoute() {
   const href = useRouterState({ select: (state) => state.location.href });
   const [checked, setChecked] = useState(false);
 
+  // The session is verified once per app entry, not on every in-app navigation.
   useEffect(() => {
+    if (checked) return;
     let cancelled = false;
     void supabase.auth.getUser().then(({ data, error }) => {
       if (cancelled) return;
@@ -34,7 +36,7 @@ function AppShellRoute() {
     return () => {
       cancelled = true;
     };
-  }, [href, navigate]);
+  }, [checked, href, navigate]);
 
   if (!checked) {
     return (
