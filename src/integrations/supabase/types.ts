@@ -1320,6 +1320,220 @@ export type Database = {
         }
         Relationships: []
       }
+      safe_journey_events: {
+        Row: {
+          created_at: string
+          detail: string | null
+          id: string
+          journey_id: string
+          label: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          journey_id: string
+          label: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          journey_id?: string
+          label?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safe_journey_events_journey_id_fkey"
+            columns: ["journey_id"]
+            isOneToOne: false
+            referencedRelation: "safe_journeys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      safe_journey_notifications: {
+        Row: {
+          channel: string
+          created_at: string
+          error: string | null
+          event_type: string
+          id: string
+          journey_id: string
+          recipient_contact_id: string | null
+          recipient_label: string
+          sent_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          error?: string | null
+          event_type: string
+          id?: string
+          journey_id: string
+          recipient_contact_id?: string | null
+          recipient_label: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          error?: string | null
+          event_type?: string
+          id?: string
+          journey_id?: string
+          recipient_contact_id?: string | null
+          recipient_label?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safe_journey_notifications_journey_id_fkey"
+            columns: ["journey_id"]
+            isOneToOne: false
+            referencedRelation: "safe_journeys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      safe_journeys: {
+        Row: {
+          cancelled_at: string | null
+          check_in_interval_minutes: number | null
+          check_in_required_at: string | null
+          completed_at: string | null
+          created_at: string
+          destination_address: string
+          destination_latitude: number | null
+          destination_longitude: number | null
+          emergency_id: string | null
+          expected_arrival_at: string
+          grace_period_minutes: number
+          guardian_contact_id: string | null
+          guardian_email: string | null
+          guardian_name: string
+          guardian_notified_at: string | null
+          guardian_phone: string | null
+          id: string
+          last_accuracy: number | null
+          last_check_in_at: string | null
+          last_latitude: number | null
+          last_location_at: string | null
+          last_longitude: number | null
+          name: string
+          notify_guardian_on_complete: boolean
+          notify_guardian_on_missed: boolean
+          notify_guardian_on_start: boolean
+          origin_address: string | null
+          origin_latitude: number | null
+          origin_longitude: number | null
+          sharing_enabled: boolean
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          check_in_interval_minutes?: number | null
+          check_in_required_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          destination_address: string
+          destination_latitude?: number | null
+          destination_longitude?: number | null
+          emergency_id?: string | null
+          expected_arrival_at: string
+          grace_period_minutes?: number
+          guardian_contact_id?: string | null
+          guardian_email?: string | null
+          guardian_name: string
+          guardian_notified_at?: string | null
+          guardian_phone?: string | null
+          id?: string
+          last_accuracy?: number | null
+          last_check_in_at?: string | null
+          last_latitude?: number | null
+          last_location_at?: string | null
+          last_longitude?: number | null
+          name: string
+          notify_guardian_on_complete?: boolean
+          notify_guardian_on_missed?: boolean
+          notify_guardian_on_start?: boolean
+          origin_address?: string | null
+          origin_latitude?: number | null
+          origin_longitude?: number | null
+          sharing_enabled?: boolean
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          check_in_interval_minutes?: number | null
+          check_in_required_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          destination_address?: string
+          destination_latitude?: number | null
+          destination_longitude?: number | null
+          emergency_id?: string | null
+          expected_arrival_at?: string
+          grace_period_minutes?: number
+          guardian_contact_id?: string | null
+          guardian_email?: string | null
+          guardian_name?: string
+          guardian_notified_at?: string | null
+          guardian_phone?: string | null
+          id?: string
+          last_accuracy?: number | null
+          last_check_in_at?: string | null
+          last_latitude?: number | null
+          last_location_at?: string | null
+          last_longitude?: number | null
+          name?: string
+          notify_guardian_on_complete?: boolean
+          notify_guardian_on_missed?: boolean
+          notify_guardian_on_start?: boolean
+          origin_address?: string | null
+          origin_latitude?: number | null
+          origin_longitude?: number | null
+          sharing_enabled?: boolean
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safe_journeys_emergency_id_fkey"
+            columns: ["emergency_id"]
+            isOneToOne: false
+            referencedRelation: "emergencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safe_journeys_guardian_contact_id_fkey"
+            columns: ["guardian_contact_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       safety_checkins: {
         Row: {
           confirmed_at: string | null
@@ -1363,6 +1577,50 @@ export type Database = {
             columns: ["emergency_id"]
             isOneToOne: false
             referencedRelation: "emergencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      safety_circle_members: {
+        Row: {
+          contact_id: string
+          created_at: string
+          id: string
+          is_default_guardian: boolean
+          notify_on_complete: boolean
+          notify_on_missed: boolean
+          notify_on_start: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string
+          id?: string
+          is_default_guardian?: boolean
+          notify_on_complete?: boolean
+          notify_on_missed?: boolean
+          notify_on_start?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string
+          id?: string
+          is_default_guardian?: boolean
+          notify_on_complete?: boolean
+          notify_on_missed?: boolean
+          notify_on_start?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_circle_members_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_contacts"
             referencedColumns: ["id"]
           },
         ]
@@ -1757,6 +2015,23 @@ export type Database = {
         Args: { _emergency_id: string; _token: string }
         Returns: Json
       }
+      guardian_safe_journeys: {
+        Args: never
+        Returns: {
+          destination_address: string
+          emergency_id: string
+          expected_arrival_at: string
+          guardian_notified_at: string
+          journey_id: string
+          journey_name: string
+          last_latitude: number
+          last_location_at: string
+          last_longitude: number
+          status: string
+          traveller_name: string
+          traveller_phone: string
+        }[]
+      }
       guardian_session_for: {
         Args: { _emergency_id: string; _token: string }
         Returns: {
@@ -1844,6 +2119,152 @@ export type Database = {
         }
         Returns: Json
       }
+      safe_journey_attach_emergency: {
+        Args: { _emergency_id: string; _journey_id: string }
+        Returns: {
+          cancelled_at: string | null
+          check_in_interval_minutes: number | null
+          check_in_required_at: string | null
+          completed_at: string | null
+          created_at: string
+          destination_address: string
+          destination_latitude: number | null
+          destination_longitude: number | null
+          emergency_id: string | null
+          expected_arrival_at: string
+          grace_period_minutes: number
+          guardian_contact_id: string | null
+          guardian_email: string | null
+          guardian_name: string
+          guardian_notified_at: string | null
+          guardian_phone: string | null
+          id: string
+          last_accuracy: number | null
+          last_check_in_at: string | null
+          last_latitude: number | null
+          last_location_at: string | null
+          last_longitude: number | null
+          name: string
+          notify_guardian_on_complete: boolean
+          notify_guardian_on_missed: boolean
+          notify_guardian_on_start: boolean
+          origin_address: string | null
+          origin_latitude: number | null
+          origin_longitude: number | null
+          sharing_enabled: boolean
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "safe_journeys"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      safe_journey_can_transition: {
+        Args: { _from: string; _to: string }
+        Returns: boolean
+      }
+      safe_journey_live_statuses: { Args: never; Returns: string[] }
+      safe_journey_location: {
+        Args: {
+          _accuracy?: number
+          _captured_at?: string
+          _journey_id: string
+          _latitude: number
+          _longitude: number
+        }
+        Returns: {
+          cancelled_at: string | null
+          check_in_interval_minutes: number | null
+          check_in_required_at: string | null
+          completed_at: string | null
+          created_at: string
+          destination_address: string
+          destination_latitude: number | null
+          destination_longitude: number | null
+          emergency_id: string | null
+          expected_arrival_at: string
+          grace_period_minutes: number
+          guardian_contact_id: string | null
+          guardian_email: string | null
+          guardian_name: string
+          guardian_notified_at: string | null
+          guardian_phone: string | null
+          id: string
+          last_accuracy: number | null
+          last_check_in_at: string | null
+          last_latitude: number | null
+          last_location_at: string | null
+          last_longitude: number | null
+          name: string
+          notify_guardian_on_complete: boolean
+          notify_guardian_on_missed: boolean
+          notify_guardian_on_start: boolean
+          origin_address: string | null
+          origin_latitude: number | null
+          origin_longitude: number | null
+          sharing_enabled: boolean
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "safe_journeys"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      safe_journey_transition: {
+        Args: { _journey_id: string; _note?: string; _to: string }
+        Returns: {
+          cancelled_at: string | null
+          check_in_interval_minutes: number | null
+          check_in_required_at: string | null
+          completed_at: string | null
+          created_at: string
+          destination_address: string
+          destination_latitude: number | null
+          destination_longitude: number | null
+          emergency_id: string | null
+          expected_arrival_at: string
+          grace_period_minutes: number
+          guardian_contact_id: string | null
+          guardian_email: string | null
+          guardian_name: string
+          guardian_notified_at: string | null
+          guardian_phone: string | null
+          id: string
+          last_accuracy: number | null
+          last_check_in_at: string | null
+          last_latitude: number | null
+          last_location_at: string | null
+          last_longitude: number | null
+          name: string
+          notify_guardian_on_complete: boolean
+          notify_guardian_on_missed: boolean
+          notify_guardian_on_start: boolean
+          origin_address: string | null
+          origin_latitude: number | null
+          origin_longitude: number | null
+          sharing_enabled: boolean
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "safe_journeys"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       search_blood_donors: {
         Args: { _city?: string; _group?: string }
         Returns: {
@@ -1881,6 +2302,51 @@ export type Database = {
       start_emergency_session: {
         Args: { _notes: string; _severity: string; _type: string }
         Returns: Json
+      }
+      start_safe_journey: {
+        Args: { _payload: Json }
+        Returns: {
+          cancelled_at: string | null
+          check_in_interval_minutes: number | null
+          check_in_required_at: string | null
+          completed_at: string | null
+          created_at: string
+          destination_address: string
+          destination_latitude: number | null
+          destination_longitude: number | null
+          emergency_id: string | null
+          expected_arrival_at: string
+          grace_period_minutes: number
+          guardian_contact_id: string | null
+          guardian_email: string | null
+          guardian_name: string
+          guardian_notified_at: string | null
+          guardian_phone: string | null
+          id: string
+          last_accuracy: number | null
+          last_check_in_at: string | null
+          last_latitude: number | null
+          last_location_at: string | null
+          last_longitude: number | null
+          name: string
+          notify_guardian_on_complete: boolean
+          notify_guardian_on_missed: boolean
+          notify_guardian_on_start: boolean
+          origin_address: string | null
+          origin_latitude: number | null
+          origin_longitude: number | null
+          sharing_enabled: boolean
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "safe_journeys"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       transition_emergency: {
         Args: { _emergency_id: string; _note?: string; _to_phase: string }
