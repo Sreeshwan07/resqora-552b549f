@@ -11,13 +11,14 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useLivePosition } from "@/hooks/use-live-position";
 import { useRealtimeTables } from "@/hooks/use-realtime-tables";
-import { profileQuery } from "@/lib/api";
+import { activeEmergencyQuery, profileQuery } from "@/lib/api";
 import { haversineKm } from "@/lib/geo";
 import { showPush } from "@/lib/push";
 
 import {
   ARRIVAL_RADIUS_KM,
   activeJourneyQuery,
+  attachJourneyToEmergency,
   distanceToDestinationKm,
   isLive,
   journeyMessage,
@@ -28,6 +29,7 @@ import {
   transitionJourney,
   type SafeJourney,
 } from "@/lib/safe-journey";
+
 
 /** Write a new point only after real movement or a reasonable time gap. */
 const MIN_WRITE_DISTANCE_KM = 0.15;
