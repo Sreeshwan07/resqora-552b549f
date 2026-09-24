@@ -121,6 +121,22 @@ export function useSafeJourneyMonitor() {
     });
   }, [journey, position, online, once, refresh]);
 
+  // ------------------------------------------------- emergency session link
+  // An SOS raised while a journey is live is the SAME emergency session — the
+  // journey simply attaches its context to it. No second workflow is created.
+  useEffect(() => {
+    const live = emergency.data;
+    if (!journey || !isLive(journey) || journey.emergency_id) return;
+    if (!live || live.status === "resolved") return;
+    void once(`attach-${journey.id}-${live.id}`, async () => {
+      await attachJourneyToEmergency(journey.id, live.id);
+      trackJourneyEvent(user?.id, "emergency_from_journey");
+      refresh();
+    });
+  }, [journey, emergency.data, user?.id, once, refresh]);
+
+
+
   // -------------------------------------------------------- state machine
   useEffect(() => {
     if (!journey || !user) return;
