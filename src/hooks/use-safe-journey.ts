@@ -99,12 +99,8 @@ export function useSafeJourneyMonitor() {
     if (!journey || !isLive(journey) || !journey.sharing_enabled) return;
     if (!position || position.source !== "gps" || !online) return;
     const previous = lastWrite.current;
-    const moved = previous
-      ? distanceToDestinationKm(
-          { ...journey, destination_latitude: previous.lat, destination_longitude: previous.lng },
-          position,
-        ) ?? 0
-      : Infinity;
+    const moved = previous ? haversineKm(previous, position) : Infinity;
+
     const stale = !previous || Date.now() - previous.at > MIN_WRITE_GAP_MS;
     if (!stale && moved < MIN_WRITE_DISTANCE_KM) return;
 
