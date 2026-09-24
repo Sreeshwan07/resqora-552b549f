@@ -69,18 +69,17 @@ export function useSafeJourneyMonitor() {
 
   // Realtime: a change written by another device or by the database itself is
   // reflected here without a refresh.
-  useRealtimeTables(
-    user
+  useRealtimeTables({
+    channel: user ? `safe-journey-${user.id}` : null,
+    watch: user
       ? [
-          {
-            table: "safe_journeys",
-            filter: `user_id=eq.${user.id}`,
-            invalidate: [["safe-journey-active", user.id], ["safe-journey-history", user.id]],
-          },
-          { table: "safe_journey_events", invalidate: [["safe-journey-events"]] },
+          { table: "safe_journeys", filter: `user_id=eq.${user.id}` },
+          { table: "safe_journey_events", filter: `user_id=eq.${user.id}` },
         ]
       : [],
-  );
+    invalidate: ["safe-journey-active", "safe-journey-history", "safe-journey-events"],
+  });
+
 
   /** Serialises one-shot work so a tick can never fire the same step twice. */
   const once = useCallback(async (key: string, work: () => Promise<void>) => {
