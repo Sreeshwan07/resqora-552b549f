@@ -57,7 +57,9 @@ export function useSafeJourneyMonitor() {
   const journeyQuery = useQuery(activeJourneyQuery(user?.id));
   const profile = useQuery(profileQuery(user?.id));
   const { position, status: locationStatus } = useLivePosition();
+  const emergency = useQuery(activeEmergencyQuery(user?.id));
   const online = useOnline();
+
 
   const journey = journeyQuery.data ?? null;
   const lastWrite = useRef<{ lat: number; lng: number; at: number } | null>(null);
