@@ -12,7 +12,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLivePosition } from "@/hooks/use-live-position";
 import { useRealtimeTables } from "@/hooks/use-realtime-tables";
 import { profileQuery } from "@/lib/api";
+import { haversineKm } from "@/lib/geo";
 import { showPush } from "@/lib/push";
+
 import {
   ARRIVAL_RADIUS_KM,
   activeJourneyQuery,
