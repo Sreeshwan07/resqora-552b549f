@@ -6,7 +6,9 @@
  * endpoint is tried as a fallback; when neither answers we return null rather
  * than guessing an address.
  */
-import { reverseGeocodeFn } from "@/lib/geocode.functions";
+import { reverseGeocodeFn, searchPlacesFn, type PlaceMatch } from "@/lib/geocode.functions";
+
+export type { PlaceMatch };
 
 async function fromGoogle(lat: number, lng: number) {
   try {
@@ -41,4 +43,17 @@ async function fromBigDataCloud(lat: number, lng: number) {
 
 export async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
   return (await fromGoogle(lat, lng)) ?? (await fromBigDataCloud(lat, lng));
+}
+
+/**
+ * Destination search used by Safe Journey. Returns only places a real
+ * geocoding provider matched; an empty list means "no match", never a guess.
+ */
+export async function searchPlaces(query: string): Promise<PlaceMatch[]> {
+  try {
+    const result = await searchPlacesFn({ data: { query: query.trim() } });
+    return result.matches;
+  } catch {
+    return [];
+  }
 }
