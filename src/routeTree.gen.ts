@@ -30,6 +30,7 @@ import { Route as AppDonorsRouteImport } from './routes/_app.donors'
 import { Route as AppEmailDiagnosticsRouteImport } from './routes/_app.email-diagnostics'
 import { Route as AppEmergencyRouteImport } from './routes/_app.emergency'
 import { Route as AppHistoryRouteImport } from './routes/_app.history'
+import { Route as AppJourneyRouteImport } from './routes/_app.journey'
 import { Route as AppLiveRouteImport } from './routes/_app.live'
 import { Route as AppMedaiRouteImport } from './routes/_app.medai'
 import { Route as AppMedicalIdRouteImport } from './routes/_app.medical-id'
@@ -159,6 +160,11 @@ const AppEmergencyRoute = AppEmergencyRouteImport.update({
 const AppHistoryRoute = AppHistoryRouteImport.update({
   id: '/history',
   path: '/history',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppJourneyRoute = AppJourneyRouteImport.update({
+  id: '/journey',
+  path: '/journey',
   getParentRoute: () => AppRoute,
 } as any)
 const AppLiveRoute = AppLiveRouteImport.update({
@@ -314,6 +320,7 @@ export interface FileRoutesByFullPath {
   '/email-diagnostics': typeof AppEmailDiagnosticsRoute
   '/emergency': typeof AppEmergencyRoute
   '/history': typeof AppHistoryRoute
+  '/journey': typeof AppJourneyRoute
   '/live': typeof AppLiveRoute
   '/medai': typeof AppMedaiRoute
   '/medical-id': typeof AppMedicalIdRoute
@@ -362,6 +369,7 @@ export interface FileRoutesByTo {
   '/email-diagnostics': typeof AppEmailDiagnosticsRoute
   '/emergency': typeof AppEmergencyRoute
   '/history': typeof AppHistoryRoute
+  '/journey': typeof AppJourneyRoute
   '/live': typeof AppLiveRoute
   '/medai': typeof AppMedaiRoute
   '/medical-id': typeof AppMedicalIdRoute
@@ -412,6 +420,7 @@ export interface FileRoutesById {
   '/_app/email-diagnostics': typeof AppEmailDiagnosticsRoute
   '/_app/emergency': typeof AppEmergencyRoute
   '/_app/history': typeof AppHistoryRoute
+  '/_app/journey': typeof AppJourneyRoute
   '/_app/live': typeof AppLiveRoute
   '/_app/medai': typeof AppMedaiRoute
   '/_app/medical-id': typeof AppMedicalIdRoute
@@ -462,6 +471,7 @@ export interface FileRouteTypes {
     | '/email-diagnostics'
     | '/emergency'
     | '/history'
+    | '/journey'
     | '/live'
     | '/medai'
     | '/medical-id'
@@ -510,6 +520,7 @@ export interface FileRouteTypes {
     | '/email-diagnostics'
     | '/emergency'
     | '/history'
+    | '/journey'
     | '/live'
     | '/medai'
     | '/medical-id'
@@ -559,6 +570,7 @@ export interface FileRouteTypes {
     | '/_app/email-diagnostics'
     | '/_app/emergency'
     | '/_app/history'
+    | '/_app/journey'
     | '/_app/live'
     | '/_app/medai'
     | '/_app/medical-id'
@@ -749,6 +761,13 @@ declare module '@tanstack/react-router' {
       path: '/history'
       fullPath: '/history'
       preLoaderRoute: typeof AppHistoryRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/journey': {
+      id: '/_app/journey'
+      path: '/journey'
+      fullPath: '/journey'
+      preLoaderRoute: typeof AppJourneyRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/live': {
@@ -952,6 +971,7 @@ interface AppRouteChildren {
   AppEmailDiagnosticsRoute: typeof AppEmailDiagnosticsRoute
   AppEmergencyRoute: typeof AppEmergencyRoute
   AppHistoryRoute: typeof AppHistoryRoute
+  AppJourneyRoute: typeof AppJourneyRoute
   AppLiveRoute: typeof AppLiveRoute
   AppMedaiRoute: typeof AppMedaiRoute
   AppMedicalIdRoute: typeof AppMedicalIdRoute
@@ -990,6 +1010,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppEmailDiagnosticsRoute: AppEmailDiagnosticsRoute,
   AppEmergencyRoute: AppEmergencyRoute,
   AppHistoryRoute: AppHistoryRoute,
+  AppJourneyRoute: AppJourneyRoute,
   AppLiveRoute: AppLiveRoute,
   AppMedaiRoute: AppMedaiRoute,
   AppMedicalIdRoute: AppMedicalIdRoute,
