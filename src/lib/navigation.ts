@@ -33,6 +33,7 @@ import {
   ClipboardCheck,
   ClipboardList,
   HandHeart,
+  Route,
 } from "lucide-react";
 import type { NavSection, NavItem } from "@/types";
 
@@ -158,6 +159,13 @@ export const digitalTwinNav: NavItem = {
   description: "Live emergency workspace",
 };
 
+export const journeyNav: NavItem = {
+  label: "Safe Journey",
+  to: "/journey",
+  icon: Route,
+  description: "Guardian-watched travel",
+};
+
 export const checkinsNav: NavItem = {
   label: "Check-ins",
   to: "/checkins",
@@ -260,6 +268,7 @@ export const navSections: NavSection[] = [
         icon: Siren,
         description: "Emergency activation",
       },
+      journeyNav,
       digitalTwinNav,
       commandCentreNav,
       triageNav,
@@ -357,6 +366,7 @@ export const mobileMenuSections: NavSection[] = [
       resqrIdNav,
       medicalIdNav,
       contactsNav,
+      journeyNav,
       checkinsNav,
       {
         label: "Emergency history",
