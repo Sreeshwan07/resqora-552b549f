@@ -20,7 +20,7 @@ export function GuardianJourneysCard() {
   useRealtimeTables({
     channel: user ? `guardian-journeys-${user.id}` : null,
     watch: [{ table: "safe_journeys" }],
-    invalidate: [["guardian-safe-journeys", user?.id]],
+    invalidate: ["guardian-safe-journeys"],
   });
 
   const rows = journeys.data ?? [];
