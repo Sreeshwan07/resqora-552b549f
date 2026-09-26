@@ -329,10 +329,7 @@ export function ActiveJourneyPanel({ monitor }: { monitor: SafeJourneyMonitor })
         {coords && (
           <Button asChild variant="ghost" size="sm" className="mt-3">
             <a
-              href={mapsDirectionsLink(coords, {
-                lat: journey.destination_latitude ?? coords.lat,
-                lng: journey.destination_longitude ?? coords.lng,
-              })}
+              href={mapsDirectionsLink(journey.destination_address, coords)}
               target="_blank"
               rel="noreferrer"
             >

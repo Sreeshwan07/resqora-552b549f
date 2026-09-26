@@ -638,3 +638,47 @@ export function locationFreshness(input: {
 export function minutesUntil(iso: string) {
   return Math.round((new Date(iso).getTime() - Date.now()) / 60_000);
 }
+
+/* --------------------------- safety circle ------------------------------- */
+
+/** Adds or updates a trusted contact in the Safety Circle (no duplicate rows). */
+export async function upsertSafetyCircleMember(
+  userId: string,
+  contactId: string,
+  patch: Partial<
+    Pick<
+      SafetyCircleMember,
+      "is_default_guardian" | "notify_on_start" | "notify_on_complete" | "notify_on_missed"
+    >
+  >,
+) {
+  if (!userId) throw new Error("Sign in to manage your Safety Circle.");
+  const { error } = await supabase
+    .from("safety_circle_members")
+    .upsert(
+      { user_id: userId, contact_id: contactId, ...patch },
+      { onConflict: "user_id,contact_id" },
+    );
+  if (error) throw new Error(error.message);
+}
+
+export async function removeFromSafetyCircle(userId: string, contactId: string) {
+  if (!userId) throw new Error("Sign in to manage your Safety Circle.");
+  const { error } = await supabase
+    .from("safety_circle_members")
+    .delete()
+    .eq("user_id", userId)
+    .eq("contact_id", contactId);
+  if (error) throw new Error(error.message);
+}
+
+/** Exactly one default guardian per user. */
+export async function setDefaultGuardian(userId: string, contactId: string) {
+  if (!userId) throw new Error("Sign in to manage your Safety Circle.");
+  const cleared = await supabase
+    .from("safety_circle_members")
+    .update({ is_default_guardian: false })
+    .eq("user_id", userId);
+  if (cleared.error) throw new Error(cleared.error.message);
+  await upsertSafetyCircleMember(userId, contactId, { is_default_guardian: true });
+}
