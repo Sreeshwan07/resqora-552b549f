@@ -15,6 +15,7 @@ import { ConnectionBanner } from "@/components/pwa/connection-banner";
 import { PushRegistrar } from "@/components/pwa/push-registrar";
 import { useLivePosition } from "@/hooks/use-live-position";
 import { useEmergencyTracker } from "@/hooks/use-emergency-tracker";
+import { useSafeJourneyMonitor } from "@/hooks/use-safe-journey";
 import { useRelayEscalation } from "@/hooks/use-relay-escalation";
 import { useAuth } from "@/hooks/use-auth";
 import { useAccess } from "@/hooks/use-access";
@@ -32,6 +33,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
   useEmergencyTracker();
   // Escalates to backup contacts when the Guardian does not acknowledge in time.
   useRelayEscalation();
+  // Safe Journey monitoring (check-ins, arrival, escalation) runs app-wide.
+  useSafeJourneyMonitor();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user } = useAuth();
   const access = useAccess();
