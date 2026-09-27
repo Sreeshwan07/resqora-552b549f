@@ -24,8 +24,7 @@ export function SafetyCircleCard() {
   const circle = useQuery(safetyCircleQuery(user?.id));
   const [busy, setBusy] = useState<string | null>(null);
 
-  const refresh = () =>
-    queryClient.invalidateQueries({ queryKey: ["safety-circle", user?.id] });
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ["safety-circle", user?.id] });
 
   const run = async (key: string, work: () => Promise<unknown>) => {
     setBusy(key);
@@ -85,9 +84,7 @@ export function SafetyCircleCard() {
                         className="min-h-10"
                         disabled={busy !== null}
                         onClick={() =>
-                          void run(contact.id, () =>
-                            setDefaultGuardian(user?.id ?? "", contact.id),
-                          )
+                          void run(contact.id, () => setDefaultGuardian(user?.id ?? "", contact.id))
                         }
                       >
                         Make default
@@ -120,7 +117,10 @@ export function SafetyCircleCard() {
                         ["notify_on_missed", "Alert them if I miss a check-in"],
                       ] as const
                     ).map(([field, label]) => (
-                      <label key={field} className="flex items-center justify-between gap-4 text-sm">
+                      <label
+                        key={field}
+                        className="flex items-center justify-between gap-4 text-sm"
+                      >
                         <span className="text-muted-foreground">{label}</span>
                         <Switch
                           checked={member[field]}

@@ -11,6 +11,7 @@ import { EmergencyConsole } from "@/components/landing/emergency-console";
 import { EmergencyContactsCard } from "@/components/landing/emergency-contacts-card";
 import { EmergencyTools } from "@/components/landing/emergency-tools";
 import { GuardianShortcut } from "@/components/landing/guardian-shortcut";
+import { SafeJourneyCard } from "@/components/journey/safe-journey-card";
 import { MobileNav } from "@/components/layouts/mobile-nav";
 import { InstallCard } from "@/components/pwa/install-card";
 import { LocationGate } from "@/components/resqora/location-gate";
@@ -99,6 +100,8 @@ function Index() {
           ) : (
             <>
               <GuardianShortcut />
+
+              <SafeJourneyCard />
 
               <InstallCard />
 

@@ -30,7 +30,6 @@ import {
   type SafeJourney,
 } from "@/lib/safe-journey";
 
-
 /** Write a new point only after real movement or a reasonable time gap. */
 const MIN_WRITE_DISTANCE_KM = 0.15;
 const MIN_WRITE_GAP_MS = 120_000;
@@ -51,7 +50,13 @@ function useOnline() {
   return online;
 }
 
-export function useSafeJourneyMonitor() {
+/**
+ * `manage` owns the side effects (location writes, check-in/escalation ticks and
+ * the realtime channel). Exactly one mount — the app shell — manages; screens
+ * pass `false` so they read the same state without duplicating work or opening a
+ * second realtime channel with the same name.
+ */
+export function useSafeJourneyMonitor({ manage = true }: { manage?: boolean } = {}) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const journeyQuery = useQuery(activeJourneyQuery(user?.id));
@@ -59,7 +64,6 @@ export function useSafeJourneyMonitor() {
   const { position, status: locationStatus } = useLivePosition();
   const emergency = useQuery(activeEmergencyQuery(user?.id));
   const online = useOnline();
-
 
   const journey = journeyQuery.data ?? null;
   const lastWrite = useRef<{ lat: number; lng: number; at: number } | null>(null);
@@ -74,7 +78,7 @@ export function useSafeJourneyMonitor() {
   // Realtime: a change written by another device or by the database itself is
   // reflected here without a refresh.
   useRealtimeTables({
-    channel: user ? `safe-journey-${user.id}` : null,
+    channel: user && manage ? `safe-journey-${user.id}` : null,
     watch: user
       ? [
           { table: "safe_journeys", filter: `user_id=eq.${user.id}` },
@@ -83,7 +87,6 @@ export function useSafeJourneyMonitor() {
       : [],
     invalidate: ["safe-journey-active", "safe-journey-history", "safe-journey-events"],
   });
-
 
   /** Serialises one-shot work so a tick can never fire the same step twice. */
   const once = useCallback(async (key: string, work: () => Promise<void>) => {
@@ -100,6 +103,7 @@ export function useSafeJourneyMonitor() {
 
   // ---------------------------------------------------------------- location
   useEffect(() => {
+    if (!manage) return;
     if (!journey || !isLive(journey) || !journey.sharing_enabled) return;
     if (!position || position.source !== "gps" || !online) return;
     const previous = lastWrite.current;
@@ -119,12 +123,13 @@ export function useSafeJourneyMonitor() {
       });
       refresh();
     });
-  }, [journey, position, online, once, refresh]);
+  }, [manage, journey, position, online, once, refresh]);
 
   // ------------------------------------------------- emergency session link
   // An SOS raised while a journey is live is the SAME emergency session — the
   // journey simply attaches its context to it. No second workflow is created.
   useEffect(() => {
+    if (!manage) return;
     const live = emergency.data;
     if (!journey || !isLive(journey) || journey.emergency_id) return;
     if (!live || live.status === "resolved") return;
@@ -133,13 +138,11 @@ export function useSafeJourneyMonitor() {
       trackJourneyEvent(user?.id, "emergency_from_journey");
       refresh();
     });
-  }, [journey, emergency.data, user?.id, once, refresh]);
-
-
+  }, [manage, journey, emergency.data, user?.id, once, refresh]);
 
   // -------------------------------------------------------- state machine
   useEffect(() => {
-    if (!journey || !user) return;
+    if (!manage || !journey || !user) return;
     if (!isLive(journey)) return;
 
     const run = async () => {
@@ -192,7 +195,9 @@ export function useSafeJourneyMonitor() {
       // Grace period expired with no response: tell the guardian the truth —
       // no confirmation received. Never an accident claim.
       if (status === "check_in_required") {
-        const from = new Date(journey.check_in_required_at ?? journey.expected_arrival_at).getTime();
+        const from = new Date(
+          journey.check_in_required_at ?? journey.expected_arrival_at,
+        ).getTime();
         if (now - from >= journey.grace_period_minutes * 60_000) {
           await once(`missed-${journey.id}`, async () => {
             const missed = await transitionJourney(
@@ -227,7 +232,7 @@ export function useSafeJourneyMonitor() {
     void run();
     const id = window.setInterval(() => void run(), TICK_MS);
     return () => window.clearInterval(id);
-  }, [journey, user, position, profile.data, once, refresh]);
+  }, [manage, journey, user, position, profile.data, once, refresh]);
 
   const freshness = locationFreshness({
     lastLocationAt: journey?.last_location_at ?? null,
@@ -253,6 +258,6 @@ export type SafeJourneyMonitor = ReturnType<typeof useSafeJourneyMonitor>;
 export function journeyNeedsAttention(journey: SafeJourney | null | undefined) {
   return Boolean(
     journey &&
-      ["check_in_required", "check_in_missed", "guardian_notified"].includes(journey.status),
+    ["check_in_required", "check_in_missed", "guardian_notified"].includes(journey.status),
   );
 }

@@ -50,11 +50,7 @@ export function ActiveJourneyPanel({ monitor }: { monitor: SafeJourneyMonitor })
         ? { lat: monitor.position.lat, lng: monitor.position.lng }
         : null;
 
-  const run = async (
-    key: string,
-    work: () => Promise<void>,
-    success?: string,
-  ) => {
+  const run = async (key: string, work: () => Promise<void>, success?: string) => {
     setBusy(key);
     try {
       await work();
@@ -152,11 +148,7 @@ export function ActiveJourneyPanel({ monitor }: { monitor: SafeJourneyMonitor })
           </div>
         </dl>
 
-        <MapPreview
-          coords={coords}
-          title="Safe Journey location"
-          className="h-56 sm:h-72"
-        />
+        <MapPreview coords={coords} title="Safe Journey location" className="h-56 sm:h-72" />
         <p className="border-t border-border px-4 py-2 text-xs text-muted-foreground">
           {journey.last_location_at
             ? `Location last updated ${new Date(journey.last_location_at).toLocaleTimeString()} · ${monitor.freshness.label}`
@@ -176,11 +168,7 @@ export function ActiveJourneyPanel({ monitor }: { monitor: SafeJourneyMonitor })
             not respond within {journey.grace_period_minutes} minutes.
           </p>
           <div className="mt-4 grid gap-2 sm:grid-cols-3">
-            <Button
-              className="min-h-11"
-              disabled={busy !== null}
-              onClick={() => void markSafe()}
-            >
+            <Button className="min-h-11" disabled={busy !== null} onClick={() => void markSafe()}>
               <CheckCircle2 className="size-4" aria-hidden="true" />
               I'm safe
             </Button>

@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_app/journey")({
 });
 
 function JourneyPage() {
-  const monitor = useSafeJourneyMonitor();
+  const monitor = useSafeJourneyMonitor({ manage: false });
 
   return (
     <div className="space-y-6">

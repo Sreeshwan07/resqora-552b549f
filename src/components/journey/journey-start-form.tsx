@@ -279,7 +279,9 @@ export function JourneyStartForm({ onStarted }: { onStarted?: () => void }) {
             <SelectTrigger id="journey-guardian" aria-invalid={Boolean(errors.guardian)}>
               <SelectValue
                 placeholder={
-                  contactOptions.length === 0 ? "Add an emergency contact first" : "Choose a contact"
+                  contactOptions.length === 0
+                    ? "Add an emergency contact first"
+                    : "Choose a contact"
                 }
               />
             </SelectTrigger>

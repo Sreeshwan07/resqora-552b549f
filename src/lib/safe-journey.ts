@@ -273,7 +273,7 @@ export async function transitionJourney(
   const { data, error } = await supabase.rpc("safe_journey_transition", {
     _journey_id: journeyId,
     _to: to,
-    _note: note ?? null,
+    _note: note ?? undefined,
   });
   if (error) throw new Error(error.message);
   return data as unknown as SafeJourney;
@@ -290,7 +290,7 @@ export async function pushJourneyLocation(input: {
     _journey_id: input.journeyId,
     _latitude: input.latitude,
     _longitude: input.longitude,
-    _accuracy: input.accuracy ?? null,
+    _accuracy: input.accuracy ?? undefined,
     _captured_at: (input.capturedAt ?? new Date()).toISOString(),
   });
   if (error) throw new Error(error.message);

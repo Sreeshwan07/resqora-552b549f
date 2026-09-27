@@ -5,6 +5,7 @@ import { Copy, Loader2, PhoneCall, Save, ShieldCheck, ShieldOff, UserRound } fro
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/system/page-header";
+import { SafetyCircleCard } from "@/components/journey/safety-circle-card";
 import { MedicalIdCard } from "@/components/resqora/medical-id-card";
 import { GuardianCard } from "@/components/resqora/guardian-card";
 import { SafetyScoreCard } from "@/components/resqora/safety-score-card";
@@ -478,6 +479,7 @@ function ProfilePage() {
         <div className="space-y-4">
           <SafetyScoreCard score={score} hints={[]} />
           <GuardianCard userId={user?.id} />
+          <SafetyCircleCard />
           <MedicalQrSection />
         </div>
       </div>
