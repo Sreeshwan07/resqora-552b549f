@@ -38,6 +38,8 @@ export function useRealtimeTables({
   const changeRef = useRef(onChange);
   changeRef.current = onChange;
 
+  const instance = useRef(0);
+
   const signature = JSON.stringify(watch);
   const keys = JSON.stringify(invalidate);
 
@@ -47,7 +49,12 @@ export function useRealtimeTables({
     const queryKeys = JSON.parse(keys) as string[];
     if (tables.length === 0) return;
 
-    const sub = supabase.channel(channel);
+    // Supabase caches channels by name and `removeChannel` resolves
+    // asynchronously, so a remount that reuses the name gets the still
+    // subscribed channel back and throws. A per-subscription suffix keeps every
+    // mount on its own channel.
+    instance.current += 1;
+    const sub = supabase.channel(`${channel}-${instance.current}`);
     for (const entry of tables) {
       sub.on(
         "postgres_changes",
