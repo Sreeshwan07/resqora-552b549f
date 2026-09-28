@@ -54,6 +54,7 @@ import { Route as AppTriageRouteImport } from './routes/_app.triage'
 import { Route as MTokenRouteImport } from './routes/m.$token'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as STokenRouteImport } from './routes/s.$token'
+import { Route as ApiPublicAnonSessionRouteImport } from './routes/api/public/anon-session'
 import { Route as ApiPublicPushConfigRouteImport } from './routes/api/public/push-config'
 import { Route as ApiPublicSmsInboundRouteImport } from './routes/api/public/sms-inbound'
 import { Route as GuardianEmergencyIdTokenRouteImport } from './routes/guardian.$emergencyId.$token'
@@ -282,6 +283,11 @@ const STokenRoute = STokenRouteImport.update({
   path: '/s/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAnonSessionRoute = ApiPublicAnonSessionRouteImport.update({
+  id: '/api/public/anon-session',
+  path: '/api/public/anon-session',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPushConfigRoute = ApiPublicPushConfigRouteImport.update({
   id: '/api/public/push-config',
   path: '/api/public/push-config',
@@ -344,6 +350,7 @@ export interface FileRoutesByFullPath {
   '/m/$token': typeof MTokenRoute
   '/r/$code': typeof RCodeRoute
   '/s/$token': typeof STokenRoute
+  '/api/public/anon-session': typeof ApiPublicAnonSessionRoute
   '/api/public/push-config': typeof ApiPublicPushConfigRoute
   '/api/public/sms-inbound': typeof ApiPublicSmsInboundRoute
   '/guardian/$emergencyId/$token': typeof GuardianEmergencyIdTokenRoute
@@ -393,6 +400,7 @@ export interface FileRoutesByTo {
   '/m/$token': typeof MTokenRoute
   '/r/$code': typeof RCodeRoute
   '/s/$token': typeof STokenRoute
+  '/api/public/anon-session': typeof ApiPublicAnonSessionRoute
   '/api/public/push-config': typeof ApiPublicPushConfigRoute
   '/api/public/sms-inbound': typeof ApiPublicSmsInboundRoute
   '/guardian/$emergencyId/$token': typeof GuardianEmergencyIdTokenRoute
@@ -444,6 +452,7 @@ export interface FileRoutesById {
   '/m/$token': typeof MTokenRoute
   '/r/$code': typeof RCodeRoute
   '/s/$token': typeof STokenRoute
+  '/api/public/anon-session': typeof ApiPublicAnonSessionRoute
   '/api/public/push-config': typeof ApiPublicPushConfigRoute
   '/api/public/sms-inbound': typeof ApiPublicSmsInboundRoute
   '/guardian/$emergencyId/$token': typeof GuardianEmergencyIdTokenRoute
@@ -495,6 +504,7 @@ export interface FileRouteTypes {
     | '/m/$token'
     | '/r/$code'
     | '/s/$token'
+    | '/api/public/anon-session'
     | '/api/public/push-config'
     | '/api/public/sms-inbound'
     | '/guardian/$emergencyId/$token'
@@ -544,6 +554,7 @@ export interface FileRouteTypes {
     | '/m/$token'
     | '/r/$code'
     | '/s/$token'
+    | '/api/public/anon-session'
     | '/api/public/push-config'
     | '/api/public/sms-inbound'
     | '/guardian/$emergencyId/$token'
@@ -594,6 +605,7 @@ export interface FileRouteTypes {
     | '/m/$token'
     | '/r/$code'
     | '/s/$token'
+    | '/api/public/anon-session'
     | '/api/public/push-config'
     | '/api/public/sms-inbound'
     | '/guardian/$emergencyId/$token'
@@ -609,6 +621,7 @@ export interface RootRouteChildren {
   MTokenRoute: typeof MTokenRoute
   RCodeRoute: typeof RCodeRoute
   STokenRoute: typeof STokenRoute
+  ApiPublicAnonSessionRoute: typeof ApiPublicAnonSessionRoute
   ApiPublicPushConfigRoute: typeof ApiPublicPushConfigRoute
   ApiPublicSmsInboundRoute: typeof ApiPublicSmsInboundRoute
   GuardianEmergencyIdTokenRoute: typeof GuardianEmergencyIdTokenRoute
@@ -931,6 +944,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof STokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/anon-session': {
+      id: '/api/public/anon-session'
+      path: '/api/public/anon-session'
+      fullPath: '/api/public/anon-session'
+      preLoaderRoute: typeof ApiPublicAnonSessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/push-config': {
       id: '/api/public/push-config'
       path: '/api/public/push-config'
@@ -1045,6 +1065,7 @@ const rootRouteChildren: RootRouteChildren = {
   MTokenRoute: MTokenRoute,
   RCodeRoute: RCodeRoute,
   STokenRoute: STokenRoute,
+  ApiPublicAnonSessionRoute: ApiPublicAnonSessionRoute,
   ApiPublicPushConfigRoute: ApiPublicPushConfigRoute,
   ApiPublicSmsInboundRoute: ApiPublicSmsInboundRoute,
   GuardianEmergencyIdTokenRoute: GuardianEmergencyIdTokenRoute,
