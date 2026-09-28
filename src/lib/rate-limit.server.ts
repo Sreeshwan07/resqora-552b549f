@@ -1,44 +1,51 @@
 /**
- * Best-effort server-side rate limiting for public server functions.
+ * Per-instance burst guard (secondary only). Paid AI/Maps endpoints use the
+ * durable database limiter in paid-guard.server.ts; this remains for non-paid
+ * callers (SMS webhook, alerts, MedAI) that also have durable DB-side caps.
  *
- * Workers are stateless and can be recycled, so this is a per-instance sliding
- * window: it stops bursts and scripted abuse cheaply without a database round
- * trip, layered on top of the client-side throttles and platform limits.
+ * No global reset: when the map is full, only the oldest idle keys are evicted,
+ * so one caller churning keys can never wipe everyone else's counters.
  */
 const buckets = new Map<string, number[]>();
 const MAX_KEYS = 5_000;
+const MAX_WINDOW_MS = 10 * 60_000;
 
 export type ServerRateLimit = { allowed: true } | { allowed: false; retryAfter: number };
 
+function evict(now: number) {
+  for (const [key, hits] of buckets) {
+    if (buckets.size <= MAX_KEYS) return;
+    if (!hits.length || now - hits[hits.length - 1] > MAX_WINDOW_MS) buckets.delete(key);
+  }
+  // Still full: drop the least-recently-inserted keys one at a time.
+  for (const key of buckets.keys()) {
+    if (buckets.size <= MAX_KEYS) return;
+    buckets.delete(key);
+  }
+}
+
 export function limitByKey(key: string, max: number, windowMs: number): ServerRateLimit {
   const now = Date.now();
-  if (buckets.size > MAX_KEYS) buckets.clear();
   const hits = (buckets.get(key) ?? []).filter((at) => now - at < windowMs);
+  buckets.delete(key); // re-insert to keep Map order ≈ recency
   if (hits.length >= max) {
     buckets.set(key, hits);
     return { allowed: false, retryAfter: Math.ceil((windowMs - (now - hits[0])) / 1000) };
   }
   hits.push(now);
   buckets.set(key, hits);
+  if (buckets.size > MAX_KEYS) evict(now);
   return { allowed: true };
 }
 
-/** Caller identity for limiting: proxy client IP, falling back to a shared bucket. */
+/** Trusted edge IP only; spoofable forwarding headers are not used as identity. */
 export function callerKey(request: Request, scope: string) {
-  const ip =
-    request.headers.get("cf-connecting-ip") ??
-    request.headers.get("x-real-ip") ??
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "unknown";
-  return `${scope}:${ip}`;
+  return `${scope}:${request.headers.get("cf-connecting-ip") ?? "unknown"}`;
 }
 
-/** Throws a user-safe error when the caller is over the limit. */
 export function enforceLimit(request: Request, scope: string, max: number, windowMs: number) {
   const result = limitByKey(callerKey(request, scope), max, windowMs);
   if (!result.allowed) {
-    throw new Error(
-      `Too many requests — please wait ${result.retryAfter} second(s) before trying again.`,
-    );
+    throw new Error("Too many requests. Please try again shortly.");
   }
 }
