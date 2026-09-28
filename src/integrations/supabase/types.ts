@@ -1177,6 +1177,36 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_buckets: {
+        Row: {
+          created_at: string
+          endpoint: string
+          id: string
+          identifier: string
+          request_count: number
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          id?: string
+          identifier: string
+          request_count?: number
+          updated_at?: string
+          window_start: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          id?: string
+          identifier?: string
+          request_count?: number
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       responder_profiles: {
         Row: {
           active: boolean
@@ -1959,6 +1989,15 @@ export type Database = {
           _latitude?: number
           _longitude?: number
           _note?: string
+        }
+        Returns: Json
+      }
+      consume_rate_limit: {
+        Args: {
+          _endpoint: string
+          _identifier: string
+          _max: number
+          _window_seconds: number
         }
         Returns: Json
       }

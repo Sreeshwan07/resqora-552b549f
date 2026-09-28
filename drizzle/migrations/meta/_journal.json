@@ -8,6 +8,13 @@
       "when": 1790135739573,
       "tag": "0000_safe_journey",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790568344301,
+      "tag": "0001_durable_rate_limits",
+      "breakpoints": true
     }
   ]
 }
