@@ -14,7 +14,8 @@ import {
 } from "@/lib/rate-limit-config";
 import { shortHash, trustedClientIp, verifyAnonToken } from "@/lib/anon-session.server";
 
-export type CallerIdentity = { kind: "user"; userId: string } | { kind: "anon"; sessionHash: string };
+export type CallerIdentity =
+  { kind: "user"; userId: string } | { kind: "anon"; sessionHash: string };
 
 export type ConsumeResult = { allowed: boolean; retryAfter: number };
 
@@ -31,7 +32,12 @@ export class GuardError extends Error {
 export type GuardDeps = {
   verifyUser: (token: string) => Promise<string | null>;
   verifyAnon: (token: string | null) => Promise<string | null>;
-  consume: (identifier: string, endpoint: string, windowSeconds: number, max: number) => Promise<ConsumeResult>;
+  consume: (
+    identifier: string,
+    endpoint: string,
+    windowSeconds: number,
+    max: number,
+  ) => Promise<ConsumeResult>;
 };
 
 async function defaultVerifyUser(token: string) {
@@ -47,7 +53,12 @@ async function defaultVerifyUser(token: string) {
   return data.user.id;
 }
 
-async function defaultConsume(identifier: string, endpoint: string, windowSeconds: number, max: number) {
+async function defaultConsume(
+  identifier: string,
+  endpoint: string,
+  windowSeconds: number,
+  max: number,
+) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin.rpc("consume_rate_limit", {
     _identifier: identifier,
@@ -67,7 +78,10 @@ const defaultDeps: GuardDeps = {
 };
 
 /** Resolve the caller from server-verified credentials only. Never from body fields. */
-export async function resolveCaller(request: Request, deps: GuardDeps): Promise<CallerIdentity | null> {
+export async function resolveCaller(
+  request: Request,
+  deps: GuardDeps,
+): Promise<CallerIdentity | null> {
   const auth = request.headers.get("authorization");
   if (auth?.startsWith("Bearer ")) {
     const token = auth.slice(7).trim();
@@ -83,7 +97,13 @@ export async function resolveCaller(request: Request, deps: GuardDeps): Promise<
   return null;
 }
 
-async function limited(deps: GuardDeps, id: string, endpoint: string, windowSeconds: number, max: number) {
+async function limited(
+  deps: GuardDeps,
+  id: string,
+  endpoint: string,
+  windowSeconds: number,
+  max: number,
+) {
   let result: ConsumeResult;
   try {
     result = await deps.consume(id, endpoint, windowSeconds, max);
@@ -158,6 +178,11 @@ export async function guardPaidEndpoint(endpoint: PaidEndpoint): Promise<CallerI
 }
 
 /** Consume a durable bucket for a raw key (used by the anonymous-session issuer). */
-export async function consumeRaw(identifier: string, endpoint: string, windowSeconds: number, max: number) {
+export async function consumeRaw(
+  identifier: string,
+  endpoint: string,
+  windowSeconds: number,
+  max: number,
+) {
   return limited(defaultDeps, identifier, endpoint, windowSeconds, max);
 }

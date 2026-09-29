@@ -11,9 +11,8 @@ export const Route = createFileRoute("/api/public/anon-session")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const { issueAnonToken, shortHash, trustedClientIp } = await import(
-          "@/lib/anon-session.server"
-        );
+        const { issueAnonToken, shortHash, trustedClientIp } =
+          await import("@/lib/anon-session.server");
         const { consumeRaw, GuardError } = await import("@/lib/paid-guard.server");
         const { ANON_ISSUE_LIMIT, GUARD_MESSAGES } = await import("@/lib/rate-limit-config");
         try {

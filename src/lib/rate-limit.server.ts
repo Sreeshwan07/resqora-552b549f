@@ -7,6 +7,8 @@
  * so one caller churning keys can never wipe everyone else's counters.
  */
 const buckets = new Map<string, number[]>();
+/** Keys currently at their limit — never evicted, so churn cannot unblock anyone. */
+const blocked = new Set<string>();
 const MAX_KEYS = 5_000;
 const MAX_WINDOW_MS = 10 * 60_000;
 
@@ -15,12 +17,15 @@ export type ServerRateLimit = { allowed: true } | { allowed: false; retryAfter: 
 function evict(now: number) {
   for (const [key, hits] of buckets) {
     if (buckets.size <= MAX_KEYS) return;
-    if (!hits.length || now - hits[hits.length - 1] > MAX_WINDOW_MS) buckets.delete(key);
+    if (!hits.length || now - hits[hits.length - 1] > MAX_WINDOW_MS) {
+      buckets.delete(key);
+      blocked.delete(key);
+    }
   }
-  // Still full: drop the least-recently-inserted keys one at a time.
+  // Still full: drop the least-recently-used keys that are not currently blocked.
   for (const key of buckets.keys()) {
     if (buckets.size <= MAX_KEYS) return;
-    buckets.delete(key);
+    if (!blocked.has(key)) buckets.delete(key);
   }
 }
 
@@ -30,8 +35,10 @@ export function limitByKey(key: string, max: number, windowMs: number): ServerRa
   buckets.delete(key); // re-insert to keep Map order ≈ recency
   if (hits.length >= max) {
     buckets.set(key, hits);
+    blocked.add(key);
     return { allowed: false, retryAfter: Math.ceil((windowMs - (now - hits[0])) / 1000) };
   }
+  blocked.delete(key);
   hits.push(now);
   buckets.set(key, hits);
   if (buckets.size > MAX_KEYS) evict(now);

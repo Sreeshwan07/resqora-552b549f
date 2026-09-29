@@ -1,6 +1,9 @@
 import { describe, expect, it, vi, beforeAll } from "vitest";
 
-vi.mock("@tanstack/react-start/server", () => ({ setResponseStatus: vi.fn(), getRequest: vi.fn() }));
+vi.mock("@tanstack/react-start/server", () => ({
+  setResponseStatus: vi.fn(),
+  getRequest: vi.fn(),
+}));
 
 const SECRET = "test-secret-".padEnd(64, "x");
 beforeAll(() => {
@@ -30,7 +33,8 @@ function memoryDeps(overrides: Partial<GuardDeps> = {}) {
   return { deps, calls };
 }
 
-const req = (headers: Record<string, string>) => new Request("http://x/", { method: "POST", headers });
+const req = (headers: Record<string, string>) =>
+  new Request("http://x/", { method: "POST", headers });
 
 async function status(p: Promise<unknown>) {
   try {
@@ -44,7 +48,11 @@ async function status(p: Promise<unknown>) {
 describe("paid endpoint guard", () => {
   it("TEST 1: authenticated user within limit succeeds", async () => {
     const { deps } = memoryDeps();
-    const caller = await checkPaidEndpoint(req({ authorization: "Bearer valid.user.jwt" }), "analyzeEmergencyDescription", deps);
+    const caller = await checkPaidEndpoint(
+      req({ authorization: "Bearer valid.user.jwt" }),
+      "analyzeEmergencyDescription",
+      deps,
+    );
     expect(caller).toEqual({ kind: "user", userId: "user-a" });
   });
 
@@ -59,20 +67,34 @@ describe("paid endpoint guard", () => {
   it("TEST 3: anonymous without valid session is rejected (401), including tampered/expired tokens", async () => {
     const { deps } = memoryDeps();
     expect(await status(checkPaidEndpoint(req({}), "reverseGeocodeFn", deps))).toBe(401);
-    expect(await status(checkPaidEndpoint(req({ [ANON_HEADER]: "plain-anon-id" }), "reverseGeocodeFn", deps))).toBe(401);
+    expect(
+      await status(
+        checkPaidEndpoint(req({ [ANON_HEADER]: "plain-anon-id" }), "reverseGeocodeFn", deps),
+      ),
+    ).toBe(401);
     const { token } = await issueAnonToken();
     const tampered = token.slice(0, 5) + (token[5] === "A" ? "B" : "A") + token.slice(6);
-    expect(await status(checkPaidEndpoint(req({ [ANON_HEADER]: tampered }), "reverseGeocodeFn", deps))).toBe(401);
+    expect(
+      await status(checkPaidEndpoint(req({ [ANON_HEADER]: tampered }), "reverseGeocodeFn", deps)),
+    ).toBe(401);
     const old = await issueAnonToken({ now: Date.now() - 2 * 3600_000 });
-    expect(await status(checkPaidEndpoint(req({ [ANON_HEADER]: old.token }), "reverseGeocodeFn", deps))).toBe(401);
+    expect(
+      await status(checkPaidEndpoint(req({ [ANON_HEADER]: old.token }), "reverseGeocodeFn", deps)),
+    ).toBe(401);
     const forged = await issueAnonToken({ secret: "attacker-secret".padEnd(64, "y") });
-    expect(await status(checkPaidEndpoint(req({ [ANON_HEADER]: forged.token }), "reverseGeocodeFn", deps))).toBe(401);
+    expect(
+      await status(
+        checkPaidEndpoint(req({ [ANON_HEADER]: forged.token }), "reverseGeocodeFn", deps),
+      ),
+    ).toBe(401);
   });
 
   it("anonymous cannot use auth-only endpoints", async () => {
     const { deps } = memoryDeps();
     const { token } = await issueAnonToken();
-    expect(await status(checkPaidEndpoint(req({ [ANON_HEADER]: token }), "searchPlacesFn", deps))).toBe(401);
+    expect(
+      await status(checkPaidEndpoint(req({ [ANON_HEADER]: token }), "searchPlacesFn", deps)),
+    ).toBe(401);
   });
 
   it("invalid bearer never silently falls back to anonymous", async () => {
@@ -88,10 +110,16 @@ describe("paid endpoint guard", () => {
     const max = RATE_LIMIT_CONFIG.analyzeAccidentScene.anonymous!;
     expect(max).toBeLessThan(RATE_LIMIT_CONFIG.analyzeAccidentScene.authenticated);
     for (let i = 0; i < max; i++) {
-      const c = await checkPaidEndpoint(req({ [ANON_HEADER]: token }), "analyzeAccidentScene", deps);
+      const c = await checkPaidEndpoint(
+        req({ [ANON_HEADER]: token }),
+        "analyzeAccidentScene",
+        deps,
+      );
       expect(c.kind).toBe("anon");
     }
-    expect(await status(checkPaidEndpoint(req({ [ANON_HEADER]: token }), "analyzeAccidentScene", deps))).toBe(429);
+    expect(
+      await status(checkPaidEndpoint(req({ [ANON_HEADER]: token }), "analyzeAccidentScene", deps)),
+    ).toBe(429);
   });
 
   it("TEST 8: changing x-forwarded-for does not change the authenticated bucket", async () => {
@@ -99,7 +127,11 @@ describe("paid endpoint guard", () => {
     const max = RATE_LIMIT_CONFIG.geocodeAddress.authenticated;
     for (let i = 0; i < max; i++) {
       await checkPaidEndpoint(
-        req({ authorization: "Bearer valid.user.jwt", "x-forwarded-for": `10.0.0.${i}`, "x-real-ip": `9.9.9.${i}` }),
+        req({
+          authorization: "Bearer valid.user.jwt",
+          "x-forwarded-for": `10.0.0.${i}`,
+          "x-real-ip": `9.9.9.${i}`,
+        }),
         "geocodeAddress",
         deps,
       );
@@ -112,7 +144,11 @@ describe("paid endpoint guard", () => {
   it("TEST 9: client-supplied user ids in headers are ignored", async () => {
     const { deps, calls } = memoryDeps();
     await checkPaidEndpoint(
-      req({ authorization: "Bearer valid.user.jwt", "x-user-id": "victim-user", "x-resqora-user": "victim-user" }),
+      req({
+        authorization: "Bearer valid.user.jwt",
+        "x-user-id": "victim-user",
+        "x-resqora-user": "victim-user",
+      }),
       "reverseGeocodeFn",
       deps,
     );
@@ -123,7 +159,11 @@ describe("paid endpoint guard", () => {
     const { deps } = memoryDeps({ consume: async () => ({ allowed: false, retryAfter: 10 }) });
     const provider = vi.fn();
     const endpoint = async () => {
-      await checkPaidEndpoint(req({ authorization: "Bearer valid.user.jwt" }), "analyzeEmergencyImage", deps);
+      await checkPaidEndpoint(
+        req({ authorization: "Bearer valid.user.jwt" }),
+        "analyzeEmergencyImage",
+        deps,
+      );
       provider();
     };
     expect(await status(endpoint())).toBe(429);
@@ -131,10 +171,18 @@ describe("paid endpoint guard", () => {
   });
 
   it("TEST 11: limiter storage failure fails closed (503) and provider is not called", async () => {
-    const { deps } = memoryDeps({ consume: async () => { throw new Error("db down"); } });
+    const { deps } = memoryDeps({
+      consume: async () => {
+        throw new Error("db down");
+      },
+    });
     const provider = vi.fn();
     const endpoint = async () => {
-      await checkPaidEndpoint(req({ authorization: "Bearer valid.user.jwt" }), "generateActionPlan", deps);
+      await checkPaidEndpoint(
+        req({ authorization: "Bearer valid.user.jwt" }),
+        "generateActionPlan",
+        deps,
+      );
       provider();
     };
     expect(await status(endpoint())).toBe(503);
@@ -144,14 +192,22 @@ describe("paid endpoint guard", () => {
   it("AI 429 messages keep the emergency path visible", async () => {
     const { deps } = memoryDeps({ consume: async () => ({ allowed: false, retryAfter: 10 }) });
     await expect(
-      checkPaidEndpoint(req({ authorization: "Bearer valid.user.jwt" }), "analyzeEmergencyDescription", deps),
+      checkPaidEndpoint(
+        req({ authorization: "Bearer valid.user.jwt" }),
+        "analyzeEmergencyDescription",
+        deps,
+      ),
     ).rejects.toThrow(/112/);
   });
 
   it("anonymous traffic from a trusted edge IP also hits a per-network cap", async () => {
     const { deps, calls } = memoryDeps();
     const { token } = await issueAnonToken();
-    await checkPaidEndpoint(req({ [ANON_HEADER]: token, "cf-connecting-ip": "203.0.113.5" }), "reverseGeocodeFn", deps);
+    await checkPaidEndpoint(
+      req({ [ANON_HEADER]: token, "cf-connecting-ip": "203.0.113.5" }),
+      "reverseGeocodeFn",
+      deps,
+    );
     expect(calls.some((c) => c.startsWith("ip:") && c.endsWith("|anon-network"))).toBe(true);
     expect(calls.join()).not.toContain("203.0.113.5");
   });

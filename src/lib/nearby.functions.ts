@@ -16,7 +16,9 @@ export const fetchNearbyServices = createServerFn({ method: "POST" })
   });
 
 export const geocodeAddress = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => z.strictObject({ query: z.string().min(2).max(160) }).parse(data))
+  .inputValidator((data: unknown) =>
+    z.strictObject({ query: z.string().min(2).max(160) }).parse(data),
+  )
   .handler(async ({ data }) => {
     const { guardPaidEndpoint } = await import("@/lib/paid-guard.server");
     await guardPaidEndpoint("geocodeAddress");

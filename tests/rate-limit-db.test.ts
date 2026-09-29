@@ -16,7 +16,8 @@ function client(key: string) {
     global: {
       fetch: (input, init) => {
         const h = new Headers(init?.headers);
-        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
+        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`)
+          h.delete("Authorization");
         h.set("apikey", key);
         return fetch(input, { ...init, headers: h });
       },
@@ -25,12 +26,19 @@ function client(key: string) {
 }
 
 const consume = (c: ReturnType<typeof client>, id: string, max: number) =>
-  c.rpc("consume_rate_limit", { _identifier: id, _endpoint: "vitest", _window_seconds: 3600, _max: max });
+  c.rpc("consume_rate_limit", {
+    _identifier: id,
+    _endpoint: "vitest",
+    _window_seconds: 3600,
+    _max: max,
+  });
 
 run("durable rate limiter (database)", () => {
   it("TEST 6: 25 simultaneous requests with max 5 → exactly 5 allowed", async () => {
     const id = `test:concurrency-${crypto.randomUUID()}`;
-    const results = await Promise.all(Array.from({ length: 25 }, () => consume(client(service!), id, 5)));
+    const results = await Promise.all(
+      Array.from({ length: 25 }, () => consume(client(service!), id, 5)),
+    );
     const allowed = results.filter((r) => (r.data as { allowed: boolean }).allowed).length;
     expect(results.every((r) => !r.error)).toBe(true);
     expect(allowed).toBe(5);
@@ -52,7 +60,10 @@ run("durable rate limiter (database)", () => {
     const read = await anon.from("rate_limit_buckets").select("id").limit(1);
     expect(read.error).not.toBeNull();
     const write = await anon.from("rate_limit_buckets").insert({
-      identifier: "user:x", endpoint: "x", window_start: new Date().toISOString(), request_count: 0,
+      identifier: "user:x",
+      endpoint: "x",
+      window_start: new Date().toISOString(),
+      request_count: 0,
     });
     expect(write.error).not.toBeNull();
   });

@@ -20,10 +20,13 @@ function fromB64url(value: string) {
 }
 
 async function hmacKey(secret: string) {
-  return crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, [
-    "sign",
-    "verify",
-  ]);
+  return crypto.subtle.importKey(
+    "raw",
+    enc.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign", "verify"],
+  );
 }
 
 function secretOrThrow(secret?: string) {
@@ -42,7 +45,9 @@ export async function issueAnonToken(opts: { secret?: string; now?: number } = {
     v: 1,
   };
   const body = b64url(enc.encode(JSON.stringify(payload)));
-  const sig = new Uint8Array(await crypto.subtle.sign("HMAC", await hmacKey(secret), enc.encode(body)));
+  const sig = new Uint8Array(
+    await crypto.subtle.sign("HMAC", await hmacKey(secret), enc.encode(body)),
+  );
   return { token: `${body}.${b64url(sig)}`, expiresAt: payload.exp };
 }
 
