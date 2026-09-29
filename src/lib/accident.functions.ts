@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import {
   FIRST_AID_FALLBACK,
@@ -9,7 +8,7 @@ import {
   type HospitalSpecialty,
 } from "@/lib/accident";
 
-const Input = z.object({
+const Input = z.strictObject({
   // Only base64 image data URLs — a video is reduced to a key frame in-browser.
   imageDataUrl: z
     .string()
@@ -70,8 +69,8 @@ function strings(value: unknown, max: number) {
 export const analyzeAccidentScene = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Input.parse(input))
   .handler(async ({ data }): Promise<AccidentReport> => {
-    const { enforceLimit } = await import("@/lib/rate-limit.server");
-    enforceLimit(getRequest(), "vision", 10, 60_000);
+    const { guardPaidEndpoint } = await import("@/lib/paid-guard.server");
+    await guardPaidEndpoint("analyzeAccidentScene");
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("AI is not configured");
 

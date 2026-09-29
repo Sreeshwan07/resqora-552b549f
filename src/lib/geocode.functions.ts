@@ -5,7 +5,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-const schema = z.object({
+const schema = z.strictObject({
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180),
 });
@@ -47,13 +47,15 @@ async function openStreetMap(lat: number, lng: number) {
 export const reverseGeocodeFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => schema.parse(data))
   .handler(async ({ data }): Promise<{ address: string | null }> => {
+    const { guardPaidEndpoint } = await import("@/lib/paid-guard.server");
+    await guardPaidEndpoint("reverseGeocodeFn");
     const address = (await google(data.lat, data.lng)) ?? (await openStreetMap(data.lat, data.lng));
     return { address };
   });
 
 /* ------------------------- forward geocoding (search) ---------------------- */
 
-const searchSchema = z.object({ query: z.string().trim().min(3).max(160) });
+const searchSchema = z.strictObject({ query: z.string().trim().min(3).max(160) });
 
 export type PlaceMatch = { address: string; latitude: number; longitude: number };
 
@@ -117,6 +119,8 @@ async function openStreetMapSearch(query: string): Promise<PlaceMatch[]> {
 export const searchPlacesFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => searchSchema.parse(data))
   .handler(async ({ data }): Promise<{ matches: PlaceMatch[] }> => {
+    const { guardPaidEndpoint } = await import("@/lib/paid-guard.server");
+    await guardPaidEndpoint("searchPlacesFn");
     const google = await googleSearch(data.query);
     if (google.length > 0) return { matches: google };
     return { matches: await openStreetMapSearch(data.query) };

@@ -1,8 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 
-const Input = z.object({
+const Input = z.strictObject({
   type: z.string().min(2).max(40),
   severity: z.string().min(2).max(20),
   notes: z.string().max(1200).optional(),
@@ -40,8 +39,8 @@ Rules: 4-7 actions ordered by urgency, 2-4 watchFor signs, etaMinutes is a reali
 export const generateActionPlan = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Input.parse(input))
   .handler(async ({ data }): Promise<CoordinatorPlan> => {
-    const { enforceLimit } = await import("@/lib/rate-limit.server");
-    enforceLimit(getRequest(), "coordinator", 20, 60_000);
+    const { guardPaidEndpoint } = await import("@/lib/paid-guard.server");
+    await guardPaidEndpoint("generateActionPlan");
     const key = process.env["LOVABLE_API_KEY"];
     if (!key) throw new Error("AI is not configured");
 

@@ -1,8 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 
-const Input = z.object({
+const Input = z.strictObject({
   description: z.string().min(3).max(2000),
 });
 
@@ -23,8 +22,8 @@ Give 3-5 firstAid steps that a bystander can safely perform right now. Never tel
 export const analyzeEmergencyDescription = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Input.parse(input))
   .handler(async ({ data }): Promise<EmergencyAnalysis> => {
-    const { enforceLimit } = await import("@/lib/rate-limit.server");
-    enforceLimit(getRequest(), "analysis", 12, 60_000);
+    const { guardPaidEndpoint } = await import("@/lib/paid-guard.server");
+    await guardPaidEndpoint("analyzeEmergencyDescription");
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("AI is not configured");
 

@@ -1,8 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 
-const Input = z.object({
+const Input = z.strictObject({
   // Only base64 image data URLs — never an arbitrary URL the server would fetch.
   imageDataUrl: z
     .string()
@@ -30,8 +29,8 @@ If the photo shows no emergency, use severity "low", a low confidence, and say s
 export const analyzeEmergencyImage = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Input.parse(input))
   .handler(async ({ data }): Promise<AccidentAnalysis> => {
-    const { enforceLimit } = await import("@/lib/rate-limit.server");
-    enforceLimit(getRequest(), "vision", 8, 60_000);
+    const { guardPaidEndpoint } = await import("@/lib/paid-guard.server");
+    await guardPaidEndpoint("analyzeEmergencyImage");
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("AI is not configured");
 
