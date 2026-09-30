@@ -15,6 +15,13 @@
       "when": 1790568344301,
       "tag": "0001_durable_rate_limits",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790744449595,
+      "tag": "0002_server_side_email_deliveries",
+      "breakpoints": true
     }
   ]
 }
