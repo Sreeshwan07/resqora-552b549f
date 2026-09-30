@@ -328,10 +328,14 @@ export type Database = {
           contact_name: string
           contact_phone: string | null
           created_at: string
+          dedupe_key: string | null
+          delivered_at: string | null
           emergency_id: string
           error: string | null
+          failed_at: string | null
           id: string
           kind: string
+          provider_message_id: string | null
           sent_at: string | null
           status: string
           updated_at: string
@@ -344,10 +348,14 @@ export type Database = {
           contact_name: string
           contact_phone?: string | null
           created_at?: string
+          dedupe_key?: string | null
+          delivered_at?: string | null
           emergency_id: string
           error?: string | null
+          failed_at?: string | null
           id?: string
           kind?: string
+          provider_message_id?: string | null
           sent_at?: string | null
           status?: string
           updated_at?: string
@@ -360,10 +368,14 @@ export type Database = {
           contact_name?: string
           contact_phone?: string | null
           created_at?: string
+          dedupe_key?: string | null
+          delivered_at?: string | null
           emergency_id?: string
           error?: string | null
+          failed_at?: string | null
           id?: string
           kind?: string
+          provider_message_id?: string | null
           sent_at?: string | null
           status?: string
           updated_at?: string
