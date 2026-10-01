@@ -182,45 +182,24 @@ export async function notifyGuardian(input: {
     return { session, dashboardUrl, configured: true, emailed: false };
   }
 
-  const seeded = await supabase
-    .from("emergency_alert_deliveries")
-    .insert({
-      user_id: input.userId,
-      emergency_id: input.emergency.id,
-      contact_id: input.guardian.id,
-      contact_name: `${input.guardian.name} (Guardian)`,
-      contact_phone: input.guardian.phone,
-      contact_email: input.guardian.email,
-      channel: "email",
-      status: "pending",
+  // The server resolves the Guardian from the user's saved contacts.
+  const { requestEmergencyEmails } = await import("@/lib/emergency-email.functions");
+  const r = await requestEmergencyEmails({
+    data: {
+      emergencyId: input.emergency.id,
       kind: "guardian",
-    })
-    .select("*")
-    .single();
-  if (seeded.error) throw new Error(seeded.error.message);
-
-  const { sendAndRecord } = await import("@/lib/email-service");
-  const { buildTemplateParams } = await import("@/lib/email-alerts");
-  const result = await sendAndRecord({
-    deliveryId: seeded.data.id,
-    params: {
-      ...buildTemplateParams({
-        toEmail: input.guardian.email,
-        emergency: input.emergency,
-        profile: input.profile,
-        address: input.address,
-        trackingUrl: dashboardUrl,
-      }),
+      contactIds: [input.guardian.id],
+      trackingUrl: dashboardUrl,
     },
   });
-  if (!result.ok && result.attempts === 0) {
-    return { session, dashboardUrl, configured: false, emailed: false, error: result.error };
-  }
+  const emailed = r.sent > 0;
   return {
     session,
     dashboardUrl,
-    configured: true,
-    emailed: result.ok,
-    error: result.ok ? undefined : result.error,
+    configured: r.configured,
+    emailed,
+    error: emailed
+      ? undefined
+      : (r.error ?? r.results[0]?.error ?? "Email notification could not be sent."),
   };
 }

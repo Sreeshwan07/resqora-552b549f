@@ -138,7 +138,9 @@ export async function dispatchEmergencyEmails(deps: {
     name: profile?.full_name || "A RESQORA user",
     reference: emergency.id.slice(0, 8).toUpperCase(),
     status: String(emergency.status).replace(/_/g, " "),
-    location: emergency.address || (hasCoords ? `${emergency.latitude}, ${emergency.longitude}` : "Unavailable"),
+    location:
+      emergency.address ||
+      (hasCoords ? `${emergency.latitude}, ${emergency.longitude}` : "Unavailable"),
     locationStatus: fresh ? "Live" : hasCoords ? "Last known" : "Unavailable",
     type: String(emergency.type).replace(/_/g, " "),
     trackingUrl: deps.trackingUrl,
@@ -185,11 +187,17 @@ export async function dispatchEmergencyEmails(deps: {
         .from("emergency_alert_deliveries")
         .update(
           result.ok
-            ? { status: "sent", sent_at: now, provider_message_id: result.providerMessageId, error: null }
+            ? {
+                status: "sent",
+                sent_at: now,
+                provider_message_id: result.providerMessageId,
+                error: null,
+              }
             : { status: "failed", failed_at: now, error: result.error },
         )
         .eq("id", row.id);
-      if (error) console.error("[email] status update failed", { deliveryId: row.id, code: error.code });
+      if (error)
+        console.error("[email] status update failed", { deliveryId: row.id, code: error.code });
       console.info("[email]", {
         emergencyId: emergency.id,
         deliveryId: row.id,

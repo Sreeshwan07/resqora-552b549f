@@ -28,9 +28,22 @@ export const requestEmergencyEmails = createServerFn({ method: "POST" })
     const { dispatchEmergencyEmails, safeTrackingUrl } = await import("./emergency-email.server");
     const { isEmailProviderConfigured } = await import("./email-provider.server");
     const { consumeRaw } = await import("./paid-guard.server");
-    const limit = await consumeRaw(`${context.userId}:${data.emergencyId}`, "emergencyEmail", 600, 10);
+    const limit = await consumeRaw(
+      `${context.userId}:${data.emergencyId}`,
+      "emergencyEmail",
+      600,
+      10,
+    );
     if (!limit.allowed) {
-      return { configured: true, skipped: false, sent: 0, failed: 0, duplicate: 0, error: "Too many email requests for this emergency. Please wait.", results: [] };
+      return {
+        configured: true,
+        skipped: false,
+        sent: 0,
+        failed: 0,
+        duplicate: 0,
+        error: "Too many email requests for this emergency. Please wait.",
+        results: [],
+      };
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const origin = new URL(getRequest().url).origin;
@@ -60,7 +73,15 @@ export const requestEmergencyEmails = createServerFn({ method: "POST" })
         INVALID_STATE: "This emergency is no longer active.",
         UNAUTHORIZED_RECIPIENT: "That recipient is not one of your emergency contacts.",
       };
-      return { configured: isEmailProviderConfigured(), skipped: false, sent: 0, failed: 0, duplicate: 0, error: map[code] ?? "Email notification could not be sent.", results: [] };
+      return {
+        configured: isEmailProviderConfigured(),
+        skipped: false,
+        sent: 0,
+        failed: 0,
+        duplicate: 0,
+        error: map[code] ?? "Email notification could not be sent.",
+        results: [],
+      };
     }
   });
 

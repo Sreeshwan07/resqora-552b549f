@@ -1,6 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { sendEmergencyTemplateEmail } from "@/lib/email-service";
-import { buildEmergencyEmailHtml } from "@/lib/email-alerts";
 import { origin } from "@/lib/share";
 
 /**
@@ -76,42 +74,13 @@ export async function activateBystanderEmergency(input: {
   if (!activation) throw new Error("Could not activate the emergency. Please call 108.");
 
   const guardianUrl = guardianLinkFor(activation.emergency_id, activation.guardian_token);
-  let guardianEmailSent = false;
+  const guardianEmailSent = false;
   let guardianEmailError: string | null = null;
 
+  // Bystanders are unauthenticated: the browser never sends emergency email.
+  // Server-side delivery for bystander activations needs a connected provider.
   if (activation.guardian_email) {
-    const time = new Date().toLocaleString();
-    const address = coords
-      ? `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`
-      : "Location unavailable";
-    const mapLink = coords
-      ? `https://www.google.com/maps/search/?api=1&query=${coords.latitude},${coords.longitude}`
-      : "Pending location capture";
-    const status = "🔴 Emergency raised by a bystander";
-    const result = await sendEmergencyTemplateEmail({
-      to_email: activation.guardian_email,
-      user_name: activation.victim_name,
-      time,
-      address,
-      map_link: mapLink,
-      tracking_link: guardianUrl,
-      emergency_id: activation.reference,
-      reply_to: "no-reply@resqora.app",
-      status,
-      support_contact: activation.guardian_phone ?? "Emergency services: 108",
-      message_html: buildEmergencyEmailHtml({
-        name: activation.victim_name,
-        time,
-        address,
-        mapLink,
-        trackingUrl: guardianUrl,
-        reference: activation.reference,
-        status,
-        supportContact: activation.guardian_phone ?? "Emergency services: 108",
-      }),
-    });
-    guardianEmailSent = result.ok;
-    guardianEmailError = result.ok ? null : (result.error ?? "Email could not be sent");
+    guardianEmailError = "Email notification could not be sent.";
   }
 
   return { activation, guardianUrl, guardianEmailSent, guardianEmailError };

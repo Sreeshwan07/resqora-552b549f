@@ -16,7 +16,7 @@ import type { EmergencyContact, Profile } from "@/lib/api";
 import { haversineKm } from "@/lib/geo";
 import { mapsLink } from "@/lib/alerts";
 import { logActivity } from "@/lib/activity";
-import { isEmailConfigured, sendEmergencyTemplateEmail } from "@/lib/email-service";
+import { EMAIL_NOT_CONFIGURED } from "@/lib/email-service";
 import { whatsappShareLink } from "@/lib/whatsapp-alerts";
 
 export type SafeJourney = Database["public"]["Tables"]["safe_journeys"]["Row"];
@@ -499,41 +499,14 @@ export async function notifyJourneyEvent(input: {
         contactId: input.journey.guardian_contact_id,
       });
       if (slot) {
-        if (!isEmailConfigured()) {
-          await settleNotification(slot.id, "unavailable", "Email service is not configured.");
-          outcomes.push({
-            channel: "email",
-            recipient: guardianLabel,
-            status: "unavailable",
-            detail: "Email service is not configured, so no email was sent.",
-          });
-        } else {
-          const location = journeyLocationLine(input.journey);
-          const result = await sendEmergencyTemplateEmail({
-            to_email: input.journey.guardian_email,
-            user_name: travellerName,
-            time: new Date().toLocaleString(),
-            address: input.journey.destination_address,
-            map_link: location.link,
-            tracking_link: "Not available",
-            emergency_id: journeyReference(input.journey),
-            reply_to: input.profile?.email || "no-reply@resqora.app",
-            status: message.title,
-            support_contact: input.profile?.phone || input.profile?.email || "",
-            message_html: `<pre style="font-family:inherit;white-space:pre-wrap">${message.body.replace(/[<>&]/g, "")}</pre>`,
-          });
-          await settleNotification(
-            slot.id,
-            result.ok ? "sent" : "failed",
-            result.ok ? undefined : result.error,
-          );
-          outcomes.push({
-            channel: "email",
-            recipient: guardianLabel,
-            status: result.ok ? "sent" : "failed",
-            detail: result.ok ? "Email accepted by the provider" : result.error,
-          });
-        }
+        // Browser-side email is disabled; no server sender is connected yet.
+        await settleNotification(slot.id, "unavailable", EMAIL_NOT_CONFIGURED);
+        outcomes.push({
+          channel: "email",
+          recipient: guardianLabel,
+          status: "unavailable",
+          detail: "Email notification could not be sent.",
+        });
       }
     }
 
