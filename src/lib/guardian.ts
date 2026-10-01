@@ -198,6 +198,8 @@ export async function notifyGuardian(input: {
     dashboardUrl,
     configured: r.configured,
     emailed,
-    error: emailed ? undefined : (r.error ?? r.results[0]?.error ?? "Email notification could not be sent."),
+    error: emailed
+      ? undefined
+      : (r.error ?? r.results[0]?.error ?? "Email notification could not be sent."),
   };
 }

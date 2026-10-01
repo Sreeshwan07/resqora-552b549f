@@ -29,7 +29,10 @@ export const Route = createFileRoute("/_app/email-diagnostics")({
 
 function EmailDiagnosticsPage() {
   const status = useServerFn(emailProviderStatus);
-  const { data, isLoading } = useQuery({ queryKey: ["email-provider-status"], queryFn: () => status() });
+  const { data, isLoading } = useQuery({
+    queryKey: ["email-provider-status"],
+    queryFn: () => status(),
+  });
   const configured = data?.configured ?? false;
   return (
     <>
@@ -50,8 +53,8 @@ function EmailDiagnosticsPage() {
             <p>Emergency emails are sent by the server and every attempt is recorded.</p>
           ) : (
             <p>
-              No email sender is connected yet. Emergency email alerts are recorded as
-              "failed — not configured"; SMS, push and in-app alerts keep working.
+              No email sender is connected yet. Emergency email alerts are recorded as "failed — not
+              configured"; SMS, push and in-app alerts keep working.
             </p>
           )}
         </CardContent>

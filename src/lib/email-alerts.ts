@@ -103,7 +103,13 @@ export async function sendEmergencyEmailAlerts(input: {
   kind?: "alert" | "resolved";
 }) {
   if (contactsWithEmail(input.contacts).length === 0) {
-    return { sent: 0, failed: 0, configured: true, skipped: true, results: [] as EmailDeliveryOutcome[] };
+    return {
+      sent: 0,
+      failed: 0,
+      configured: true,
+      skipped: true,
+      results: [] as EmailDeliveryOutcome[],
+    };
   }
   const r = await requestEmergencyEmails({
     data: {
