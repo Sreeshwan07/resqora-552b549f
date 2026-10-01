@@ -13,3 +13,4 @@
 - Paid AI/Maps server functions must call `guardPaidEndpoint(<name>)` (src/lib/paid-guard.server.ts) before any provider call; limits live only in src/lib/rate-limit-config.ts — why: durable, atomic, per-user/per-signed-anon-session quotas that fail closed.
 - Signed-out callers use server-signed short-lived anonymous tokens (`/api/public/anon-session`, header `x-resqora-anon`) — why: low-friction emergency access without trusting client IDs or forwarded IPs.
 - Core SOS creation must never sit behind the paid-endpoint limiter — why: emergencies must work even when AI/Maps quotas are exhausted.
+- Emergency email is sent only by the server (`requestEmergencyEmails` in src/lib/emergency-email.functions.ts; recipients come from saved contacts, rows deduped by `dedupe_key`; a database trigger blocks browser writes to email rows) — why: the browser must never be able to send or fake emergency emails.
