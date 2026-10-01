@@ -509,7 +509,6 @@ export async function notifyJourneyEvent(input: {
         });
       }
     }
-  }
 
     // WhatsApp: prepared, not auto-delivered.
     if (input.journey.guardian_phone) {

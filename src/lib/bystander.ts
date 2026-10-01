@@ -74,7 +74,7 @@ export async function activateBystanderEmergency(input: {
   if (!activation) throw new Error("Could not activate the emergency. Please call 108.");
 
   const guardianUrl = guardianLinkFor(activation.emergency_id, activation.guardian_token);
-  let guardianEmailSent = false;
+  const guardianEmailSent = false;
   let guardianEmailError: string | null = null;
 
   // Bystanders are unauthenticated: the browser never sends emergency email.
