@@ -20,7 +20,19 @@ function fakeDbs(opts: { owner?: string; status?: string } = {}) {
         eq: () => q,
         maybeSingle: async () =>
           table === "emergencies"
-            ? { data: { id: E, user_id: opts.owner ?? U, type: "medical", status: opts.status ?? "active", latitude: 1, longitude: 2, address: null, location_updated_at: null }, error: null }
+            ? {
+                data: {
+                  id: E,
+                  user_id: opts.owner ?? U,
+                  type: "medical",
+                  status: opts.status ?? "active",
+                  latitude: 1,
+                  longitude: 2,
+                  address: null,
+                  location_updated_at: null,
+                },
+                error: null,
+              }
             : { data: { full_name: "Test" }, error: null },
         then: (r: (v: unknown) => void) => r({ data: contacts, error: null }),
       };
@@ -32,8 +44,15 @@ function fakeDbs(opts: { owner?: string; status?: string } = {}) {
       return {
         upsert(rows: Record<string, unknown>[]) {
           const fresh = rows.filter((r) => !deliveries.has(r.dedupe_key as string));
-          fresh.forEach((r) => deliveries.set(r.dedupe_key as string, { ...r, id: `d-${r.contact_id}` }));
-          return { select: async () => ({ data: fresh.map((r) => ({ ...r, id: `d-${r.contact_id}` })), error: null }) };
+          fresh.forEach((r) =>
+            deliveries.set(r.dedupe_key as string, { ...r, id: `d-${r.contact_id}` }),
+          );
+          return {
+            select: async () => ({
+              data: fresh.map((r) => ({ ...r, id: `d-${r.contact_id}` })),
+              error: null,
+            }),
+          };
         },
         update(patch: Record<string, unknown>) {
           updates.push(patch);
@@ -52,7 +71,11 @@ describe("server-side emergency email", () => {
     const send = vi.fn(async () => ({ ok: true as const, providerMessageId: "m1" }));
     const d = fakeDbs();
     const r = await dispatchEmergencyEmails({ ...d, ...base, send });
-    expect(send.mock.calls.map((c) => (c as unknown as [{ to: string }])[0].to).sort()).toEqual(["a@x.com", "b@x.com", "c@x.com"]);
+    expect(send.mock.calls.map((c) => (c as unknown as [{ to: string }])[0].to).sort()).toEqual([
+      "a@x.com",
+      "b@x.com",
+      "c@x.com",
+    ]);
     expect(r.outcomes.every((o) => o.status === "sent")).toBe(true);
     expect(d.updates.every((u) => u.status === "sent" && !("delivered_at" in u))).toBe(true);
   });
