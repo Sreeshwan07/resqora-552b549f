@@ -1,3 +1,4 @@
+import { confidenceLabel } from "@/lib/critical-signs";
 import { AlertTriangle, Info, Sparkles, Users } from "lucide-react";
 import {
   AI_DISCLAIMER,
@@ -70,7 +71,7 @@ export function MedicalReportCard({
               PRIORITY {PRIORITY_LABEL[meta.priority]}
             </span>
             <span className="text-xs font-medium text-muted-foreground">
-              Confidence {report.confidence}%
+              AI confidence: {confidenceLabel(report.confidence)}
             </span>
             {report.victimCount != null && (
               <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
