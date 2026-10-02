@@ -44,8 +44,20 @@ Respond ONLY with compact JSON:
 Rules: only list injuries suggested by what is visible, prefix them with "Possible"/"Suspected" wording where uncertain, keep every string under 120 characters, return 3-6 firstAid steps.
 If the media shows no emergency, use severity "minor", low confidence and say so in the summary.`;
 
-const SEVERITIES = ["minor", "moderate", "serious", "critical"] as const satisfies readonly AccidentSeverity[];
-const TYPES = ["accident", "fire", "medical", "crime", "natural", "sos"] as const satisfies readonly CoreEmergencyType[];
+const SEVERITIES = [
+  "minor",
+  "moderate",
+  "serious",
+  "critical",
+] as const satisfies readonly AccidentSeverity[];
+const TYPES = [
+  "accident",
+  "fire",
+  "medical",
+  "crime",
+  "natural",
+  "sos",
+] as const satisfies readonly CoreEmergencyType[];
 const SPECIALTIES: HospitalSpecialty[] = [
   "trauma",
   "cardiac",
@@ -114,13 +126,19 @@ export const analyzeAccidentScene = createServerFn({ method: "POST" })
     const victims = Number(parsed.victimCount);
 
     return {
-      incidentLabel: (typeof parsed.incidentLabel === "string" && parsed.incidentLabel.trim() ? parsed.incidentLabel : "Accident scene").slice(0, 60),
+      incidentLabel: (typeof parsed.incidentLabel === "string" && parsed.incidentLabel.trim()
+        ? parsed.incidentLabel
+        : "Accident scene"
+      ).slice(0, 60),
       emergencyType,
       severity,
       confidence: Number.isFinite(Number(parsed.confidence))
         ? Math.max(0, Math.min(100, Math.round(Number(parsed.confidence))))
         : 50,
-      summary: (typeof parsed.summary === "string" && parsed.summary.trim() ? parsed.summary : "Emergency scene analysed.").slice(0, 400),
+      summary: (typeof parsed.summary === "string" && parsed.summary.trim()
+        ? parsed.summary
+        : "Emergency scene analysed."
+      ).slice(0, 400),
       observations: strings(parsed.observations, 6),
       possibleInjuries: strings(parsed.possibleInjuries, 6),
       hazards: strings(parsed.hazards, 5),
@@ -132,7 +150,10 @@ export const analyzeAccidentScene = createServerFn({ method: "POST" })
           ? "burn"
           : "trauma",
       firstAid: {
-        title: (typeof parsed.firstAidTitle === "string" && parsed.firstAidTitle.trim() ? parsed.firstAidTitle : fallback.title).slice(0, 60),
+        title: (typeof parsed.firstAidTitle === "string" && parsed.firstAidTitle.trim()
+          ? parsed.firstAidTitle
+          : fallback.title
+        ).slice(0, 60),
         steps: steps.length >= 2 ? steps : fallback.steps,
       },
       recommendedActions: strings(parsed.recommendedActions, 5),

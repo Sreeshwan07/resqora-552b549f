@@ -17,7 +17,10 @@ export type EmergencyAnalysis = {
 const AnalysisSchema = z.object({
   emergencyType: z.enum(["accident", "fire", "medical", "crime", "natural", "sos"]),
   severity: z.enum(["low", "medium", "high", "critical"]),
-  confidence: z.coerce.number().catch(50).transform((n) => Math.max(0, Math.min(100, Math.round(n)))),
+  confidence: z.coerce
+    .number()
+    .catch(50)
+    .transform((n) => Math.max(0, Math.min(100, Math.round(n)))),
   summary: z.string().trim().min(1).max(600).catch("Emergency description analysed."),
   recommendedResponse: z
     .string()

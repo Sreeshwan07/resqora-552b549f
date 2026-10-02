@@ -37,7 +37,10 @@ const PlanSchema = z.object({
   priority: z.enum(["green", "yellow", "orange", "red"]),
   headline: str(400).catch("Live emergency coordination in progress."),
   hospitalType: str(120).catch("Nearest emergency department"),
-  etaMinutes: z.coerce.number().catch(12).transform((n) => Math.max(1, Math.min(120, Math.round(n)))),
+  etaMinutes: z.coerce
+    .number()
+    .catch(12)
+    .transform((n) => Math.max(1, Math.min(120, Math.round(n)))),
   actions: z
     .array(
       z

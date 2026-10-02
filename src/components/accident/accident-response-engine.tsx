@@ -174,7 +174,10 @@ export function AccidentResponseEngine() {
         },
       });
       setReport(result);
-      record("AI analysis completed", `${result.incidentLabel} · AI confidence: ${confidenceLabel(result.confidence)}`);
+      record(
+        "AI analysis completed",
+        `${result.incidentLabel} · AI confidence: ${confidenceLabel(result.confidence)}`,
+      );
       if (result.confidence < 40) {
         toast.warning(
           "Unable to confidently assess the incident. Please contact emergency services.",

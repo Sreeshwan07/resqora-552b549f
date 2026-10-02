@@ -4,12 +4,27 @@
  * situation. They never diagnose — they only prioritise emergency guidance.
  */
 const CRITICAL_PATTERNS: { key: string; pattern: RegExp }[] = [
-  { key: "unconscious", pattern: /\b(unconscious|unresponsive|passed out|not waking|fainted|collapsed)\b|बेहोश|స్పృహ/i },
-  { key: "not_breathing", pattern: /\b(not breathing|no breathing|stopped breathing|can'?t breathe|cannot breathe|choking)\b|सांस नहीं/i },
-  { key: "severe_bleeding", pattern: /\b(severe|heavy|lots of|uncontrolled|spurting)\s+bleed(ing)?\b|\bbleeding (heavily|a lot|badly)\b/i },
+  {
+    key: "unconscious",
+    pattern: /\b(unconscious|unresponsive|passed out|not waking|fainted|collapsed)\b|बेहोश|స్పృహ/i,
+  },
+  {
+    key: "not_breathing",
+    pattern:
+      /\b(not breathing|no breathing|stopped breathing|can'?t breathe|cannot breathe|choking)\b|सांस नहीं/i,
+  },
+  {
+    key: "severe_bleeding",
+    pattern:
+      /\b(severe|heavy|lots of|uncontrolled|spurting)\s+bleed(ing)?\b|\bbleeding (heavily|a lot|badly)\b/i,
+  },
   { key: "chest_pain", pattern: /\b(severe|crushing|heavy)?\s*chest pain\b|\bheart attack\b/i },
   { key: "stroke", pattern: /\b(stroke|face drooping|slurred speech|one side (weak|numb))\b/i },
-  { key: "fire", pattern: /\b(major fire|house (is )?on fire|building (is )?on fire|trapped in (a )?fire|burning building)\b/i },
+  {
+    key: "fire",
+    pattern:
+      /\b(major fire|house (is )?on fire|building (is )?on fire|trapped in (a )?fire|burning building)\b/i,
+  },
   { key: "collapse", pattern: /\b(building collapse|collapsed building|buried|trapped under)\b/i },
   { key: "drowning", pattern: /\b(drown(ing|ed)?)\b/i },
   { key: "electric", pattern: /\b(electrocut\w*|electric shock|live wire)\b/i },

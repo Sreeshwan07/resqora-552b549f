@@ -24,7 +24,10 @@ export type AccidentAnalysis = {
 const VisionSchema = z.object({
   emergencyType: z.enum(["accident", "fire", "medical", "crime", "natural", "sos"]),
   severity: z.enum(["low", "medium", "high", "critical"]),
-  confidence: z.coerce.number().catch(50).transform((n) => Math.max(0, Math.min(100, Math.round(n)))),
+  confidence: z.coerce
+    .number()
+    .catch(50)
+    .transform((n) => Math.max(0, Math.min(100, Math.round(n)))),
   summary: z.string().trim().min(1).max(600).catch("Emergency scene analysed."),
   recommendedActions: z
     .array(z.string().trim().max(300).catch(""))
