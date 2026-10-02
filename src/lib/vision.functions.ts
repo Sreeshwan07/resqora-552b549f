@@ -21,6 +21,17 @@ export type AccidentAnalysis = {
   recommendedActions: string[];
 };
 
+const VisionSchema = z.object({
+  emergencyType: z.enum(["accident", "fire", "medical", "crime", "natural", "sos"]),
+  severity: z.enum(["low", "medium", "high", "critical"]),
+  confidence: z.coerce.number().catch(50).transform((n) => Math.max(0, Math.min(100, Math.round(n)))),
+  summary: z.string().trim().min(1).max(600).catch("Emergency scene analysed."),
+  recommendedActions: z
+    .array(z.string().trim().max(300).catch(""))
+    .catch([])
+    .transform((a) => a.slice(0, 5)),
+});
+
 const SYSTEM = `You are RESQORA, an emergency triage vision model. Look at the photo and classify the emergency.
 Respond ONLY with compact JSON:
 {"emergencyType":"accident|fire|medical|crime|natural|sos","severity":"low|medium|high|critical","confidence":0-100,"summary":"one or two sentences","recommendedActions":["short action"]}
@@ -31,45 +42,25 @@ export const analyzeEmergencyImage = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<AccidentAnalysis> => {
     const { guardPaidEndpoint } = await import("@/lib/paid-guard.server");
     await guardPaidEndpoint("analyzeEmergencyImage");
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("AI is not configured");
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "content-type": "application/json", "Lovable-API-Key": key },
-      body: JSON.stringify({
-        model: "google/gemini-3.6-flash",
-        messages: [
-          { role: "system", content: SYSTEM },
-          {
-            role: "user",
-            content: [
-              { type: "text", text: "Analyse this scene for an emergency response." },
-              { type: "image_url", image_url: { url: data.imageDataUrl } },
-            ],
-          },
-        ],
-      }),
-    });
-
-    if (response.status === 429)
-      throw new Error("AI is busy right now — please retry in a moment.");
-    if (response.status === 402) throw new Error("AI credits exhausted for this workspace.");
-    if (!response.ok) throw new Error(`AI analysis failed (${response.status})`);
-
-    const payload = (await response.json()) as { choices?: { message?: { content?: string } }[] };
-    const text = payload.choices?.[0]?.message?.content ?? "";
-    const match = text.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error("Could not read the AI analysis");
-
-    const parsed = JSON.parse(match[0]) as Partial<AccidentAnalysis>;
-    return {
-      emergencyType: (parsed.emergencyType ?? "sos") as AccidentAnalysis["emergencyType"],
-      severity: (parsed.severity ?? "medium") as AccidentAnalysis["severity"],
-      confidence: Math.max(0, Math.min(100, Math.round(Number(parsed.confidence ?? 60)))),
-      summary: parsed.summary ?? "Emergency scene analysed.",
-      recommendedActions: Array.isArray(parsed.recommendedActions)
-        ? parsed.recommendedActions.slice(0, 5).map(String)
-        : [],
-    };
+    const ai = await import("@/lib/ai-call.server");
+    const text = await ai.callAiText(
+      "analyzeEmergencyImage",
+      [
+        { role: "system", content: `${SYSTEM}\n${ai.UNTRUSTED_INPUT_RULE}` },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "Analyse this scene for an emergency response." },
+            { type: "image_url", image_url: { url: data.imageDataUrl } },
+          ],
+        },
+      ],
+      { timeoutMs: 30_000 },
+    );
+    const parsed = ai.validateAi(
+      "analyzeEmergencyImage",
+      VisionSchema,
+      ai.parseAiJson("analyzeEmergencyImage", text),
+    );
+    return { ...parsed, recommendedActions: parsed.recommendedActions.filter(Boolean) };
   });
