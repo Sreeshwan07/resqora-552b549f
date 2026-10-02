@@ -13,7 +13,7 @@ const Input = z.strictObject({
   imageDataUrl: z
     .string()
     .min(32)
-    .max(8_000_000)
+    .max(6_000_000)
     .regex(
       /^data:image\/(jpeg|jpg|png|webp|heic);base64,[A-Za-z0-9+/=\s]+$/,
       "Unsupported image format",

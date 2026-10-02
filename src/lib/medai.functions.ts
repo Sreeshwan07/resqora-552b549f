@@ -17,7 +17,7 @@ const Input = z.object({
       /^data:image\/(jpeg|jpg|png|webp|heic);base64,[A-Za-z0-9+/=\s]+$/,
       "Unsupported image format",
     )
-    .max(8_000_000)
+    .max(6_000_000)
     .nullish(),
   medicalContext: z.string().max(2000).nullish(),
 });
