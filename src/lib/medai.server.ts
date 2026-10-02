@@ -3,6 +3,8 @@
  * calls the Lovable AI gateway, returning a strict JSON assessment the chat UI
  * can render as a doctor-style card.
  */
+import { detectCriticalSigns, detectSelfHarm } from "@/lib/critical-signs";
+
 export type MedAiTurn = { role: "user" | "assistant"; content: string };
 
 export type MedAiAssessment = {
@@ -79,15 +81,17 @@ function coerce(raw: unknown): MedAiAssessment {
   const value = (raw ?? {}) as Record<string, unknown>;
   const urgency = URGENCIES.includes(value.urgency as (typeof URGENCIES)[number])
     ? (value.urgency as MedAiAssessment["urgency"])
-    : "moderate";
+    : "high";
+  const urgencyValid = URGENCIES.includes(value.urgency as (typeof URGENCIES)[number]);
   const list = (input: unknown, cap: number) =>
     Array.isArray(input)
       ? input
           .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+          .map((item) => item.trim().slice(0, 400))
           .slice(0, cap)
       : [];
   const text = (input: unknown) =>
-    typeof input === "string" && input.trim().length > 0 ? input.trim() : null;
+    typeof input === "string" && input.trim().length > 0 ? input.trim().slice(0, 2000) : null;
 
   return {
     reply:
@@ -98,7 +102,9 @@ function coerce(raw: unknown): MedAiAssessment {
     whenToSeekCare: text(value.whenToSeekCare),
     followUpQuestion: text(value.followUpQuestion),
     urgency,
-    urgencyReason: text(value.urgencyReason) ?? "",
+    urgencyReason: urgencyValid
+      ? (text(value.urgencyReason) ?? "")
+      : "Unable to reliably assess this situation. Seek professional emergency assistance if symptoms are serious.",
     specialist: text(value.specialist),
     specialistReason: text(value.specialistReason),
     firstAid: list(value.firstAid, 8),
@@ -141,4 +147,32 @@ export async function runMedAi(input: {
   // parseAiJson throws a safe AiError; coerce() runtime-validates every field.
   const assessment = coerce(ai.parseAiJson("askMedAi", content));
   return applyCriticalOverride(input.message, assessment);
+}
+
+/**
+ * Deterministic safety net applied after the model: clearly critical
+ * indicators or self-harm language always escalate, regardless of AI output.
+ */
+function applyCriticalOverride(message: string, a: MedAiAssessment): MedAiAssessment {
+  if (detectSelfHarm(message)) {
+    return {
+      ...a,
+      urgency: "critical",
+      emergency: true,
+      urgencyReason:
+        "You deserve support right now. Please call Tele-MANAS 14416 or emergency services 112, or activate SOS so someone you trust is alerted.",
+      redFlags: a.redFlags,
+    };
+  }
+  const signs = detectCriticalSigns(message);
+  if (signs.length === 0) return a;
+  return {
+    ...a,
+    urgency: "critical",
+    emergency: true,
+    urgencyReason:
+      a.urgency === "critical" && a.urgencyReason
+        ? a.urgencyReason
+        : "Possible signs of a serious medical emergency were identified. Seek professional emergency assistance — activate SOS or call 108/112 now.",
+  };
 }
