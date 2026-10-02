@@ -3,6 +3,8 @@
  * calls the Lovable AI gateway, returning a strict JSON assessment the chat UI
  * can render as a doctor-style card.
  */
+import { detectCriticalSigns, detectSelfHarm } from "@/lib/critical-signs";
+
 export type MedAiTurn = { role: "user" | "assistant"; content: string };
 
 export type MedAiAssessment = {
@@ -79,15 +81,17 @@ function coerce(raw: unknown): MedAiAssessment {
   const value = (raw ?? {}) as Record<string, unknown>;
   const urgency = URGENCIES.includes(value.urgency as (typeof URGENCIES)[number])
     ? (value.urgency as MedAiAssessment["urgency"])
-    : "moderate";
+    : "high";
+  const urgencyValid = URGENCIES.includes(value.urgency as (typeof URGENCIES)[number]);
   const list = (input: unknown, cap: number) =>
     Array.isArray(input)
       ? input
           .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+          .map((item) => item.trim().slice(0, 400))
           .slice(0, cap)
       : [];
   const text = (input: unknown) =>
-    typeof input === "string" && input.trim().length > 0 ? input.trim() : null;
+    typeof input === "string" && input.trim().length > 0 ? input.trim().slice(0, 2000) : null;
 
   return {
     reply:
@@ -98,7 +102,9 @@ function coerce(raw: unknown): MedAiAssessment {
     whenToSeekCare: text(value.whenToSeekCare),
     followUpQuestion: text(value.followUpQuestion),
     urgency,
-    urgencyReason: text(value.urgencyReason) ?? "",
+    urgencyReason: urgencyValid
+      ? (text(value.urgencyReason) ?? "")
+      : "Unable to reliably assess this situation. Seek professional emergency assistance if symptoms are serious.",
     specialist: text(value.specialist),
     specialistReason: text(value.specialistReason),
     firstAid: list(value.firstAid, 8),
@@ -116,39 +122,57 @@ export async function runMedAi(input: {
   imageDataUrl?: string | null;
   medicalContext?: string | null;
 }): Promise<MedAiAssessment> {
-  const key = process.env.LOVABLE_API_KEY;
-  if (!key) throw new Error("AI is not configured");
-
+  const ai = await import("@/lib/ai-call.server");
   const userContent: unknown[] = [{ type: "text", text: input.message }];
   if (input.imageDataUrl) {
     userContent.push({ type: "image_url", image_url: { url: input.imageDataUrl } });
   }
+  const history = input.history.slice(-12).map((turn) => ({
+    role: turn.role,
+    content: turn.content.slice(0, 4000),
+  }));
 
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { "content-type": "application/json", "Lovable-API-Key": key },
-    body: JSON.stringify({
-      model: "google/gemini-3.6-flash",
-      messages: [
-        { role: "system", content: systemPrompt(input.language, input.medicalContext ?? null) },
-        ...input.history.slice(-12),
-        { role: "user", content: userContent },
-      ],
-      response_format: { type: "json_object" },
-    }),
-  });
+  const content = await ai.callAiText(
+    "askMedAi",
+    [
+      {
+        role: "system",
+        content: `${systemPrompt(input.language, input.medicalContext ?? null)}\n${ai.UNTRUSTED_INPUT_RULE}`,
+      },
+      ...history,
+      { role: "user", content: userContent },
+    ],
+    { jsonMode: true, timeoutMs: input.imageDataUrl ? 30_000 : 20_000 },
+  );
+  // parseAiJson throws a safe AiError; coerce() runtime-validates every field.
+  const assessment = coerce(ai.parseAiJson("askMedAi", content));
+  return applyCriticalOverride(input.message, assessment);
+}
 
-  if (response.status === 429)
-    throw new Error("MedAI is busy right now — please retry in a moment.");
-  if (response.status === 402) throw new Error("AI credits exhausted for this workspace.");
-  if (!response.ok) throw new Error(`MedAI request failed (${response.status})`);
-
-  const payload = (await response.json()) as { choices?: { message?: { content?: string } }[] };
-  const content = payload.choices?.[0]?.message?.content ?? "";
-  const json = content.slice(content.indexOf("{"), content.lastIndexOf("}") + 1);
-  try {
-    return coerce(JSON.parse(json));
-  } catch {
-    return coerce({ reply: content });
+/**
+ * Deterministic safety net applied after the model: clearly critical
+ * indicators or self-harm language always escalate, regardless of AI output.
+ */
+function applyCriticalOverride(message: string, a: MedAiAssessment): MedAiAssessment {
+  if (detectSelfHarm(message)) {
+    return {
+      ...a,
+      urgency: "critical",
+      emergency: true,
+      urgencyReason:
+        "You deserve support right now. Please call Tele-MANAS 14416 or emergency services 112, or activate SOS so someone you trust is alerted.",
+      redFlags: a.redFlags,
+    };
   }
+  const signs = detectCriticalSigns(message);
+  if (signs.length === 0) return a;
+  return {
+    ...a,
+    urgency: "critical",
+    emergency: true,
+    urgencyReason:
+      a.urgency === "critical" && a.urgencyReason
+        ? a.urgencyReason
+        : "Possible signs of a serious medical emergency were identified. Seek professional emergency assistance — activate SOS or call 108/112 now.",
+  };
 }
