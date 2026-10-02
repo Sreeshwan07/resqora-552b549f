@@ -116,39 +116,29 @@ export async function runMedAi(input: {
   imageDataUrl?: string | null;
   medicalContext?: string | null;
 }): Promise<MedAiAssessment> {
-  const key = process.env.LOVABLE_API_KEY;
-  if (!key) throw new Error("AI is not configured");
-
+  const ai = await import("@/lib/ai-call.server");
   const userContent: unknown[] = [{ type: "text", text: input.message }];
   if (input.imageDataUrl) {
     userContent.push({ type: "image_url", image_url: { url: input.imageDataUrl } });
   }
+  const history = input.history.slice(-12).map((turn) => ({
+    role: turn.role,
+    content: turn.content.slice(0, 4000),
+  }));
 
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { "content-type": "application/json", "Lovable-API-Key": key },
-    body: JSON.stringify({
-      model: "google/gemini-3.6-flash",
-      messages: [
-        { role: "system", content: systemPrompt(input.language, input.medicalContext ?? null) },
-        ...input.history.slice(-12),
-        { role: "user", content: userContent },
-      ],
-      response_format: { type: "json_object" },
-    }),
-  });
-
-  if (response.status === 429)
-    throw new Error("MedAI is busy right now — please retry in a moment.");
-  if (response.status === 402) throw new Error("AI credits exhausted for this workspace.");
-  if (!response.ok) throw new Error(`MedAI request failed (${response.status})`);
-
-  const payload = (await response.json()) as { choices?: { message?: { content?: string } }[] };
-  const content = payload.choices?.[0]?.message?.content ?? "";
-  const json = content.slice(content.indexOf("{"), content.lastIndexOf("}") + 1);
-  try {
-    return coerce(JSON.parse(json));
-  } catch {
-    return coerce({ reply: content });
-  }
+  const content = await ai.callAiText(
+    "askMedAi",
+    [
+      {
+        role: "system",
+        content: `${systemPrompt(input.language, input.medicalContext ?? null)}\n${ai.UNTRUSTED_INPUT_RULE}`,
+      },
+      ...history,
+      { role: "user", content: userContent },
+    ],
+    { jsonMode: true, timeoutMs: input.imageDataUrl ? 30_000 : 20_000 },
+  );
+  // parseAiJson throws a safe AiError; coerce() runtime-validates every field.
+  const assessment = coerce(ai.parseAiJson("askMedAi", content));
+  return applyCriticalOverride(input.message, assessment);
 }
