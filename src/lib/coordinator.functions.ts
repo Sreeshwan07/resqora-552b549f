@@ -30,6 +30,34 @@ export type CoordinatorPlan = {
   generatedAt: string;
 };
 
+const str = (max: number) => z.string().trim().min(1).max(max);
+const PlanSchema = z.object({
+  incidentType: str(80).optional().catch(undefined),
+  severity: z.enum(["low", "medium", "high", "critical"]),
+  priority: z.enum(["green", "yellow", "orange", "red"]),
+  headline: str(400).catch("Live emergency coordination in progress."),
+  hospitalType: str(120).catch("Nearest emergency department"),
+  etaMinutes: z.coerce.number().catch(12).transform((n) => Math.max(1, Math.min(120, Math.round(n)))),
+  actions: z
+    .array(
+      z
+        .object({
+          title: str(160),
+          detail: z.string().trim().max(400).catch(""),
+          role: str(40).catch("On scene"),
+          urgent: z.boolean().catch(false),
+        })
+        .nullable()
+        .catch(null),
+    )
+    .catch([])
+    .transform((a) => a.slice(0, 7)),
+  watchFor: z
+    .array(z.string().trim().max(200).catch(""))
+    .catch([])
+    .transform((a) => a.slice(0, 4)),
+});
+
 const SYSTEM = `You are the RESQORA AI Emergency Coordinator. A live emergency is in progress.
 Produce an operational action plan for the person on scene and their guardian.
 Respond ONLY with compact JSON:
@@ -41,8 +69,6 @@ export const generateActionPlan = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<CoordinatorPlan> => {
     const { guardPaidEndpoint } = await import("@/lib/paid-guard.server");
     await guardPaidEndpoint("generateActionPlan");
-    const key = process.env["LOVABLE_API_KEY"];
-    if (!key) throw new Error("AI is not configured");
 
     const prompt = [
       `Emergency type: ${data.type}`,
@@ -56,47 +82,23 @@ export const generateActionPlan = createServerFn({ method: "POST" })
       .filter(Boolean)
       .join("\n");
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "content-type": "application/json", "Lovable-API-Key": key },
-      body: JSON.stringify({
-        model: "google/gemini-3.6-flash",
-        messages: [
-          { role: "system", content: SYSTEM },
-          { role: "user", content: prompt },
-        ],
-      }),
-    });
-
-    if (response.status === 429)
-      throw new Error("AI is busy right now — please retry in a moment.");
-    if (response.status === 402) throw new Error("AI credits exhausted for this workspace.");
-    if (!response.ok) throw new Error(`Coordinator failed (${response.status})`);
-
-    const payload = (await response.json()) as { choices?: { message?: { content?: string } }[] };
-    const text = payload.choices?.[0]?.message?.content ?? "";
-    const match = text.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error("Could not read the coordination plan");
-    const parsed = JSON.parse(match[0]) as Partial<CoordinatorPlan>;
-
-    const actions = Array.isArray(parsed.actions)
-      ? parsed.actions.slice(0, 7).map((action) => ({
-          title: String(action?.title ?? "Action"),
-          detail: String(action?.detail ?? ""),
-          role: String(action?.role ?? "On scene"),
-          urgent: Boolean(action?.urgent),
-        }))
-      : [];
-
+    const ai = await import("@/lib/ai-call.server");
+    const text = await ai.callAiText("generateActionPlan", [
+      { role: "system", content: `${SYSTEM}\n${ai.UNTRUSTED_INPUT_RULE}` },
+      { role: "user", content: prompt },
+    ]);
+    const parsed = ai.validateAi(
+      "generateActionPlan",
+      PlanSchema,
+      ai.parseAiJson("generateActionPlan", text),
+    );
+    // Advisory only: this plan is displayed to the user; it never dispatches,
+    // changes emergency state or contacts responders by itself.
     return {
-      incidentType: parsed.incidentType ?? data.type,
-      severity: (parsed.severity ?? "high") as CoordinatorPlan["severity"],
-      priority: (parsed.priority ?? "orange") as CoordinatorPlan["priority"],
-      headline: parsed.headline ?? "Live emergency coordination in progress.",
-      hospitalType: parsed.hospitalType ?? "Nearest emergency department",
-      etaMinutes: Math.max(1, Math.min(120, Math.round(Number(parsed.etaMinutes ?? 12)))),
-      actions,
-      watchFor: Array.isArray(parsed.watchFor) ? parsed.watchFor.slice(0, 4).map(String) : [],
+      ...parsed,
+      incidentType: parsed.incidentType ?? data.type.slice(0, 80),
+      actions: parsed.actions.filter((a): a is CoordinatorAction => a !== null),
+      watchFor: parsed.watchFor.filter(Boolean),
       generatedAt: new Date().toISOString(),
     };
   });
