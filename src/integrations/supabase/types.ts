@@ -495,6 +495,62 @@ export type Database = {
         }
         Relationships: []
       }
+      emergency_transitions: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          emergency_id: string
+          id: string
+          new_phase: string | null
+          new_status: string | null
+          owner_id: string | null
+          previous_phase: string | null
+          previous_status: string | null
+          reason: string | null
+          request_id: string | null
+          result: Json | null
+          source: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          emergency_id: string
+          id?: string
+          new_phase?: string | null
+          new_status?: string | null
+          owner_id?: string | null
+          previous_phase?: string | null
+          previous_status?: string | null
+          reason?: string | null
+          request_id?: string | null
+          result?: Json | null
+          source?: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          emergency_id?: string
+          id?: string
+          new_phase?: string | null
+          new_status?: string | null
+          owner_id?: string | null
+          previous_phase?: string | null
+          previous_status?: string | null
+          reason?: string | null
+          request_id?: string | null
+          result?: Json | null
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_transitions_emergency_id_fkey"
+            columns: ["emergency_id"]
+            isOneToOne: false
+            referencedRelation: "emergencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emergency_victims: {
         Row: {
           assigned_responder: string | null
@@ -2400,7 +2456,12 @@ export type Database = {
         }
       }
       transition_emergency: {
-        Args: { _emergency_id: string; _note?: string; _to_phase: string }
+        Args: {
+          _emergency_id: string
+          _note?: string
+          _request_id?: string
+          _to_phase: string
+        }
         Returns: Json
       }
       update_assignment_status: {
