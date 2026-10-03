@@ -227,7 +227,6 @@ export async function createEmergency(options: {
     await supabase
       .from("emergencies")
       .update({
-        status: "locating",
         latitude,
         longitude,
         address,
