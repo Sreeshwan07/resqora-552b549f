@@ -26,7 +26,7 @@ import { logSecurityEvent } from "@/lib/audit";
 import { checkRateLimit, sanitizeMultiline } from "@/lib/security";
 import { generateActionPlan } from "@/lib/coordinator.functions";
 import { cachePlan, medicalContext, persistPlan } from "@/lib/core";
-import { markPhase } from "@/lib/incident";
+import { markPhase, transitionIncident } from "@/lib/incident";
 
 /**
  * Runs the AI Emergency Coordinator as soon as an SOS goes active so the action
@@ -227,7 +227,6 @@ export async function createEmergency(options: {
     await supabase
       .from("emergencies")
       .update({
-        status: "locating",
         latitude,
         longitude,
         address,
@@ -646,17 +645,13 @@ export async function confirmSafe(input: {
 }
 
 export async function resolveEmergency(emergency: Emergency) {
-  const resolvedAt = new Date();
-  const duration = Math.max(
-    1,
-    Math.round((resolvedAt.getTime() - new Date(emergency.started_at).getTime()) / 1000),
+  // The server stamps status, close time and duration atomically.
+  await transitionIncident(
+    emergency.id,
+    "resolved",
+    "Emergency marked as resolved.",
+    `resolve:${emergency.id}`,
   );
-  await markPhase(emergency.id, "resolved", "Emergency marked as resolved.");
-  // The state machine stamps status/resolved_at; only the measured duration is ours.
-  await supabase
-    .from("emergencies")
-    .update({ resolved_at: resolvedAt.toISOString(), duration_seconds: duration })
-    .eq("id", emergency.id);
   await logEvent(emergency.id, emergency.user_id, "Resolved", "Emergency marked as resolved.");
   await notify(emergency.user_id, {
     category: "emergency",
@@ -670,22 +665,9 @@ export async function cancelEmergency(
   emergency: Emergency,
   extra?: { profile?: Profile | null; contacts?: EmergencyContact[] },
 ) {
-  const cancelledAt = new Date();
-  const duration = Math.max(
-    1,
-    Math.round((cancelledAt.getTime() - new Date(emergency.started_at).getTime()) / 1000),
-  );
-  // Freeze the session: status, close time and elapsed duration are all written
-  // once so the history entry and the timeline stop changing after this point.
-  await supabase
-    .from("emergencies")
-    .update({
-      status: "cancelled",
-      live_status: "safe",
-      resolved_at: cancelledAt.toISOString(),
-      duration_seconds: duration,
-    })
-    .eq("id", emergency.id);
+  // The server state machine closes the session (status, close time, duration).
+  // A stable request ID makes retries/double taps return the same result.
+  await transitionIncident(emergency.id, "cancelled", "Cancelled by the user.", `cancel:${emergency.id}`);
   // Cancelling must kill every live tracking token immediately.
   await supabase
     .from("share_links")
@@ -697,7 +679,6 @@ export async function cancelEmergency(
   } catch {
     /* the session expires with the emergency anyway */
   }
-  markPhase(emergency.id, "cancelled", "Cancelled by the user.");
   await logEvent(emergency.id, emergency.user_id, "Cancelled", "You cancelled this alert.");
   void logSecurityEvent("SOS deactivated", "Emergency cancelled by the user", {
     emergency_id: emergency.id,

@@ -64,11 +64,13 @@ export async function transitionIncident(
   emergencyId: string,
   phase: AnyPhase,
   note?: string,
+  requestId?: string,
 ): Promise<TransitionResult> {
   const { data, error } = await supabase.rpc("transition_emergency", {
     _emergency_id: emergencyId,
     _to_phase: phase,
     _note: note ?? undefined,
+    _request_id: requestId ?? undefined,
   });
   if (error) throw new Error(error.message);
   return (data ?? { changed: false, phase }) as unknown as TransitionResult;
