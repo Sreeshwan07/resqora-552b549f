@@ -46,13 +46,13 @@ function json(body: unknown, status = 200) {
   });
 }
 
-function verifySignature(raw: string, header: string | null, secret: string) {
+function verifySignature(raw: string, stamp: string, header: string | null, secret: string) {
   if (!header) return false;
   const provided = header
     .replace(/^sha256=/i, "")
     .trim()
     .toLowerCase();
-  const expected = createHmac("sha256", secret).update(raw).digest("hex");
+  const expected = createHmac("sha256", secret).update(`${stamp}.${raw}`).digest("hex");
   if (provided.length !== expected.length) return false;
   try {
     return timingSafeEqual(Buffer.from(provided, "hex"), Buffer.from(expected, "hex"));
@@ -180,23 +180,16 @@ export const Route = createFileRoute("/api/public/sms-inbound")({
         const raw = await request.text();
         if (raw.length > 8_000) return json({ error: "payload_too_large" }, 413);
 
-        if (!verifySignature(raw, request.headers.get("x-resqora-signature"), secret)) {
+        // The timestamp is mandatory and covered by the signature
+        // (HMAC over "<timestamp>.<raw body>"), so a captured request cannot
+        // be replayed later or have its timestamp swapped.
+        const stamp = request.headers.get("x-resqora-timestamp")?.trim() ?? "";
+        const at = /^\d{9,11}$/.test(stamp) ? Number(stamp) * 1000 : NaN;
+        if (!Number.isFinite(at) || Math.abs(Date.now() - at) > REPLAY_WINDOW_MS) {
+          return json({ error: "stale_request" }, 401);
+        }
+        if (!verifySignature(raw, stamp, request.headers.get("x-resqora-signature"), secret)) {
           return json({ error: "invalid_signature" }, 401);
-        }
-
-        // Replay protection on the provider timestamp header.
-        const stamp = request.headers.get("x-resqora-timestamp");
-        if (stamp) {
-          const at = Number.isNaN(Number(stamp)) ? Date.parse(stamp) : Number(stamp) * 1000;
-          if (!Number.isFinite(at) || Math.abs(Date.now() - at) > REPLAY_WINDOW_MS) {
-            return json({ error: "stale_request" }, 401);
-          }
-        }
-
-        const { limitByKey, callerKey } = await import("@/lib/rate-limit.server");
-        const limited = limitByKey(callerKey(request, "sms-inbound"), 30, 60_000);
-        if (!limited.allowed) {
-          return json({ error: "rate_limited", retryAfter: limited.retryAfter }, 429);
         }
 
         let parsed: z.infer<typeof Payload>;
@@ -210,6 +203,19 @@ export const Route = createFileRoute("/api/public/sms-inbound")({
         const from = String(parsed.msisdn ?? parsed.from ?? parsed.sender ?? "");
         const body = parsed.message ?? parsed.text ?? parsed.body ?? "";
         if (!messageId || !from) return json({ error: "invalid_payload" }, 400);
+
+        // Durable per-sender abuse cap (shared Postgres limiter, survives
+        // restarts, not based on spoofable forwarded IPs). Duplicate provider
+        // retries are still de-duplicated by message id inside sms_ingest.
+        {
+          const { consumeRaw } = await import("@/lib/paid-guard.server");
+          const sender = createHmac("sha256", secret).update(from).digest("hex").slice(0, 32);
+          const limit = await consumeRaw(`sms:${sender}`, "sms-inbound", 60, 30).catch(() => null);
+          if (!limit) return json({ error: "processing_failed" }, 503);
+          if (!limit.allowed) {
+            return json({ error: "rate_limited", retryAfter: limit.retryAfter }, 429);
+          }
+        }
 
         const payloadHash = createHmac("sha256", secret).update(raw).digest("hex");
 
