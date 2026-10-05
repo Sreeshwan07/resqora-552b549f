@@ -667,7 +667,12 @@ export async function cancelEmergency(
 ) {
   // The server state machine closes the session (status, close time, duration).
   // A stable request ID makes retries/double taps return the same result.
-  await transitionIncident(emergency.id, "cancelled", "Cancelled by the user.", `cancel:${emergency.id}`);
+  await transitionIncident(
+    emergency.id,
+    "cancelled",
+    "Cancelled by the user.",
+    `cancel:${emergency.id}`,
+  );
   // Cancelling must kill every live tracking token immediately.
   await supabase
     .from("share_links")
