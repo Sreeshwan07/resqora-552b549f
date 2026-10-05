@@ -3,7 +3,7 @@
  * RESQORA emergency session.
  *
  * Security model, in order:
- *  1. HMAC-SHA256 signature over the raw body (shared secret with the provider)
+ *  1. HMAC-SHA256 signature over "<x-resqora-timestamp>.<raw body>" (timestamp required, 5-min window) (shared secret with the provider)
  *  2. Replay window on the provider timestamp header
  *  3. Per-IP burst limit
  *  4. Zod validation of the payload
