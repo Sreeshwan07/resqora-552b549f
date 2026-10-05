@@ -82,3 +82,8 @@ Open: full live incident end-to-end run on a physical device; real (non-simulati
 - [ ] Batch 1b: data access rules audit, Guardian/RESQR link security, webhook security
 - [ ] Later batches: remaining Phase 4 sections (notifications, concurrency, location, uploads, errors, headers, admin, retention, observability, offline, tests)
 - Old data left as-is (user choice): 3 emergencies with phase "draft" but status "resolved"
+
+## Phase 4 — batch 1b (done)
+- [x] Access audit: every table has row protection; public link lookups require long tokens, active + unexpired links
+- [x] SMS webhook: mandatory signed timestamp (replay-proof), durable per-sender limit replaces in-memory IP limit
+- [ ] Batch 2: remaining Phase 4 sections; signed-in UI test of cancel/resolve
