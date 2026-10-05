@@ -76,3 +76,9 @@ Open: full live incident end-to-end run on a physical device; real (non-simulati
 - [x] Truthful location provenance (USER_PROVIDED / LAST_KNOWN / UNAVAILABLE) and reply delivery states
 - [ ] Blocked: SMS_WEBHOOK_SECRET + inbound number must be configured with the SMS provider before texting works
 - [ ] Blocked: end-to-end SMS test requires the live provider number
+
+## Phase 4 — security & reliability hardening (batched, most critical first)
+- [x] Batch 1a: emergency status rules enforced on the server; every status change audited; resolve/cancel retry-safe
+- [ ] Batch 1b: data access rules audit, Guardian/RESQR link security, webhook security
+- [ ] Later batches: remaining Phase 4 sections (notifications, concurrency, location, uploads, errors, headers, admin, retention, observability, offline, tests)
+- Old data left as-is (user choice): 3 emergencies with phase "draft" but status "resolved"
