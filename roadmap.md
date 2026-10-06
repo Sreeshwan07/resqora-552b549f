@@ -86,4 +86,5 @@ Open: full live incident end-to-end run on a physical device; real (non-simulati
 ## Phase 4 — batch 1b (done)
 - [x] Access audit: every table has row protection; public link lookups require long tokens, active + unexpired links
 - [x] SMS webhook: mandatory signed timestamp (replay-proof), durable per-sender limit replaces in-memory IP limit
-- [ ] Batch 2: remaining Phase 4 sections; signed-in UI test of cancel/resolve
+- [x] Signed-in test: closed emergencies cannot be reopened or changed directly; replays are no-ops
+- [ ] Batch 3: remaining Phase 4 sections (idempotency of responder acceptance and notifications onward)
