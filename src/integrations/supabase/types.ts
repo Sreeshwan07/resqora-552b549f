@@ -1074,6 +1074,36 @@ export type Database = {
         }
         Relationships: []
       }
+      perf_test_runs: {
+        Row: {
+          created_at: string
+          environment: Json
+          finished_at: string
+          id: string
+          results: Json
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          environment?: Json
+          finished_at?: string
+          id?: string
+          results?: Json
+          started_at: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          environment?: Json
+          finished_at?: string
+          id?: string
+          results?: Json
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       preparedness_tasks: {
         Row: {
           category: string

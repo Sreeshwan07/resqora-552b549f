@@ -29,6 +29,13 @@
       "when": 1791012941587,
       "tag": "0003_emergency_transition_guard_and_audit",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791301186148,
+      "tag": "0004_perf_test_runs",
+      "breakpoints": true
     }
   ]
 }
