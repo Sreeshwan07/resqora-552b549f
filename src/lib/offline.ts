@@ -113,16 +113,29 @@ export async function syncOfflineQueue() {
           longitude: item.longitude,
           address: item.address,
           started_at: item.startedAt,
+          // Same key on every retry: a lost reply can never create a second session.
+          idempotency_key: item.localId,
         })
         .select("id")
         .single();
-      if (error || !data) {
+      let createdId = data?.id ?? null;
+      if (error?.code === "23505") {
+        // Already uploaded by an earlier attempt whose reply was lost.
+        const existing = await supabase
+          .from("emergencies")
+          .select("id")
+          .eq("user_id", item.userId)
+          .eq("idempotency_key", item.localId)
+          .maybeSingle();
+        createdId = existing.data?.id ?? null;
+      }
+      if (!createdId) {
         remainingEmergencies.push(item);
         continue;
       }
-      idMap.set(item.localId, data.id);
+      idMap.set(item.localId, createdId);
       await supabase.from("emergency_events").insert({
-        emergency_id: data.id,
+        emergency_id: createdId,
         user_id: item.userId,
         label: "Offline SOS synced",
         detail: "This alert was captured without connectivity and uploaded once back online.",
