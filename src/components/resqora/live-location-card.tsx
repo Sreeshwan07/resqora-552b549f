@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { mapsLink } from "@/lib/alerts";
 import type { LivePosition, LocationStatus } from "@/hooks/use-live-position";
 import { cn } from "@/lib/utils";
+import { FRESHNESS_STYLE, locationFreshness } from "@/lib/freshness";
 
 /** Compact always-on location strip. Refreshes with the shared GPS watcher (10s). */
 export function LiveLocationCard({
@@ -20,6 +21,7 @@ export function LiveLocationCard({
   resolvingAddress?: boolean;
   className?: string;
 }) {
+  const freshness = locationFreshness(position?.updatedAt ?? null);
   const label = address
     ? address
     : position
@@ -38,8 +40,17 @@ export function LiveLocationCard({
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+          <p className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
             Current address
+            <span
+              className={cn(
+                "rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider",
+                FRESHNESS_STYLE[freshness],
+              )}
+              aria-label={`Location status: ${freshness}`}
+            >
+              {freshness}
+            </span>
           </p>
           <p className="mt-0.5 flex items-start gap-1.5 text-sm font-semibold text-foreground">
             <MapPin className="mt-0.5 size-3.5 shrink-0 text-primary" aria-hidden="true" />
