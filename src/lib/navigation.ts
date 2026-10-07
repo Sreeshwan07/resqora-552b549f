@@ -138,6 +138,13 @@ export const samaritanNav: NavItem = {
   description: "Volunteer nearby & accept requests",
 };
 
+export const performanceNav: NavItem = {
+  label: "Performance tests",
+  to: "/performance",
+  icon: Gauge,
+  description: "Measured SOS latency & concurrency",
+};
+
 export const smsTestNav: NavItem = {
   label: "SMS SOS test plan",
   to: "/sms-test",
@@ -276,6 +283,7 @@ export const navSections: NavSection[] = [
       prepareNav,
       samaritanNav,
       smsTestNav,
+      performanceNav,
       debriefNav,
       {
         label: "Report accident",
@@ -356,6 +364,7 @@ export const mobileMenuSections: NavSection[] = [
       prepareNav,
       samaritanNav,
       smsTestNav,
+      performanceNav,
       debriefNav,
       activityNav,
     ],

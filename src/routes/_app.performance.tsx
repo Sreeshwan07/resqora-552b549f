@@ -89,6 +89,7 @@ function PerformancePage() {
   return (
     <div className="space-y-4">
       <PageHeader
+        icon={Activity}
         title="Performance evaluation"
         description="Measured live against the real backend. Test emergencies are marked as simulations, send no alerts and are cancelled afterwards."
       />
