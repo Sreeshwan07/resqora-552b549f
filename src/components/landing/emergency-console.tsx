@@ -8,6 +8,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { activeEmergencyQuery, contactsQuery, profileQuery } from "@/lib/api";
 import { confirmSafe, createEmergency, type NotificationOutcome } from "@/lib/emergency";
 import { cn } from "@/lib/utils";
+import { commStateFromOutcome } from "@/lib/freshness";
+import { isOffline, pendingCount } from "@/lib/offline";
 
 const CHANNEL_LABELS: Record<NotificationOutcome["channel"], string> = {
   email: "Email alerts",
@@ -153,9 +155,20 @@ export function EmergencyConsole({ mode = "full" }: { mode?: "full" | "report" }
         </Button>
       </div>
 
+      {!sosBusy && isOffline() && pendingCount() > 0 && (
+        <p
+          role="status"
+          className="rounded-xl bg-warning/10 p-3 text-xs font-semibold text-warning"
+        >
+          Communication: QUEUED — saved on this device, will send automatically when back online.
+        </p>
+      )}
+
       {sosBusy && !sosActive && (
         <div className="space-y-2 rounded-2xl border border-alert/40 bg-alert/5 p-4">
-          <p className="text-sm font-semibold text-foreground">Activating emergency response…</p>
+          <p className="text-sm font-semibold text-foreground">
+            Communication: {isOffline() ? "CONNECTING" : "SENDING"} — activating emergency response…
+          </p>
           <ul className="space-y-1 text-xs text-muted-foreground">
             <li>• Creating the emergency session</li>
             <li>• Capturing GPS location and address</li>
@@ -189,6 +202,7 @@ export function EmergencyConsole({ mode = "full" }: { mode?: "full" | "report" }
                   <span className="font-medium text-foreground">
                     {CHANNEL_LABELS[item.channel]}:
                   </span>{" "}
+                  <span className="font-bold">{commStateFromOutcome(item.status)}</span>{" "}
                   <span className={OUTCOME_STYLES[item.status]}>{item.detail}</span>
                 </span>
               </li>
