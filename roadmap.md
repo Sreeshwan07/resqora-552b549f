@@ -88,3 +88,8 @@ Open: full live incident end-to-end run on a physical device; real (non-simulati
 - [x] SMS webhook: mandatory signed timestamp (replay-proof), durable per-sender limit replaces in-memory IP limit
 - [x] Signed-in test: closed emergencies cannot be reopened or changed directly; replays are no-ops
 - [ ] Batch 3: remaining Phase 4 sections (idempotency of responder acceptance and notifications onward)
+
+## Problem Statement 5 compliance (batched)
+- [x] Batch 1: in-app performance tests (6 scenarios, measured, stored), charts, technical report export
+- [ ] Batch 2: LIVE/RECENT/LAST KNOWN/UNAVAILABLE location labels and CONNECTING/QUEUED/SENDING/SENT/FAILED communication status on the SOS screen
+- [ ] Batch 3: guardian/responder medical least-privilege review, service-info single source check, final PS5 checklist
