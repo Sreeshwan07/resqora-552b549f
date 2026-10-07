@@ -43,7 +43,7 @@ export function stats(samples: Sample[]) {
   };
 }
 
-async function timed<T>(fn: () => Promise<T>): Promise<{ ms: number; value: T }> {
+async function timed<T>(fn: () => PromiseLike<T>): Promise<{ ms: number; value: T }> {
   const t = performance.now();
   const value = await fn();
   return { ms: performance.now() - t, value };
