@@ -83,7 +83,14 @@ function PerformancePage() {
 
   const chart = (run?.results ?? []).map((r) => {
     const s = stats(r.samples);
-    return { name: r.id.toUpperCase(), avg: s.avg, min: s.min, max: s.max, ok: s.ok, failed: s.failed };
+    return {
+      name: r.id.toUpperCase(),
+      avg: s.avg,
+      min: s.min,
+      max: s.max,
+      ok: s.ok,
+      failed: s.failed,
+    };
   });
 
   return (
@@ -179,7 +186,12 @@ function PerformancePage() {
                   <Tooltip />
                   <Legend />
                   <Bar dataKey="ok" name="Succeeded" stackId="a" fill="var(--color-success)" />
-                  <Bar dataKey="failed" name="Failed / blocked" stackId="a" fill="var(--color-warning)" />
+                  <Bar
+                    dataKey="failed"
+                    name="Failed / blocked"
+                    stackId="a"
+                    fill="var(--color-warning)"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
