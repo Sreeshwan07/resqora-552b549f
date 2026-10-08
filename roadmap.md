@@ -92,4 +92,4 @@ Open: full live incident end-to-end run on a physical device; real (non-simulati
 ## Problem Statement 5 compliance (batched)
 - [x] Batch 1: in-app performance tests (6 scenarios, measured, stored), charts, technical report export
 - [x] Batch 2: LIVE/RECENT/LAST KNOWN/UNAVAILABLE location labels and CONNECTING/QUEUED/SENDING/SENT/FAILED communication status on the SOS screen; offline SOS upload retry-safe (no duplicates)
-- [ ] Batch 3: guardian/responder medical least-privilege review, service-info single source check, final PS5 checklist
+- [x] Batch 3: medical least-privilege review (volunteers see no medical data; Guardian view per-emergency + expiring; share links owner-created + expiring), service lists use one shared number list

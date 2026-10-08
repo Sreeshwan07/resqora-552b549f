@@ -221,3 +221,10 @@ export function newIncidentId() {
 }
 
 export type TimelineEntry = { label: string; detail?: string; at: Date };
+
+/** Shorthand lookup into EMERGENCY_NUMBERS so every screen dials the same numbers. */
+export const EMERGENCY_PHONE = {
+  ambulance: EMERGENCY_NUMBERS[0].phone,
+  police: EMERGENCY_NUMBERS[1].phone,
+  fire: EMERGENCY_NUMBERS[2].phone,
+} as const;

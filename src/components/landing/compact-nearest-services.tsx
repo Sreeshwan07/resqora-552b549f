@@ -1,3 +1,4 @@
+import { EMERGENCY_PHONE } from "@/lib/accident";
 import { Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import { ChevronRight, MapPin, Navigation, PhoneCall, RefreshCw } from "lucide-react";
@@ -10,10 +11,10 @@ import { CATEGORY_ICON } from "@/components/resqora/nearest-services";
 import { cn } from "@/lib/utils";
 
 const ROWS: { category: PlaceCategory; label: string; tel: string }[] = [
-  { category: "hospital", label: "Hospital", tel: "108" },
-  { category: "police", label: "Police Station", tel: "112" },
-  { category: "fire", label: "Fire Station", tel: "101" },
-  { category: "blood_bank", label: "Blood Bank", tel: "108" },
+  { category: "hospital", label: "Hospital", tel: EMERGENCY_PHONE.ambulance },
+  { category: "police", label: "Police Station", tel: EMERGENCY_PHONE.police },
+  { category: "fire", label: "Fire Station", tel: EMERGENCY_PHONE.fire },
+  { category: "blood_bank", label: "Blood Bank", tel: EMERGENCY_PHONE.ambulance },
 ];
 
 /** Four compact responder cards: name, distance, ETA and one-tap actions. */
