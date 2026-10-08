@@ -1,3 +1,4 @@
+import { EMERGENCY_PHONE } from "@/lib/accident";
 import { useState } from "react";
 import { motion } from "motion/react";
 import {
@@ -57,11 +58,11 @@ const DEFAULT_CATEGORIES: PlaceCategory[] = [
 
 /** Official Indian emergency numbers used when a facility publishes no number. */
 const NATIONAL_NUMBER: Record<PlaceCategory, string> = {
-  hospital: "108",
-  ambulance: "108",
-  police: "112",
-  fire: "101",
-  blood_bank: "108",
+  hospital: EMERGENCY_PHONE.ambulance,
+  ambulance: EMERGENCY_PHONE.ambulance,
+  police: EMERGENCY_PHONE.police,
+  fire: EMERGENCY_PHONE.fire,
+  blood_bank: EMERGENCY_PHONE.ambulance,
 };
 
 export function PlaceCard({
