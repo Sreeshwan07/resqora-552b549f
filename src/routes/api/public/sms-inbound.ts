@@ -22,7 +22,7 @@ import {
   sendTwilioSms,
   twilioConfigured,
   verifyTwilioSignature,
-} from "@/lib/twilio.server";
+} from "@/lib/twilio";
 
 const Payload = z
   .object({
@@ -87,7 +87,7 @@ async function sendReply(
   message: string,
 ): Promise<{ status: "sent" | "pending" | "failed"; error?: string; sid?: string }> {
   if (twilioConfigured()) {
-    const origin = process.env["PUBLIC_APP_URL"]?.trim();
+    const origin = process.env["PUBLIC_APP_URL"]?.trim() || "https://resqora.lovable.app";
     const r = await sendTwilioSms(
       to,
       message,
