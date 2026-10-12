@@ -17,6 +17,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, timingSafeEqual } from "crypto";
 import { z } from "zod";
+import {
+  parseTwilioForm,
+  sendTwilioSms,
+  twilioConfigured,
+  verifyTwilioSignature,
+} from "@/lib/twilio.server";
 
 const Payload = z
   .object({
@@ -61,7 +67,38 @@ function verifySignature(raw: string, stamp: string, header: string | null, secr
   }
 }
 
-async function sendReply(to: string, message: string) {
+function twiml() {
+  return new Response('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', {
+    status: 200,
+    headers: { "content-type": "text/xml" },
+  });
+}
+
+/** The exact public URL Twilio signed (https behind the edge proxy). */
+function publicUrl(request: Request) {
+  const u = new URL(request.url);
+  const host = request.headers.get("x-forwarded-host") ?? u.host;
+  const proto = /^(localhost|127\.)/.test(host) ? u.protocol : "https:";
+  return `${proto}//${host}${u.pathname}${u.search}`;
+}
+
+async function sendReply(
+  to: string,
+  message: string,
+): Promise<{ status: "sent" | "pending" | "failed"; error?: string; sid?: string }> {
+  if (twilioConfigured()) {
+    const origin = process.env["PUBLIC_APP_URL"]?.trim();
+    const r = await sendTwilioSms(
+      to,
+      message,
+      origin ? `${origin.replace(/\/$/, "")}/api/public/twilio-status` : undefined,
+    );
+    return r.status === "sent" ? { status: "sent", sid: r.sid } : { status: r.status, error: r.error };
+  }
+  return sendGatewayReply(to, message);
+}
+
+async function sendGatewayReply(to: string, message: string) {
   const lovableKey = process.env["LOVABLE_API_KEY"];
   const connectionKey = process.env["GATEWAYAPI_API_KEY"];
   if (!lovableKey || !connectionKey) return { status: "pending" as const, error: "not_configured" };
@@ -159,6 +196,7 @@ async function notifySmsContacts(
         kind: "alert",
         status: outcome.status,
         error: outcome.error ?? null,
+        provider_message_id: outcome.sid ?? null,
         sent_at: outcome.status === "sent" ? new Date().toISOString() : null,
       });
       return outcome.status === "sent";
@@ -171,38 +209,63 @@ export const Route = createFileRoute("/api/public/sms-inbound")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const secret = process.env["SMS_WEBHOOK_SECRET"];
-        if (!secret) {
-          // Configuration state, reported plainly — nothing is simulated.
-          return json({ error: "sms_not_configured" }, 503);
-        }
+        const twilioSig = request.headers.get("x-twilio-signature");
+        const isTwilio = twilioSig !== null;
+        let secret = process.env["SMS_WEBHOOK_SECRET"];
+        let raw: string;
+        let messageId: string;
+        let from: string;
+        let body: string;
 
-        const raw = await request.text();
-        if (raw.length > 8_000) return json({ error: "payload_too_large" }, 413);
+        if (isTwilio) {
+          // Twilio path: verified with Twilio's own request signature.
+          const authToken = process.env["TWILIO_AUTH_TOKEN"]?.trim();
+          if (!authToken || !twilioConfigured()) {
+            return json({ error: "sms_not_configured", message: "SMS provider is not configured" }, 503);
+          }
+          raw = await request.text();
+          if (raw.length > 8_000) return json({ error: "payload_too_large" }, 413);
+          const params = parseTwilioForm(raw);
+          if (!verifyTwilioSignature(publicUrl(request), params, twilioSig, authToken)) {
+            return json({ error: "invalid_signature" }, 401);
+          }
+          secret = secret || authToken;
+          messageId = (params["MessageSid"] ?? params["SmsSid"] ?? "").slice(0, 64);
+          from = (params["From"] ?? "").slice(0, 32);
+          body = (params["Body"] ?? "").slice(0, 1000);
+          if (!/^(SM|MM)[0-9a-f]{32}$/i.test(messageId) || !from) {
+            return json({ error: "invalid_payload" }, 400);
+          }
+        } else {
+          if (!secret) {
+            // Configuration state, reported plainly — nothing is simulated.
+            return json({ error: "sms_not_configured", message: "SMS provider is not configured" }, 503);
+          }
+          raw = await request.text();
+          if (raw.length > 8_000) return json({ error: "payload_too_large" }, 413);
 
-        // The timestamp is mandatory and covered by the signature
-        // (HMAC over "<timestamp>.<raw body>"), so a captured request cannot
-        // be replayed later or have its timestamp swapped.
-        const stamp = request.headers.get("x-resqora-timestamp")?.trim() ?? "";
-        const at = /^\d{9,11}$/.test(stamp) ? Number(stamp) * 1000 : NaN;
-        if (!Number.isFinite(at) || Math.abs(Date.now() - at) > REPLAY_WINDOW_MS) {
-          return json({ error: "stale_request" }, 401);
-        }
-        if (!verifySignature(raw, stamp, request.headers.get("x-resqora-signature"), secret)) {
-          return json({ error: "invalid_signature" }, 401);
-        }
+          // The timestamp is mandatory and covered by the signature
+          // (HMAC over "<timestamp>.<raw body>").
+          const stamp = request.headers.get("x-resqora-timestamp")?.trim() ?? "";
+          const at = /^\d{9,11}$/.test(stamp) ? Number(stamp) * 1000 : NaN;
+          if (!Number.isFinite(at) || Math.abs(Date.now() - at) > REPLAY_WINDOW_MS) {
+            return json({ error: "stale_request" }, 401);
+          }
+          if (!verifySignature(raw, stamp, request.headers.get("x-resqora-signature"), secret)) {
+            return json({ error: "invalid_signature" }, 401);
+          }
 
-        let parsed: z.infer<typeof Payload>;
-        try {
-          parsed = Payload.parse(JSON.parse(raw));
-        } catch {
-          return json({ error: "invalid_payload" }, 400);
+          let parsed: z.infer<typeof Payload>;
+          try {
+            parsed = Payload.parse(JSON.parse(raw));
+          } catch {
+            return json({ error: "invalid_payload" }, 400);
+          }
+          messageId = String(parsed.id ?? parsed.messageId ?? parsed.message_id ?? "");
+          from = String(parsed.msisdn ?? parsed.from ?? parsed.sender ?? "");
+          body = parsed.message ?? parsed.text ?? parsed.body ?? "";
+          if (!messageId || !from) return json({ error: "invalid_payload" }, 400);
         }
-
-        const messageId = String(parsed.id ?? parsed.messageId ?? parsed.message_id ?? "");
-        const from = String(parsed.msisdn ?? parsed.from ?? parsed.sender ?? "");
-        const body = parsed.message ?? parsed.text ?? parsed.body ?? "";
-        if (!messageId || !from) return json({ error: "invalid_payload" }, 400);
 
         // Durable per-sender abuse cap (shared Postgres limiter, survives
         // restarts, not based on spoofable forwarded IPs). Duplicate provider
@@ -221,7 +284,7 @@ export const Route = createFileRoute("/api/public/sms-inbound")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data, error } = await supabaseAdmin.rpc("sms_ingest", {
-          _provider: "gatewayapi",
+          _provider: isTwilio ? "twilio" : "gatewayapi",
           _message_id: messageId,
           _from: from,
           _body: body,
@@ -241,7 +304,7 @@ export const Route = createFileRoute("/api/public/sms-inbound")({
         };
 
         // A retried webhook is acknowledged without sending a second SMS.
-        if (result.duplicate) return json({ ok: true, duplicate: true });
+        if (result.duplicate) return isTwilio ? twiml() : json({ ok: true, duplicate: true });
 
         // Resolve the written landmark into coordinates so the existing
         // matching/dispatch logic can run, then notify emergency contacts.
@@ -310,6 +373,7 @@ export const Route = createFileRoute("/api/public/sms-inbound")({
           }
         }
 
+        if (isTwilio) return twiml();
         return json({ ok: true, emergencyId: result.emergency_id ?? null });
       },
     },
