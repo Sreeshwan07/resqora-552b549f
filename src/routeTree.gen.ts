@@ -58,6 +58,7 @@ import { Route as STokenRouteImport } from './routes/s.$token'
 import { Route as ApiPublicAnonSessionRouteImport } from './routes/api/public/anon-session'
 import { Route as ApiPublicPushConfigRouteImport } from './routes/api/public/push-config'
 import { Route as ApiPublicSmsInboundRouteImport } from './routes/api/public/sms-inbound'
+import { Route as ApiPublicTwilioStatusRouteImport } from './routes/api/public/twilio-status'
 import { Route as GuardianEmergencyIdTokenRouteImport } from './routes/guardian.$emergencyId.$token'
 
 const IndexRoute = IndexRouteImport.update({
@@ -304,6 +305,11 @@ const ApiPublicSmsInboundRoute = ApiPublicSmsInboundRouteImport.update({
   path: '/api/public/sms-inbound',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicTwilioStatusRoute = ApiPublicTwilioStatusRouteImport.update({
+  id: '/api/public/twilio-status',
+  path: '/api/public/twilio-status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GuardianEmergencyIdTokenRoute =
   GuardianEmergencyIdTokenRouteImport.update({
     id: '/guardian/$emergencyId/$token',
@@ -360,6 +366,7 @@ export interface FileRoutesByFullPath {
   '/api/public/anon-session': typeof ApiPublicAnonSessionRoute
   '/api/public/push-config': typeof ApiPublicPushConfigRoute
   '/api/public/sms-inbound': typeof ApiPublicSmsInboundRoute
+  '/api/public/twilio-status': typeof ApiPublicTwilioStatusRoute
   '/guardian/$emergencyId/$token': typeof GuardianEmergencyIdTokenRoute
 }
 export interface FileRoutesByTo {
@@ -411,6 +418,7 @@ export interface FileRoutesByTo {
   '/api/public/anon-session': typeof ApiPublicAnonSessionRoute
   '/api/public/push-config': typeof ApiPublicPushConfigRoute
   '/api/public/sms-inbound': typeof ApiPublicSmsInboundRoute
+  '/api/public/twilio-status': typeof ApiPublicTwilioStatusRoute
   '/guardian/$emergencyId/$token': typeof GuardianEmergencyIdTokenRoute
 }
 export interface FileRoutesById {
@@ -464,6 +472,7 @@ export interface FileRoutesById {
   '/api/public/anon-session': typeof ApiPublicAnonSessionRoute
   '/api/public/push-config': typeof ApiPublicPushConfigRoute
   '/api/public/sms-inbound': typeof ApiPublicSmsInboundRoute
+  '/api/public/twilio-status': typeof ApiPublicTwilioStatusRoute
   '/guardian/$emergencyId/$token': typeof GuardianEmergencyIdTokenRoute
 }
 export interface FileRouteTypes {
@@ -517,6 +526,7 @@ export interface FileRouteTypes {
     | '/api/public/anon-session'
     | '/api/public/push-config'
     | '/api/public/sms-inbound'
+    | '/api/public/twilio-status'
     | '/guardian/$emergencyId/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -568,6 +578,7 @@ export interface FileRouteTypes {
     | '/api/public/anon-session'
     | '/api/public/push-config'
     | '/api/public/sms-inbound'
+    | '/api/public/twilio-status'
     | '/guardian/$emergencyId/$token'
   id:
     | '__root__'
@@ -620,6 +631,7 @@ export interface FileRouteTypes {
     | '/api/public/anon-session'
     | '/api/public/push-config'
     | '/api/public/sms-inbound'
+    | '/api/public/twilio-status'
     | '/guardian/$emergencyId/$token'
   fileRoutesById: FileRoutesById
 }
@@ -636,6 +648,7 @@ export interface RootRouteChildren {
   ApiPublicAnonSessionRoute: typeof ApiPublicAnonSessionRoute
   ApiPublicPushConfigRoute: typeof ApiPublicPushConfigRoute
   ApiPublicSmsInboundRoute: typeof ApiPublicSmsInboundRoute
+  ApiPublicTwilioStatusRoute: typeof ApiPublicTwilioStatusRoute
   GuardianEmergencyIdTokenRoute: typeof GuardianEmergencyIdTokenRoute
 }
 
@@ -984,6 +997,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSmsInboundRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/twilio-status': {
+      id: '/api/public/twilio-status'
+      path: '/api/public/twilio-status'
+      fullPath: '/api/public/twilio-status'
+      preLoaderRoute: typeof ApiPublicTwilioStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/guardian/$emergencyId/$token': {
       id: '/guardian/$emergencyId/$token'
       path: '/guardian/$emergencyId/$token'
@@ -1089,6 +1109,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAnonSessionRoute: ApiPublicAnonSessionRoute,
   ApiPublicPushConfigRoute: ApiPublicPushConfigRoute,
   ApiPublicSmsInboundRoute: ApiPublicSmsInboundRoute,
+  ApiPublicTwilioStatusRoute: ApiPublicTwilioStatusRoute,
   GuardianEmergencyIdTokenRoute: GuardianEmergencyIdTokenRoute,
 }
 export const routeTree = rootRouteImport

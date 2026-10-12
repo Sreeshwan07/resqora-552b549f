@@ -1,5 +1,5 @@
 /**
- * Server-only Twilio helpers. Credentials are read from process.env inside
+ * Twilio helpers (used only from server handlers).
  * each call and never leave the server.
  */
 import { createHmac, timingSafeEqual } from "crypto";

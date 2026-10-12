@@ -160,7 +160,7 @@ function applyCriticalOverride(message: string, a: MedAiAssessment): MedAiAssess
       urgency: "critical",
       emergency: true,
       urgencyReason:
-        "You deserve support right now. Please call Tele-MANAS 14416 or emergency services 112, or activate SOS so someone you trust is alerted.",
+        "You deserve support right now. Please call Tele-MANAS 14416 (or 1-800-891-4416) or emergency services 112, or activate SOS so someone you trust is alerted.",
       redFlags: a.redFlags,
     };
   }
