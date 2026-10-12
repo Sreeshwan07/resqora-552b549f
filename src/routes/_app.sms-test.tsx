@@ -20,6 +20,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useRealtimeTables } from "@/hooks/use-realtime-tables";
 import { SMS_SOS_CONFIGURED, SMS_SOS_NUMBER, locationSourceLabel } from "@/lib/sms-sos";
 import { smsReadinessFn } from "@/lib/sms-test.functions";
+import { HelplineCard, IntegrationStatusCard } from "@/components/integration-status";
 import {
   SMS_TEST_ACCEPTANCE,
   SMS_TEST_FAILURE_CASES,
@@ -102,9 +103,16 @@ function SmsTestPage() {
   const checks = useMemo(
     () => [
       { label: "Inbound SMS number published to the app", ok: SMS_SOS_CONFIGURED },
-      { label: "Webhook signing secret configured", ok: config.data?.webhookSecret ?? false },
-      { label: "SMS provider connection configured", ok: config.data?.gatewayKey ?? false },
-      { label: "Provider gateway access configured", ok: config.data?.providerKey ?? false },
+      {
+        label: "SMS provider (Twilio) configured",
+        ok:
+          (config.data?.twilio ?? false) ||
+          ((config.data?.gatewayKey ?? false) && (config.data?.providerKey ?? false)),
+      },
+      {
+        label: "Webhook authenticity check configured",
+        ok: (config.data?.twilio ?? false) || (config.data?.webhookSecret ?? false),
+      },
       { label: "Landmark-to-map lookup configured", ok: config.data?.geocoding ?? false },
     ],
     [config.data],
@@ -121,6 +129,9 @@ function SmsTestPage() {
         title="SMS SOS test plan"
         description="Run one real emergency from a real feature phone, end to end, and check every stage against live data."
       />
+
+      <IntegrationStatusCard status={config.data} loading={config.isLoading} />
+      <HelplineCard />
 
       <Card>
         <CardHeader className="pb-3">
