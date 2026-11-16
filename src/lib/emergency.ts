@@ -562,8 +562,8 @@ async function runEmergencyWorkflow(
         const failures = emailResult.results.filter((r) => !r.ok);
         const detail =
           failures.length === 0
-            ? `Emergency email delivered to ${emailResult.sent} contact(s).`
-            : `${emailResult.sent} delivered, ${failures.length} failed — ${failures
+            ? `Emergency email accepted for ${emailResult.sent} contact(s).`
+            : `${emailResult.sent} accepted, ${failures.length} failed — ${failures
                 .map((f) => `${f.name}: ${f.error}`)
                 .join("; ")}`;
         await logEvent(
