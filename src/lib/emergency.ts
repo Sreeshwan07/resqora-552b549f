@@ -639,26 +639,37 @@ async function runEmergencyWorkflow(
   // Channels are independent, so they run together instead of one after another.
   await Promise.all([guardianTask(), emailTask(), smsTask(), whatsappTask()]);
 
-  await logEvent(
-    data.id,
-    options.userId,
-    "Contacts notified",
-    `${contacts.length} trusted contact${contacts.length === 1 ? "" : "s"} alerted with your live location.`,
+  const acceptedChannels = report.filter(
+    (item) => item.status === "sent" || item.status === "delivered",
   );
-
+  const manualChannels = report.filter((item) => item.status === "ready");
+  const outcomeSummary = report
+    .map((item) => `${item.channel}: ${item.status}`)
+    .join(", ");
+  await logEvent(data.id, options.userId, "SOS activation completed", outcomeSummary);
   await logEvent(
     data.id,
     options.userId,
     "Emergency active",
-    "Responders are engaged and following your live location.",
+    "The emergency session is active. Check each channel for its actual delivery state.",
   );
 
   await notify(options.userId, {
     category: "emergency",
-    title: "Emergency alert sent",
-    body: "Your trusted contacts and nearby responders have been notified.",
+    title:
+      acceptedChannels.length > 0
+        ? "Emergency alerts sent"
+        : manualChannels.length > 0
+          ? "Emergency active — alerts need action"
+          : "Emergency active — automatic alerts unavailable",
+    body:
+      acceptedChannels.length > 0
+        ? "At least one contact alert was accepted. Open the emergency for each delivery result."
+        : "Your emergency was saved, but no automatic contact alert was confirmed. Use the available manual alert options.",
   });
-  await logActivity(options.userId, "SOS activated", `${options.type} emergency triggered`);
+  await logActivity(options.userId, "SOS activated", `${options.type} emergency triggered`).catch(
+    () => undefined,
+  );
   void logSecurityEvent("SOS activated", `${options.type} emergency triggered`, {
     emergency_id: data.id,
   });
