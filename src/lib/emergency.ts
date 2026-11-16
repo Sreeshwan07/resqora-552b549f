@@ -99,11 +99,50 @@ export type EmergencyStatus = (typeof STATUS_FLOW)[number]["key"];
 export type NotificationChannel = "email" | "sms" | "whatsapp" | "guardian";
 export type NotificationOutcome = {
   channel: NotificationChannel;
-  status: "sent" | "ready" | "unavailable" | "skipped" | "failed";
+  status: "delivered" | "sent" | "ready" | "unavailable" | "skipped" | "failed";
   detail: string;
   count: number;
 };
-export type EmergencyWithReport = Emergency & { notifications: NotificationOutcome[] };
+export type EmergencyWithReport = Emergency & {
+  notifications: NotificationOutcome[];
+  queued?: false;
+};
+export type QueuedSosResult = { queued: true; localId: string };
+export type CreateEmergencyResult = EmergencyWithReport | QueuedSosResult;
+
+export type CapturedSosLocation = {
+  latitude: number;
+  longitude: number;
+  accuracy: number | null;
+  address?: string | null;
+  capturedAt?: string;
+  speed?: number | null;
+};
+
+type CreateEmergencyOptions = {
+  userId: string;
+  type: string;
+  severity?: string;
+  notes?: string;
+  contactCount: number;
+  contacts?: EmergencyContact[];
+  profile?: Profile | null;
+  /** Stable across retries, especially for an SOS captured while offline. */
+  idempotencyKey?: string;
+  capturedLocation?: CapturedSosLocation;
+  startedAt?: string;
+  /** Fired as soon as the real emergency row exists. */
+  onCreated?: (emergency: Emergency) => void;
+};
+
+// React state alone cannot stop two clicks in the same render frame. This lock
+// covers every SOS entry point sharing this module; the database remains the
+// final guard across tabs and devices.
+const activationLocks = new Set<string>();
+
+async function runEmergencyWorkflow(
+  options: CreateEmergencyOptions,
+): Promise<CreateEmergencyResult> {
 
 /** Statuses used before the current workflow, kept so old history still reads well. */
 const LEGACY_LABELS: Record<string, string> = {
