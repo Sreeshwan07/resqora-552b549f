@@ -36,6 +36,13 @@
       "when": 1791301186148,
       "tag": "0004_perf_test_runs",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794813316290,
+      "tag": "0005_retry_safe_sos_sessions",
+      "breakpoints": true
     }
   ]
 }

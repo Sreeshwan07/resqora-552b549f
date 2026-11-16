@@ -22,11 +22,19 @@ export const FRESHNESS_STYLE: Record<Freshness, string> = {
 };
 
 /** Communication states — "SENT" only when the server confirmed it. */
-export type CommState = "CONNECTING" | "QUEUED" | "SENDING" | "SENT" | "FAILED" | "UNKNOWN";
+export type CommState =
+  | "CONNECTING"
+  | "QUEUED"
+  | "SENDING"
+  | "SENT"
+  | "DELIVERED"
+  | "FAILED"
+  | "UNKNOWN";
 
 export function commStateFromOutcome(
-  status: "sent" | "ready" | "unavailable" | "skipped" | "failed",
+  status: "delivered" | "sent" | "ready" | "unavailable" | "skipped" | "failed",
 ): CommState {
+  if (status === "delivered") return "DELIVERED";
   if (status === "sent") return "SENT";
   if (status === "failed" || status === "unavailable") return "FAILED";
   if (status === "ready") return "QUEUED";

@@ -2440,6 +2440,20 @@ export type Database = {
         Args: { _notes: string; _severity: string; _type: string }
         Returns: Json
       }
+      start_emergency_session_v2: {
+        Args: {
+          _accuracy?: number
+          _address?: string
+          _idempotency_key?: string
+          _latitude?: number
+          _longitude?: number
+          _notes: string
+          _severity: string
+          _started_at?: string
+          _type: string
+        }
+        Returns: Json
+      }
       start_safe_journey: {
         Args: { _payload: Json }
         Returns: {

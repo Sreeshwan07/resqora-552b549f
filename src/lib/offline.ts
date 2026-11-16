@@ -17,6 +17,8 @@ export type QueuedEmergency = {
   notes: string | null;
   latitude: number | null;
   longitude: number | null;
+  accuracy?: number | null;
+  speed?: number | null;
   address: string | null;
   startedAt: string;
 };
@@ -55,11 +57,34 @@ function read<T>(key: string): T[] {
 
 function write<T>(key: string, value: T[]) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(key, JSON.stringify(value));
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    throw new Error(
+      "This device could not store the offline SOS. Free some browser storage and try again.",
+    );
+  }
 }
 
 export function queueEmergency(entry: Omit<QueuedEmergency, "localId">) {
-  const localId = `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  if (!entry.userId || !entry.type || !entry.startedAt) {
+    throw new Error("The offline SOS is missing required emergency details.");
+  }
+  if ((entry.latitude == null) !== (entry.longitude == null)) {
+    throw new Error("The offline SOS has incomplete GPS coordinates.");
+  }
+  if (
+    entry.latitude != null &&
+    (!Number.isFinite(entry.latitude) ||
+      !Number.isFinite(entry.longitude) ||
+      entry.latitude < -90 ||
+      entry.latitude > 90 ||
+      entry.longitude! < -180 ||
+      entry.longitude! > 180)
+  ) {
+    throw new Error("The offline SOS has invalid GPS coordinates.");
+  }
+  const localId = `local-${crypto.randomUUID()}`;
   write(EMERGENCY_KEY, [...read<QueuedEmergency>(EMERGENCY_KEY), { ...entry, localId }]);
   return localId;
 }
@@ -85,10 +110,10 @@ export function pendingCount() {
 let syncing = false;
 
 /**
- * Pushes everything captured while offline to the backend. Each queued SOS is
- * created once, its temporary local id is mapped to the real emergency id, and
- * only then are its queued location fixes uploaded. Anything that fails stays
- * queued for the next attempt, so no ping ever references a missing emergency.
+ * Reconnects through the exact same activation workflow as an online SOS. The
+ * stable local ID makes creation retry-safe, and the shared workflow captures
+ * location, creates Guardian tracking and attempts every saved contact alert.
+ * Anything that throws stays queued for the next automatic backoff attempt.
  */
 export async function syncOfflineQueue() {
   if (isOffline() || syncing) return 0;
@@ -101,34 +126,40 @@ export async function syncOfflineQueue() {
     const idMap = new Map<string, string>();
 
     for (const item of emergencies) {
-      const { data, error } = await supabase
-        .from("emergencies")
-        .insert({
-          user_id: item.userId,
+      let createdId: string | null = null;
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", item.userId)
+          .maybeSingle();
+        const { createEmergency } = await import("@/lib/emergency");
+        const result = await createEmergency({
+          userId: item.userId,
           type: item.type,
           severity: item.severity,
-          status: "active",
-          notes: item.notes,
-          latitude: item.latitude,
-          longitude: item.longitude,
-          address: item.address,
-          started_at: item.startedAt,
-          // Same key on every retry: a lost reply can never create a second session.
-          idempotency_key: item.localId,
-        })
-        .select("id")
-        .single();
-      let createdId = data?.id ?? null;
-      if (error?.code === "23505") {
-        // Already uploaded by an earlier attempt whose reply was lost.
-        const existing = await supabase
-          .from("emergencies")
-          .select("id")
-          .eq("user_id", item.userId)
-          .eq("idempotency_key", item.localId)
-          .maybeSingle();
-        createdId = existing.data?.id ?? null;
+          notes: item.notes ?? undefined,
+          contactCount: 0,
+          profile,
+          idempotencyKey: item.localId,
+          startedAt: item.startedAt,
+          capturedLocation:
+            item.latitude != null && item.longitude != null
+              ? {
+                  latitude: item.latitude,
+                  longitude: item.longitude,
+                  accuracy: item.accuracy ?? null,
+                  speed: item.speed ?? null,
+                  address: item.address,
+                  capturedAt: item.startedAt,
+                }
+              : undefined,
+        });
+        if (!result.queued) createdId = result.id;
+      } catch {
+        // Network/auth/database failures leave the complete entry untouched.
       }
+
       if (!createdId) {
         remainingEmergencies.push(item);
         continue;
@@ -155,8 +186,6 @@ export async function syncOfflineQueue() {
       if (mapped) {
         uploadable.push({ ping, emergencyId: mapped });
       } else if (ping.emergencyId.startsWith("local-")) {
-        // Its emergency has not been created yet — keep waiting (or drop if the
-        // queued emergency is gone entirely, to avoid an orphaned ping forever).
         if (stillQueued.has(ping.emergencyId)) remainingPings.push(ping);
       } else {
         uploadable.push({ ping, emergencyId: ping.emergencyId });

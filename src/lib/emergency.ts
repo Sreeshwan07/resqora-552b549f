@@ -23,10 +23,10 @@ import {
 } from "@/lib/guardian";
 import { readBatteryLevel, readSpeed } from "@/lib/device";
 import { logSecurityEvent } from "@/lib/audit";
-import { checkRateLimit, sanitizeMultiline } from "@/lib/security";
+import { sanitizeMultiline } from "@/lib/security";
 import { generateActionPlan } from "@/lib/coordinator.functions";
 import { cachePlan, medicalContext, persistPlan } from "@/lib/core";
-import { markPhase, transitionIncident } from "@/lib/incident";
+import { transitionIncident } from "@/lib/incident";
 
 /**
  * Runs the AI Emergency Coordinator as soon as an SOS goes active so the action
@@ -99,11 +99,46 @@ export type EmergencyStatus = (typeof STATUS_FLOW)[number]["key"];
 export type NotificationChannel = "email" | "sms" | "whatsapp" | "guardian";
 export type NotificationOutcome = {
   channel: NotificationChannel;
-  status: "sent" | "ready" | "unavailable" | "skipped" | "failed";
+  status: "delivered" | "sent" | "ready" | "unavailable" | "skipped" | "failed";
   detail: string;
   count: number;
 };
-export type EmergencyWithReport = Emergency & { notifications: NotificationOutcome[] };
+export type EmergencyWithReport = Emergency & {
+  notifications: NotificationOutcome[];
+  queued?: false;
+};
+export type QueuedSosResult = { queued: true; localId: string };
+export type CreateEmergencyResult = EmergencyWithReport | QueuedSosResult;
+
+export type CapturedSosLocation = {
+  latitude: number;
+  longitude: number;
+  accuracy: number | null;
+  address?: string | null;
+  capturedAt?: string;
+  speed?: number | null;
+};
+
+type CreateEmergencyOptions = {
+  userId: string;
+  type: string;
+  severity?: string;
+  notes?: string;
+  contactCount: number;
+  contacts?: EmergencyContact[];
+  profile?: Profile | null;
+  /** Stable across retries, especially for an SOS captured while offline. */
+  idempotencyKey?: string;
+  capturedLocation?: CapturedSosLocation;
+  startedAt?: string;
+  /** Fired as soon as the real emergency row exists. */
+  onCreated?: (emergency: Emergency) => void;
+};
+
+// React state alone cannot stop two clicks in the same render frame. This lock
+// covers every SOS entry point sharing this module; the database remains the
+// final guard across tabs and devices.
+const activationLocks = new Set<string>();
 
 /** Statuses used before the current workflow, kept so old history still reads well. */
 const LEGACY_LABELS: Record<string, string> = {
@@ -143,119 +178,182 @@ async function loadOwnContacts(userId: string): Promise<EmergencyContact[]> {
   return (data ?? []) as EmergencyContact[];
 }
 
-export async function createEmergency(options: {
-  userId: string;
-  type: string;
-  severity?: string;
-  notes?: string;
-  contactCount: number;
-  contacts?: EmergencyContact[];
-  profile?: Profile | null;
-  /**
-   * Fired the instant the emergency row exists, before GPS/notifications run,
-   * so the UI can flip to "EMERGENCY ACTIVE" without waiting for the workflow.
-   */
-  onCreated?: (emergency: Emergency) => void;
-}): Promise<EmergencyWithReport> {
+async function withTimeout<T>(promise: Promise<T>, milliseconds: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("Address lookup timed out")), milliseconds);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+async function runEmergencyWorkflow(
+  options: CreateEmergencyOptions,
+): Promise<CreateEmergencyResult> {
   const report: NotificationOutcome[] = [];
   const errorText = (error: unknown) =>
     error instanceof Error ? error.message : "Unexpected error";
-  const limit = checkRateLimit("sos");
-  if (!limit.allowed) throw new Error(limit.message);
   const notes = options.notes ? sanitizeMultiline(options.notes, 2000) : null;
+  const idempotencyKey =
+    options.idempotencyKey ??
+    (typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `sos-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`);
 
-  // Offline: capture everything locally and sync when connectivity returns.
+  // Offline: persist the real activation time and best available GPS fix. The
+  // returned queued state is success, not a failed activation or a fake row.
   if (isOffline()) {
-    let latitude: number | null = null;
-    let longitude: number | null = null;
+    let capturedLocation: CapturedSosLocation | undefined;
     try {
       const position = await getCurrentPosition();
-      latitude = position.coords.latitude;
-      longitude = position.coords.longitude;
+      capturedLocation = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+        speed: readSpeed(position.coords),
+        capturedAt: new Date(position.timestamp).toISOString(),
+      };
     } catch {
-      /* keep the queued alert even without a GPS fix */
+      // The SOS is still queued; its location is honestly unavailable.
     }
-    queueEmergency({
+    const startedAt = new Date().toISOString();
+    const localId = queueEmergency({
       userId: options.userId,
       type: options.type,
       severity: options.severity ?? "high",
       notes,
-      latitude,
-      longitude,
+      latitude: capturedLocation?.latitude ?? null,
+      longitude: capturedLocation?.longitude ?? null,
+      accuracy: capturedLocation?.accuracy ?? null,
+      speed: capturedLocation?.speed ?? null,
       address: null,
-      startedAt: new Date().toISOString(),
+      startedAt,
     });
-    throw new Error(
-      "You are offline — the SOS was saved on this device and will sync automatically.",
-    );
+    return { queued: true, localId };
   }
 
-  // One atomic server-side call creates the session or reuses the user's
-  // running one. The partial unique index on live emergencies makes even a
-  // race between two tabs yield exactly one session, so the client-side
-  // select-then-insert window that used to allow duplicates is gone.
-  const { data: session, error } = await supabase.rpc("start_emergency_session", {
+  // One atomic server-side call creates or resumes the session. The retry key
+  // and one-live-emergency index prevent duplicates across clicks and tabs.
+  const { data: session, error } = await supabase.rpc("start_emergency_session_v2", {
     _type: options.type,
     _severity: options.severity ?? "high",
     _notes: notes ?? "",
+    _idempotency_key: idempotencyKey,
+    _latitude: options.capturedLocation?.latitude,
+    _longitude: options.capturedLocation?.longitude,
+    _accuracy: options.capturedLocation?.accuracy ?? undefined,
+    _address: options.capturedLocation?.address ?? undefined,
+    _started_at: options.startedAt,
   });
   if (error) throw new Error(error.message);
   const started = session as unknown as { emergency: Emergency; reused: boolean } | null;
   if (!started?.emergency) throw new Error("Could not start the emergency session.");
 
-  // The session exists — surface it immediately; everything below is async work.
   const data = started.emergency;
   options.onCreated?.(data);
-  markPhase(data.id, "activated", "Incident opened on the user's device.");
+  await transitionIncident(data.id, "activated", "Incident opened on the user's device.").catch(
+    () => undefined,
+  );
 
-  // A reused session was already announced, tracked and notified when it was
-  // first created — never run the notification workflow a second time.
-  if (started.reused) return { ...data, notifications: [] };
+  // A completed retry is a no-op. An interrupted activation is resumed instead
+  // of being abandoned before GPS and contact alerts, which was the old bug.
+  if (started.reused) {
+    if (data.status === "resolved" || data.status === "cancelled") {
+      return { ...data, notifications: [] };
+    }
+    const { data: completed } = await supabase
+      .from("emergency_events")
+      .select("id")
+      .eq("emergency_id", data.id)
+      .eq("label", "SOS activation completed")
+      .limit(1)
+      .maybeSingle();
+    if (completed) return { ...data, notifications: [] };
+  }
 
-  await logEvent(data.id, options.userId, "SOS triggered", "Alert created on your device.");
+  await logEvent(
+    data.id,
+    options.userId,
+    started.reused ? "SOS activation resumed" : "SOS triggered",
+    started.reused
+      ? "An interrupted activation is continuing with the same emergency ID."
+      : "Alert created on your device.",
+  );
 
   // Recipients ALWAYS come from the signed-in user's own saved records — never
   // from a caller-supplied list, and never from any hardcoded/admin address.
   const ownContacts = await loadOwnContacts(options.userId);
   const contacts = ownContacts;
 
-  let address: string | null = null;
+  let address: string | null = options.capturedLocation?.address ?? null;
   try {
-    const position = await getCurrentPosition();
-    const { latitude, longitude } = position.coords;
-    address = await reverseGeocode(latitude, longitude);
-    await supabase
+    const captured =
+      options.capturedLocation ??
+      (await getCurrentPosition().then((position) => ({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+        speed: readSpeed(position.coords),
+        capturedAt: new Date(position.timestamp).toISOString(),
+      })));
+    const { latitude, longitude, accuracy } = captured;
+    const locatedAt = captured.capturedAt ?? new Date().toISOString();
+
+    // Save coordinates before address lookup. A slow or failed geocoder can no
+    // longer prevent the real GPS position from reaching the emergency row.
+    const { error: locationError } = await supabase
       .from("emergencies")
       .update({
         latitude,
         longitude,
-        address,
-        location_updated_at: new Date().toISOString(),
+        location_accuracy: accuracy,
+        location_updated_at: locatedAt,
       })
       .eq("id", data.id);
+    if (locationError) throw new Error(locationError.message);
     await supabase.from("location_pings").insert({
       emergency_id: data.id,
       user_id: options.userId,
       latitude,
       longitude,
-      accuracy: position.coords.accuracy,
-      speed: readSpeed(position.coords),
+      accuracy,
+      speed: captured.speed ?? null,
       battery_level: await readBatteryLevel(),
     });
     await logEvent(
       data.id,
       options.userId,
       "Location captured",
-      address
-        ? `${address} — ${latitude.toFixed(5)}, ${longitude.toFixed(5)} (±${Math.round(position.coords.accuracy)}m)`
-        : `${latitude.toFixed(5)}, ${longitude.toFixed(5)} (±${Math.round(position.coords.accuracy)}m)`,
+      `${latitude.toFixed(5)}, ${longitude.toFixed(5)}${accuracy == null ? "" : ` (±${Math.round(accuracy)}m)`}`,
     );
-  } catch {
+
+    if (!address) {
+      try {
+        address = await withTimeout(reverseGeocode(latitude, longitude), 7_000);
+      } catch {
+        address = null;
+      }
+      if (address) {
+        const { error: addressError } = await supabase
+          .from("emergencies")
+          .update({ address })
+          .eq("id", data.id);
+        if (!addressError) {
+          await logEvent(data.id, options.userId, "Address resolved", address);
+        }
+      }
+    }
+  } catch (locationFailure) {
     await logEvent(
       data.id,
       options.userId,
       "Location unavailable",
-      "GPS permission denied — responders will use your saved home address.",
+      `Current GPS could not be saved: ${errorText(locationFailure)}`,
     );
   }
 
@@ -283,10 +381,15 @@ export async function createEmergency(options: {
     /* tracking link can be regenerated from the live page */
   }
 
-  // Lifecycle: assessment starts once location capture has been attempted, and
-  // alerting starts as the notification workflow below runs.
-  markPhase(data.id, "assessing", "Location captured, situation being assessed.");
-  markPhase(data.id, "alerting", "Notifying contacts and emergency services.");
+  // Await each forward-only transition so activation cannot race past itself.
+  await transitionIncident(
+    data.id,
+    "assessing",
+    address ? "Location captured; situation being assessed." : "GPS attempted; situation being assessed.",
+  ).catch(() => undefined);
+  await transitionIncident(data.id, "alerting", "Notifying trusted contacts.").catch(
+    () => undefined,
+  );
   await logEvent(
     data.id,
     options.userId,
@@ -324,20 +427,30 @@ export async function createEmergency(options: {
         emergencyId: data.id,
         contacts,
       });
-      const configured = await dispatchDeliveries({
+      const response = await dispatchDeliveries({
         emergencyId: data.id,
         kind: "alert",
         contactIds: contacts.map((contact) => contact.id),
         trackingUrl,
         address,
       });
+      const delivered = response.results.filter((result) => result.status === "delivered").length;
+      const sent = response.results.filter((result) => result.status === "sent").length;
+      const failed = response.results.filter((result) => result.status === "failed").length;
+      const accepted = delivered + sent;
       report.push({
         channel: "sms",
-        status: configured ? "sent" : "unavailable",
-        detail: configured
-          ? `SMS sent to ${deliveries.length} contact(s).`
-          : "No SMS provider connected — use WhatsApp or SMS hand-off.",
-        count: configured ? deliveries.length : 0,
+        status: !response.configured
+          ? "unavailable"
+          : delivered > 0 && sent === 0 && failed === 0
+            ? "delivered"
+            : accepted > 0
+              ? "sent"
+              : "failed",
+        detail: !response.configured
+          ? "No SMS provider connected — use WhatsApp or SMS hand-off."
+          : `${delivered} delivered, ${sent} accepted by the provider, ${failed} failed across ${deliveries.length} contact(s).`,
+        count: accepted,
       });
     } catch (error) {
       report.push({ channel: "sms", status: "failed", detail: errorText(error), count: 0 });
@@ -390,14 +503,14 @@ export async function createEmergency(options: {
         options.userId,
         "Guardian notified",
         result.emailed
-          ? `${guardian.name} received the Guardian dashboard link.`
+          ? `${guardian.name}'s Guardian email was accepted for sending.`
           : `Guardian session created for ${guardian.name} — share the dashboard link manually.`,
       );
       report.push({
         channel: "guardian",
         status: result.emailed ? "sent" : "unavailable",
         detail: result.emailed
-          ? `${guardian.name} received the Guardian dashboard link.`
+          ? `${guardian.name}'s Guardian email was accepted for sending.`
           : `Guardian link ready for ${guardian.name} — send it from the share centre.`,
         count: 1,
       });
@@ -449,8 +562,8 @@ export async function createEmergency(options: {
         const failures = emailResult.results.filter((r) => !r.ok);
         const detail =
           failures.length === 0
-            ? `Emergency email delivered to ${emailResult.sent} contact(s).`
-            : `${emailResult.sent} delivered, ${failures.length} failed — ${failures
+            ? `Emergency email accepted for ${emailResult.sent} contact(s).`
+            : `${emailResult.sent} accepted, ${failures.length} failed — ${failures
                 .map((f) => `${f.name}: ${f.error}`)
                 .join("; ")}`;
         await logEvent(
@@ -526,26 +639,37 @@ export async function createEmergency(options: {
   // Channels are independent, so they run together instead of one after another.
   await Promise.all([guardianTask(), emailTask(), smsTask(), whatsappTask()]);
 
-  await logEvent(
-    data.id,
-    options.userId,
-    "Contacts notified",
-    `${contacts.length} trusted contact${contacts.length === 1 ? "" : "s"} alerted with your live location.`,
+  const acceptedChannels = report.filter(
+    (item) => item.status === "sent" || item.status === "delivered",
   );
-
+  const manualChannels = report.filter((item) => item.status === "ready");
+  const outcomeSummary = report
+    .map((item) => `${item.channel}: ${item.status}`)
+    .join(", ");
+  await logEvent(data.id, options.userId, "SOS activation completed", outcomeSummary);
   await logEvent(
     data.id,
     options.userId,
     "Emergency active",
-    "Responders are engaged and following your live location.",
+    "The emergency session is active. Check each channel for its actual delivery state.",
   );
 
   await notify(options.userId, {
     category: "emergency",
-    title: "Emergency alert sent",
-    body: "Your trusted contacts and nearby responders have been notified.",
+    title:
+      acceptedChannels.length > 0
+        ? "Emergency alerts sent"
+        : manualChannels.length > 0
+          ? "Emergency active — alerts need action"
+          : "Emergency active — automatic alerts unavailable",
+    body:
+      acceptedChannels.length > 0
+        ? "At least one contact alert was accepted. Open the emergency for each delivery result."
+        : "Your emergency was saved, but no automatic contact alert was confirmed. Use the available manual alert options.",
   });
-  await logActivity(options.userId, "SOS activated", `${options.type} emergency triggered`);
+  await logActivity(options.userId, "SOS activated", `${options.type} emergency triggered`).catch(
+    () => undefined,
+  );
   void logSecurityEvent("SOS activated", `${options.type} emergency triggered`, {
     emergency_id: data.id,
   });
@@ -572,6 +696,20 @@ export async function createEmergency(options: {
     address,
   });
   return { ...finalEmergency, notifications: report };
+}
+
+export async function createEmergency(
+  options: CreateEmergencyOptions,
+): Promise<CreateEmergencyResult> {
+  if (activationLocks.has(options.userId)) {
+    throw new Error("This SOS is already being sent. Please wait for its status.");
+  }
+  activationLocks.add(options.userId);
+  try {
+    return await runEmergencyWorkflow(options);
+  } finally {
+    activationLocks.delete(options.userId);
+  }
 }
 
 /**

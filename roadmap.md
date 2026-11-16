@@ -19,6 +19,13 @@ Resumed from the mobile-first audit (Phases 1-37 done).
 - [x] L. Legacy cleanup — legacy status writes and the duplicate status control removed; only one-time offline key migration keeps the old name
 
 Each phase is verified before moving to the next.
+
+## SOS button repair (current)
+- [ ] Reproduce the actual SOS failure and preserve the existing UI
+- [ ] Add a five-second cancellable countdown and duplicate-click protection
+- [ ] Make GPS capture, emergency creation, contact alerts and truthful statuses reliable
+- [ ] Queue offline SOS securely and run the full emergency workflow after reconnect
+- [ ] Add regression tests and verify the complete signed-in flow
 ## PWA / service-worker architecture pass (done)
 - [x] Single root worker: /sw.js (Workbox) importScripts /nav-sw.js (navigations) + /fcm-sw-handler.js (FCM background push)
 - [x] Retired /firebase-messaging-sw.js turned into a self-unregistering kill switch; client unregisters legacy workers

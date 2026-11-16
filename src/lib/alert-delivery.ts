@@ -151,5 +151,5 @@ export async function dispatchDeliveries(input: {
       ...(input.address ? { address: input.address } : {}),
     },
   });
-  return response.configured;
+  return response;
 }

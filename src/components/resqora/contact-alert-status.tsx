@@ -73,10 +73,15 @@ export function ContactAlertStatus({
         address,
       });
       await refresh();
-      toast[automatic ? "success" : "message"](
-        automatic
-          ? "Alerts re-sent to your contacts"
-          : "No SMS provider connected — send each alert with the buttons below",
+      const accepted = automatic.results.filter(
+        (result) => result.status === "sent" || result.status === "delivered",
+      ).length;
+      toast[accepted > 0 ? "success" : "message"](
+        accepted > 0
+          ? `${accepted} alert${accepted === 1 ? "" : "s"} accepted by the SMS provider`
+          : automatic.configured
+            ? "No new alerts were sent — check each delivery status below"
+            : "No SMS provider connected — send each alert with the buttons below",
       );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not send alerts");
