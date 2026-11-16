@@ -19,6 +19,7 @@ const CHANNEL_LABELS: Record<NotificationOutcome["channel"], string> = {
 };
 
 const OUTCOME_STYLES: Record<NotificationOutcome["status"], string> = {
+  delivered: "text-success",
   sent: "text-success",
   ready: "text-info",
   unavailable: "text-warning",

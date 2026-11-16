@@ -59,12 +59,14 @@ export function useCheckinWatcher() {
             });
             await supabase
               .from("safety_checkins")
-              .update({ status: "missed", emergency_id: emergency.id })
+              .update({ status: "missed", emergency_id: emergency.queued ? null : emergency.id })
               .eq("id", checkin.id);
             await notify(user!.id, {
               category: "emergency",
               title: "Missed safety check-in",
-              body: `RESQORA raised an SOS because "${checkin.label}" was not confirmed in time.`,
+              body: emergency.queued
+                ? `RESQORA queued an SOS on this device because "${checkin.label}" was not confirmed in time.`
+                : `RESQORA raised an SOS because "${checkin.label}" was not confirmed in time.`,
             });
             await logActivity(user!.id, "SOS activated", `Missed check-in: ${checkin.label}`);
             showPush("SOS activated", "You missed a safety check-in — your contacts were alerted.");

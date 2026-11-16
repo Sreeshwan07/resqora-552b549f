@@ -292,15 +292,19 @@ async function runEmergencyWorkflow(
 
   let address: string | null = options.capturedLocation?.address ?? null;
   try {
-    const captured =
-      options.capturedLocation ??
-      (await getCurrentPosition().then((position) => ({
+    let captured: CapturedSosLocation;
+    if (options.capturedLocation) {
+      captured = options.capturedLocation;
+    } else {
+      const position = await getCurrentPosition();
+      captured = {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
         accuracy: position.coords.accuracy,
         speed: readSpeed(position.coords),
         capturedAt: new Date(position.timestamp).toISOString(),
-      })));
+      };
+    }
     const { latitude, longitude, accuracy } = captured;
     const locatedAt = captured.capturedAt ?? new Date().toISOString();
 

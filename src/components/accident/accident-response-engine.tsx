@@ -235,6 +235,11 @@ export function AccidentResponseEngine() {
         profile: profile.data ?? null,
       });
       await queryClient.invalidateQueries();
+      if (created.queued) {
+        record("SOS queued offline", `Local queue reference ${created.localId}`);
+        toast.warning("SOS queued on this device — alerts will start when you reconnect");
+        return;
+      }
       record("SOS activated", `Emergency ${created.id.slice(0, 8).toUpperCase()} created`);
       const guardian = created.notifications.find((item) => item.channel === "guardian");
       if (guardian && guardian.status !== "skipped") {
