@@ -140,10 +140,6 @@ type CreateEmergencyOptions = {
 // final guard across tabs and devices.
 const activationLocks = new Set<string>();
 
-async function runEmergencyWorkflow(
-  options: CreateEmergencyOptions,
-): Promise<CreateEmergencyResult> {
-
 /** Statuses used before the current workflow, kept so old history still reads well. */
 const LEGACY_LABELS: Record<string, string> = {
   dispatched: "Responders dispatched",
