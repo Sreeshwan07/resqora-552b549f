@@ -276,43 +276,70 @@ async function runEmergencyWorkflow(
   const ownContacts = await loadOwnContacts(options.userId);
   const contacts = ownContacts;
 
-  let address: string | null = null;
+  let address: string | null = options.capturedLocation?.address ?? null;
   try {
-    const position = await getCurrentPosition();
-    const { latitude, longitude } = position.coords;
-    address = await reverseGeocode(latitude, longitude);
-    await supabase
+    const captured =
+      options.capturedLocation ??
+      (await getCurrentPosition().then((position) => ({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+        speed: readSpeed(position.coords),
+        capturedAt: new Date(position.timestamp).toISOString(),
+      })));
+    const { latitude, longitude, accuracy } = captured;
+    const locatedAt = captured.capturedAt ?? new Date().toISOString();
+
+    // Save coordinates before address lookup. A slow or failed geocoder can no
+    // longer prevent the real GPS position from reaching the emergency row.
+    const { error: locationError } = await supabase
       .from("emergencies")
       .update({
         latitude,
         longitude,
-        address,
-        location_updated_at: new Date().toISOString(),
+        location_accuracy: accuracy,
+        location_updated_at: locatedAt,
       })
       .eq("id", data.id);
+    if (locationError) throw new Error(locationError.message);
     await supabase.from("location_pings").insert({
       emergency_id: data.id,
       user_id: options.userId,
       latitude,
       longitude,
-      accuracy: position.coords.accuracy,
-      speed: readSpeed(position.coords),
+      accuracy,
+      speed: captured.speed ?? null,
       battery_level: await readBatteryLevel(),
     });
     await logEvent(
       data.id,
       options.userId,
       "Location captured",
-      address
-        ? `${address} — ${latitude.toFixed(5)}, ${longitude.toFixed(5)} (±${Math.round(position.coords.accuracy)}m)`
-        : `${latitude.toFixed(5)}, ${longitude.toFixed(5)} (±${Math.round(position.coords.accuracy)}m)`,
+      `${latitude.toFixed(5)}, ${longitude.toFixed(5)}${accuracy == null ? "" : ` (±${Math.round(accuracy)}m)`}`,
     );
-  } catch {
+
+    if (!address) {
+      try {
+        address = await withTimeout(reverseGeocode(latitude, longitude), 7_000);
+      } catch {
+        address = null;
+      }
+      if (address) {
+        const { error: addressError } = await supabase
+          .from("emergencies")
+          .update({ address })
+          .eq("id", data.id);
+        if (!addressError) {
+          await logEvent(data.id, options.userId, "Address resolved", address);
+        }
+      }
+    }
+  } catch (locationFailure) {
     await logEvent(
       data.id,
       options.userId,
       "Location unavailable",
-      "GPS permission denied — responders will use your saved home address.",
+      `Current GPS could not be saved: ${errorText(locationFailure)}`,
     );
   }
 
