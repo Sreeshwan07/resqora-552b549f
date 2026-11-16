@@ -178,26 +178,18 @@ async function loadOwnContacts(userId: string): Promise<EmergencyContact[]> {
   return (data ?? []) as EmergencyContact[];
 }
 
-export async function createEmergency(options: {
-  userId: string;
-  type: string;
-  severity?: string;
-  notes?: string;
-  contactCount: number;
-  contacts?: EmergencyContact[];
-  profile?: Profile | null;
-  /**
-   * Fired the instant the emergency row exists, before GPS/notifications run,
-   * so the UI can flip to "EMERGENCY ACTIVE" without waiting for the workflow.
-   */
-  onCreated?: (emergency: Emergency) => void;
-}): Promise<EmergencyWithReport> {
+async function runEmergencyWorkflow(
+  options: CreateEmergencyOptions,
+): Promise<CreateEmergencyResult> {
   const report: NotificationOutcome[] = [];
   const errorText = (error: unknown) =>
     error instanceof Error ? error.message : "Unexpected error";
-  const limit = checkRateLimit("sos");
-  if (!limit.allowed) throw new Error(limit.message);
   const notes = options.notes ? sanitizeMultiline(options.notes, 2000) : null;
+  const idempotencyKey =
+    options.idempotencyKey ??
+    (typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `sos-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`);
 
   // Offline: capture everything locally and sync when connectivity returns.
   if (isOffline()) {
