@@ -23,7 +23,7 @@ import {
 } from "@/lib/guardian";
 import { readBatteryLevel, readSpeed } from "@/lib/device";
 import { logSecurityEvent } from "@/lib/audit";
-import { checkRateLimit, sanitizeMultiline } from "@/lib/security";
+import { sanitizeMultiline } from "@/lib/security";
 import { generateActionPlan } from "@/lib/coordinator.functions";
 import { cachePlan, medicalContext, persistPlan } from "@/lib/core";
 import { markPhase, transitionIncident } from "@/lib/incident";
