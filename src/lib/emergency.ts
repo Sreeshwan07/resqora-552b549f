@@ -178,6 +178,20 @@ async function loadOwnContacts(userId: string): Promise<EmergencyContact[]> {
   return (data ?? []) as EmergencyContact[];
 }
 
+async function withTimeout<T>(promise: Promise<T>, milliseconds: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("Address lookup timed out")), milliseconds);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 async function runEmergencyWorkflow(
   options: CreateEmergencyOptions,
 ): Promise<CreateEmergencyResult> {
