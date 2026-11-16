@@ -698,6 +698,20 @@ async function runEmergencyWorkflow(
   return { ...finalEmergency, notifications: report };
 }
 
+export async function createEmergency(
+  options: CreateEmergencyOptions,
+): Promise<CreateEmergencyResult> {
+  if (activationLocks.has(options.userId)) {
+    throw new Error("This SOS is already being sent. Please wait for its status.");
+  }
+  activationLocks.add(options.userId);
+  try {
+    return await runEmergencyWorkflow(options);
+  } finally {
+    activationLocks.delete(options.userId);
+  }
+}
+
 /**
  * "I'm safe": stops live sharing, closes the session and queues a resolution
  * notice for every trusted contact.
