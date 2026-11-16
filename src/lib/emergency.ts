@@ -427,20 +427,30 @@ async function runEmergencyWorkflow(
         emergencyId: data.id,
         contacts,
       });
-      const configured = await dispatchDeliveries({
+      const response = await dispatchDeliveries({
         emergencyId: data.id,
         kind: "alert",
         contactIds: contacts.map((contact) => contact.id),
         trackingUrl,
         address,
       });
+      const delivered = response.results.filter((result) => result.status === "delivered").length;
+      const sent = response.results.filter((result) => result.status === "sent").length;
+      const failed = response.results.filter((result) => result.status === "failed").length;
+      const accepted = delivered + sent;
       report.push({
         channel: "sms",
-        status: configured ? "sent" : "unavailable",
-        detail: configured
-          ? `SMS sent to ${deliveries.length} contact(s).`
-          : "No SMS provider connected — use WhatsApp or SMS hand-off.",
-        count: configured ? deliveries.length : 0,
+        status: !response.configured
+          ? "unavailable"
+          : delivered > 0 && sent === 0 && failed === 0
+            ? "delivered"
+            : accepted > 0
+              ? "sent"
+              : "failed",
+        detail: !response.configured
+          ? "No SMS provider connected — use WhatsApp or SMS hand-off."
+          : `${delivered} delivered, ${sent} accepted by the provider, ${failed} failed across ${deliveries.length} contact(s).`,
+        count: accepted,
       });
     } catch (error) {
       report.push({ channel: "sms", status: "failed", detail: errorText(error), count: 0 });
