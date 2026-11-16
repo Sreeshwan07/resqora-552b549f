@@ -223,29 +223,53 @@ async function runEmergencyWorkflow(
     return { queued: true, localId };
   }
 
-  // One atomic server-side call creates the session or reuses the user's
-  // running one. The partial unique index on live emergencies makes even a
-  // race between two tabs yield exactly one session, so the client-side
-  // select-then-insert window that used to allow duplicates is gone.
-  const { data: session, error } = await supabase.rpc("start_emergency_session", {
+  // One atomic server-side call creates or resumes the session. The retry key
+  // and one-live-emergency index prevent duplicates across clicks and tabs.
+  const { data: session, error } = await supabase.rpc("start_emergency_session_v2", {
     _type: options.type,
     _severity: options.severity ?? "high",
     _notes: notes ?? "",
+    _idempotency_key: idempotencyKey,
+    _latitude: options.capturedLocation?.latitude,
+    _longitude: options.capturedLocation?.longitude,
+    _accuracy: options.capturedLocation?.accuracy ?? undefined,
+    _address: options.capturedLocation?.address ?? undefined,
+    _started_at: options.startedAt,
   });
   if (error) throw new Error(error.message);
   const started = session as unknown as { emergency: Emergency; reused: boolean } | null;
   if (!started?.emergency) throw new Error("Could not start the emergency session.");
 
-  // The session exists — surface it immediately; everything below is async work.
   const data = started.emergency;
   options.onCreated?.(data);
-  markPhase(data.id, "activated", "Incident opened on the user's device.");
+  await transitionIncident(data.id, "activated", "Incident opened on the user's device.").catch(
+    () => undefined,
+  );
 
-  // A reused session was already announced, tracked and notified when it was
-  // first created — never run the notification workflow a second time.
-  if (started.reused) return { ...data, notifications: [] };
+  // A completed retry is a no-op. An interrupted activation is resumed instead
+  // of being abandoned before GPS and contact alerts, which was the old bug.
+  if (started.reused) {
+    if (data.status === "resolved" || data.status === "cancelled") {
+      return { ...data, notifications: [] };
+    }
+    const { data: completed } = await supabase
+      .from("emergency_events")
+      .select("id")
+      .eq("emergency_id", data.id)
+      .eq("label", "SOS activation completed")
+      .limit(1)
+      .maybeSingle();
+    if (completed) return { ...data, notifications: [] };
+  }
 
-  await logEvent(data.id, options.userId, "SOS triggered", "Alert created on your device.");
+  await logEvent(
+    data.id,
+    options.userId,
+    started.reused ? "SOS activation resumed" : "SOS triggered",
+    started.reused
+      ? "An interrupted activation is continuing with the same emergency ID."
+      : "Alert created on your device.",
+  );
 
   // Recipients ALWAYS come from the signed-in user's own saved records — never
   // from a caller-supplied list, and never from any hardcoded/admin address.
