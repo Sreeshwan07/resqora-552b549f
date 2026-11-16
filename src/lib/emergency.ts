@@ -503,14 +503,14 @@ async function runEmergencyWorkflow(
         options.userId,
         "Guardian notified",
         result.emailed
-          ? `${guardian.name} received the Guardian dashboard link.`
+          ? `${guardian.name}'s Guardian email was accepted for sending.`
           : `Guardian session created for ${guardian.name} — share the dashboard link manually.`,
       );
       report.push({
         channel: "guardian",
         status: result.emailed ? "sent" : "unavailable",
         detail: result.emailed
-          ? `${guardian.name} received the Guardian dashboard link.`
+          ? `${guardian.name}'s Guardian email was accepted for sending.`
           : `Guardian link ready for ${guardian.name} — send it from the share centre.`,
         count: 1,
       });
