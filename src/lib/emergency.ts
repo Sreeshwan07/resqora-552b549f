@@ -191,30 +191,36 @@ async function runEmergencyWorkflow(
       ? crypto.randomUUID()
       : `sos-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`);
 
-  // Offline: capture everything locally and sync when connectivity returns.
+  // Offline: persist the real activation time and best available GPS fix. The
+  // returned queued state is success, not a failed activation or a fake row.
   if (isOffline()) {
-    let latitude: number | null = null;
-    let longitude: number | null = null;
+    let capturedLocation: CapturedSosLocation | undefined;
     try {
       const position = await getCurrentPosition();
-      latitude = position.coords.latitude;
-      longitude = position.coords.longitude;
+      capturedLocation = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+        speed: readSpeed(position.coords),
+        capturedAt: new Date(position.timestamp).toISOString(),
+      };
     } catch {
-      /* keep the queued alert even without a GPS fix */
+      // The SOS is still queued; its location is honestly unavailable.
     }
-    queueEmergency({
+    const startedAt = new Date().toISOString();
+    const localId = queueEmergency({
       userId: options.userId,
       type: options.type,
       severity: options.severity ?? "high",
       notes,
-      latitude,
-      longitude,
+      latitude: capturedLocation?.latitude ?? null,
+      longitude: capturedLocation?.longitude ?? null,
+      accuracy: capturedLocation?.accuracy ?? null,
+      speed: capturedLocation?.speed ?? null,
       address: null,
-      startedAt: new Date().toISOString(),
+      startedAt,
     });
-    throw new Error(
-      "You are offline — the SOS was saved on this device and will sync automatically.",
-    );
+    return { queued: true, localId };
   }
 
   // One atomic server-side call creates the session or reuses the user's
