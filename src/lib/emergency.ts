@@ -26,7 +26,7 @@ import { logSecurityEvent } from "@/lib/audit";
 import { sanitizeMultiline } from "@/lib/security";
 import { generateActionPlan } from "@/lib/coordinator.functions";
 import { cachePlan, medicalContext, persistPlan } from "@/lib/core";
-import { markPhase, transitionIncident } from "@/lib/incident";
+import { transitionIncident } from "@/lib/incident";
 
 /**
  * Runs the AI Emergency Coordinator as soon as an SOS goes active so the action
