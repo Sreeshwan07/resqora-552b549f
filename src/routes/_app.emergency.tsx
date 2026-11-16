@@ -135,6 +135,10 @@ function EmergencyPage() {
         },
       });
       await refresh();
+      if (created.queued) {
+        toast.warning("SOS queued on this device — alerts will start automatically when you reconnect");
+        return false;
+      }
       const email = created.notifications.find((n) => n.channel === "email");
       const guardian = created.notifications.find((n) => n.channel === "guardian");
       if (email?.status === "sent") {

@@ -160,7 +160,7 @@ function HomePage() {
     if (!user || busy || current) return;
     setBusy(true);
     try {
-      await createEmergency({
+      const created = await createEmergency({
         userId: user.id,
         type: "sos",
         contactCount: contacts.data?.length ?? 0,
@@ -168,7 +168,11 @@ function HomePage() {
         profile: profile.data ?? null,
       });
       await queryClient.invalidateQueries();
-      toast.success("SOS sent — your contacts have been alerted");
+      if (created.queued) {
+        toast.warning("SOS queued on this device — alerts will start automatically when you reconnect");
+        return;
+      }
+      toast.success("SOS activated — check each contact delivery status");
       navigate({ to: "/live" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not send SOS");
